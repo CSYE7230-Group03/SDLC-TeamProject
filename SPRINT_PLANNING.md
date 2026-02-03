@@ -9,11 +9,11 @@ Development plan consisting of 5 sprints with varying durations optimized for ea
 
 | Sprint | Start Date | End Date | Duration |
 |--------|-----------|----------|----------|
-| Sprint 01 | 2026-02-02 | 2026-02-10 | 9 days |
-| Sprint 02 | 2026-02-11 | 2026-02-27 | 17 days |
-| Sprint 03 | 2026-02-28 | 2026-03-16 | 17 days |
-| Sprint 04 | 2026-03-17 | 2026-03-27 | 11 days |
-| Sprint 05 | 2026-03-28 | 2026-03-28 | 1 day |
+| Sprint 01 | 2026-02-02 | 2026-02-13 | 12 days |
+| Sprint 02 | 2026-02-14 | 2026-02-28 | 14 days |
+| Sprint 03 | 2026-03-01 | 2026-03-15 | 14 days |
+| Sprint 04 | 2026-03-16 | 2026-03-30 | 14 days |
+| Sprint 05 | 2026-03-31 | 2026-03-31 | 1 day |
 
 ---
 
