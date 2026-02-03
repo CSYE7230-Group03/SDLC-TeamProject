@@ -2,8 +2,8 @@
 
 ## Overview
 Development plan consisting of 5 sprints with varying durations optimized for each phase
-- Sprint 05 end date: March 28, 2026
-- Total project duration: 55 days
+- Sprint 05 end date: March 31, 2026
+- Total project duration: 58 days
 
 ## Sprint Timeline
 
@@ -86,9 +86,9 @@ Development plan consisting of 5 sprints with varying durations optimized for ea
 
 ## Sprint Allocation
 
-### Sprint 01 (Feb 2 - Feb 10, 2026)
+### Sprint 01 (Feb 2 - Feb 13, 2026)
 **Focus**: Platform Setup & Technical Foundations
-**Duration**: 9 days
+**Duration**: 12 days
 - Epic #1: Platform Setup & Technical Foundations (All 5 stories)
   - #2: Backend Project Initialization
   - #3: Environment Configuration Setup
@@ -101,9 +101,9 @@ Development plan consisting of 5 sprints with varying durations optimized for ea
 
 ---
 
-### Sprint 02 (Feb 11 - Feb 27, 2026)
+### Sprint 02 (Feb 14 - Feb 28, 2026)
 **Focus**: Core Recipe & Ingredient Features (Part 1)
-**Duration**: 17 days
+**Duration**: 14 days
 - Epic #20: Intelligent Recipe Discovery & Meal Planning (Stories 1-3)
   - #15: Photo-Based Ingredient Identification
   - #16: Ingredient Confirmation & Editing
@@ -117,9 +117,9 @@ Development plan consisting of 5 sprints with varying durations optimized for ea
 
 ---
 
-### Sprint 03 (Feb 28 - Mar 16, 2026)
+### Sprint 03 (Mar 1 - Mar 15, 2026)
 **Focus**: Core Recipe & Ingredient Features (Part 2)
-**Duration**: 17 days
+**Duration**: 14 days
 - Epic #20: Intelligent Recipe Discovery & Meal Planning (Stories 4-5)
   - #18: Recipe Feasibility & Missing Ingredient Identification
   - #19: Recipe History & Reuse
@@ -133,9 +133,9 @@ Development plan consisting of 5 sprints with varying durations optimized for ea
 
 ---
 
-### Sprint 04 (Mar 17 - Mar 27, 2026)
+### Sprint 04 (Mar 16 - Mar 30, 2026)
 **Focus**: Grocery Integration & User Management
-**Duration**: 11 days
+**Duration**: 14 days
 - Epic #26: Grocery Ordering Integration (All 5 stories)
   - #21: Generate Consolidated Grocery List
   - #22: Edit Grocery List Ingredients
@@ -151,7 +151,7 @@ Development plan consisting of 5 sprints with varying durations optimized for ea
 
 ---
 
-### Sprint 05 (Mar 28, 2026)
+### Sprint 05 (Mar 31, 2026)
 **Focus**: Final Polish & Deployment
 **Duration**: 1 day (Final deadline)
 - Epic #38: User Account Management (Stories 3-5)
@@ -173,7 +173,7 @@ Development plan consisting of 5 sprints with varying durations optimized for ea
 - **Total Stories**: 30
 - **Total Sprints**: 5
 - **Sprint Duration**: 2 weeks each
-- **Project End Date**: March 28, 2026
+- **Project End Date**: March 31, 2026
 
 ## Notes
 
