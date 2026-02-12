@@ -1,0 +1,22 @@
+{
+  "name": "replate-ai-sdk",
+  "version": "1.0.0",
+  "description": "Cloud SDK wrappers for ReplateAI",
+  "main": "index.js",
+  "scripts": {
+    "test": "node ../scripts/test-cloud-access.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "firebase-admin": "^12.0.0",
+    "@aws-sdk/client-s3": "^3.500.0"
+  },
+  "keywords": [
+    "firebase",
+    "aws",
+    "s3",
+    "firestore"
+  ],
+  "author": "CSYE7230-Group03",
+  "license": "MIT"
+}
