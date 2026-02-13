@@ -1,0 +1,20 @@
+{
+  "name": "replate-ai-root",
+  "version": "1.0.0",
+  "description": "AI-Powered Leftover Recipe App",
+  "private": true,
+  "scripts": {
+    "test:cloud": "node scripts/test-cloud-access.js",
+    "setup": "echo 'Setting up project' && cp .env.example .env && echo 'Created .env file. Please fill in your credentials.' && cd sdk && npm install"
+  },
+  "keywords": [
+    "recipe",
+    "ai",
+    "food-waste"
+  ],
+  "author": "CSYE7230-Group03",
+  "license": "MIT",
+  "dependencies": {
+    "dotenv": "^16.4.5"
+  }
+}
