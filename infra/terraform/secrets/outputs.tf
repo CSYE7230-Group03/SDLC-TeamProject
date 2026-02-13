@@ -1,0 +1,1 @@
+# Output secret ARN only (never plaintext)
