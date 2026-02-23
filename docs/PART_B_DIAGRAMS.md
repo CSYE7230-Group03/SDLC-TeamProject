@@ -2,7 +2,7 @@
 
 This document contains all UML diagrams for the CSYE 7230 Project Part B report.
 Diagrams are written in Mermaid syntax for collaborative editing.
-Export as images for the final PDF report.
+Please remove/add features based on your work. We will export as images for the final PDF report. 
 
 ---
 
