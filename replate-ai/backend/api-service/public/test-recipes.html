@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ReplateAI - Recipe Generator Test</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #f5f5f5; padding: 20px; }
+    .container { max-width: 900px; margin: 0 auto; }
+    h1 { color: #2d3436; margin-bottom: 20px; }
+    .input-section { background: #fff; padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    label { display: block; font-weight: 600; margin-bottom: 6px; color: #636e72; }
+    input, select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; margin-bottom: 12px; }
+    button { background: #00b894; color: #fff; border: none; padding: 12px 24px; border-radius: 8px; font-size: 16px; cursor: pointer; width: 100%; }
+    button:hover { background: #00a381; }
+    button:disabled { background: #b2bec3; cursor: not-allowed; }
+    .loading { text-align: center; padding: 40px; color: #636e72; }
+    .recipe-card { background: #fff; border-radius: 12px; margin-bottom: 16px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    .recipe-card img { width: 100%; height: 200px; object-fit: cover; }
+    .recipe-info { padding: 16px; }
+    .recipe-info h3 { color: #2d3436; margin-bottom: 8px; }
+    .recipe-meta { display: flex; gap: 16px; color: #636e72; font-size: 13px; margin-bottom: 12px; }
+    .recipe-meta span { background: #dfe6e9; padding: 4px 8px; border-radius: 4px; }
+    .diet-tag { background: #00b894; color: #fff; padding: 3px 8px; border-radius: 4px; font-size: 12px; margin-right: 4px; }
+    .section-title { font-weight: 600; color: #2d3436; margin: 12px 0 6px; }
+    .ingredient-list { list-style: none; padding: 0; }
+    .ingredient-list li { padding: 4px 0; border-bottom: 1px solid #f0f0f0; font-size: 14px; color: #636e72; }
+    .instructions ol { padding-left: 20px; }
+    .instructions li { padding: 4px 0; font-size: 14px; color: #636e72; line-height: 1.5; }
+    .source-info { font-size: 12px; color: #b2bec3; margin-top: 8px; }
+    .error { background: #ff7675; color: #fff; padding: 16px; border-radius: 8px; margin-top: 12px; }
+    .result-header { color: #636e72; margin-bottom: 12px; font-size: 14px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>ReplateAI Recipe Generator</h1>
+
+    <div class="input-section">
+      <label>Ingredients (comma separated)</label>
+      <input type="text" id="ingredients" placeholder="chicken, rice, onion" value="chicken, rice, onion">
+
+      <label>Dietary Preference</label>
+      <select id="diet">
+        <option value="">None</option>
+        <option value="gluten free">Gluten Free</option>
+        <option value="dairy free">Dairy Free</option>
+        <option value="vegetarian">Vegetarian</option>
+        <option value="vegan">Vegan</option>
+      </select>
+
+      <label>Number of Recipes</label>
+      <input type="number" id="count" value="3" min="1" max="5">
+
+      <button id="generateBtn" onclick="generateRecipes()">Generate Recipes</button>
+    </div>
+
+    <div id="results"></div>
+  </div>
+
+  <script>
+    async function generateRecipes() {
+      const btn = document.getElementById('generateBtn');
+      const results = document.getElementById('results');
+      const ingredients = document.getElementById('ingredients').value.split(',').map(s => s.trim()).filter(Boolean);
+      const diet = document.getElementById('diet').value;
+      const count = parseInt(document.getElementById('count').value) || 3;
+
+      if (ingredients.length === 0) {
+        results.innerHTML = '<div class="error">Please enter at least one ingredient.</div>';
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = 'Generating...';
+      results.innerHTML = '<div class="loading">Finding recipes for you...</div>';
+
+      try {
+        const body = { ingredients, count };
+        if (diet) body.preferences = { restrictions: [diet] };
+
+        const res = await fetch('/recipes/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+
+        const data = await res.json();
+
+        if (!data.success) {
+          results.innerHTML = `<div class="error">${data.error}</div>`;
+          return;
+        }
+
+        let html = `<div class="result-header">Found ${data.count} recipes via ${data.source}</div>`;
+
+        data.recipes.forEach(recipe => {
+          const diets = (recipe.diets || []).map(d => `<span class="diet-tag">${d}</span>`).join('');
+          const ingredientItems = (recipe.ingredients || []).map(i =>
+            `<li>${i.amount} ${i.unit} ${i.name}</li>`
+          ).join('');
+          const steps = (recipe.instructions || []).map(s => `<li>${s}</li>`).join('');
+          const img = recipe.image ? `<img src="${recipe.image}" alt="${recipe.title}">` : '';
+
+          html += `
+            <div class="recipe-card">
+              ${img}
+              <div class="recipe-info">
+                <h3>${recipe.title}</h3>
+                <div class="recipe-meta">
+                  <span>${recipe.readyInMinutes} min</span>
+                  <span>${recipe.servings} servings</span>
+                  ${diets}
+                </div>
+                <div class="section-title">Ingredients</div>
+                <ul class="ingredient-list">${ingredientItems}</ul>
+                <div class="section-title">Instructions</div>
+                <div class="instructions"><ol>${steps}</ol></div>
+              </div>
+            </div>`;
+        });
+
+        results.innerHTML = html;
+      } catch (err) {
+        results.innerHTML = `<div class="error">Error: ${err.message}</div>`;
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Generate Recipes';
+      }
+    }
+  </script>
+</body>
+</html>
