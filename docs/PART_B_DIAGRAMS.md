@@ -333,19 +333,20 @@ sequenceDiagram
     actor User
     participant App as Mobile App
     participant API as API Service
-    participant Vision as Google Vision API
+    participant AIService as AI Service (FastAPI)
+    participant OpenAI as OpenAI API
     participant S3 as AWS S3
     participant DB as Firebase Firestore
     participant Spoonacular as Spoonacular API
-    participant OpenAI as OpenAI API
 
     User->>App: Capture photo of ingredients
-    App->>S3: Upload image
-    S3-->>App: Image URL
-    App->>API: POST /detect-ingredients (imageUrl)
-    API->>Vision: Analyze image
-    Vision-->>API: Detected labels and objects
-    API->>API: Map labels to ingredient names
+    App->>API: POST /ingredients/photo (image file)
+    API->>S3: Upload image
+    S3-->>API: Image URL
+    API->>AIService: POST /ingredients/identify (imageUrl)
+    AIService->>OpenAI: Analyze image for ingredients
+    OpenAI-->>AIService: Detected ingredients JSON
+    AIService-->>API: Ingredient list with confidence scores
     API-->>App: Ingredient list with confidence scores
     App-->>User: Display detected ingredients
 
