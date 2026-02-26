@@ -55,6 +55,19 @@ function removeIngredient(sessionId, ingredientId) {
   return { removed: true, ingredients: items };
 }
 
+function addIngredient(sessionId, name) {
+  const items = pendingSessions.get(sessionId);
+  if (!items) return { added: false, ingredients: null };
+
+  const item = {
+    id: crypto.randomUUID(),
+    name: name.trim().toLowerCase(),
+    confidence: 1.0,
+  };
+  items.push(item);
+  return { added: true, ingredients: items };
+}
+
 /**
  * Confirm a session: returns the final ingredient list and
  * removes the session from memory.
@@ -74,5 +87,6 @@ module.exports = {
   getSession,
   editIngredient,
   removeIngredient,
+  addIngredient,
   confirmSession,
 };
