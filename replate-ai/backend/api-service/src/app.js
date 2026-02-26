@@ -4,6 +4,7 @@ const path = require("path");
 const { checkExternalApiConnectivity } = require("./services/externalApiService");
 const recipeRoutes = require("./routes/recipes");
 const ingredientRoutes = require("./routes/ingredients");
+const inventoryRoutes = require("./routes/inventory");
 
 const app = express();
 const PORT = process.env.PORT || 5050;
@@ -14,6 +15,7 @@ app.use(express.static(path.join(__dirname, "..", "public")));
 // Routes
 app.use("/recipes", recipeRoutes);
 app.use("/ingredients", ingredientRoutes);
+app.use("/inventory", inventoryRoutes);
 
 // Simple root endpoint so you can quickly confirm the service is up.
 app.get("/", (req, res) => {
