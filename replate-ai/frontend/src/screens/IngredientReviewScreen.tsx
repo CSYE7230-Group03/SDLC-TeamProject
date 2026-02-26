@@ -9,10 +9,13 @@ import {
   Alert,
   ActivityIndicator,
 } from "react-native";
+import { NativeStackScreenProps } from "@react-navigation/native-stack";
+import { RootStackParamList } from "../navigation/AppNavigator";
 import {
   createReviewSession,
   editIngredientName,
   removeIngredient,
+  addIngredient,
   confirmIngredients,
 } from "../services/api";
 
@@ -22,16 +25,16 @@ interface Ingredient {
   confidence: number;
 }
 
-interface Props {
-  detectedIngredients: { name: string; confidence: number }[];
-}
+type Props = NativeStackScreenProps<RootStackParamList, "IngredientReview">;
 
-export default function IngredientReviewScreen({ detectedIngredients }: Props) {
+export default function IngredientReviewScreen({ route, navigation }: Props) {
+  const { detectedIngredients } = route.params;
 
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [ingredients, setIngredients] = useState<Ingredient[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState("");
+  const [newIngredientName, setNewIngredientName] = useState("");
   const [loading, setLoading] = useState(true);
   const [confirming, setConfirming] = useState(false);
 
@@ -102,6 +105,25 @@ export default function IngredientReviewScreen({ detectedIngredients }: Props) {
     );
   }
 
+  async function handleAddIngredient() {
+    if (!sessionId || newIngredientName.trim().length === 0) {
+      Alert.alert("Invalid", "Please enter an ingredient name");
+      return;
+    }
+
+    try {
+      const res = await addIngredient(sessionId, newIngredientName.trim());
+      if (res.success) {
+        setIngredients(res.ingredients);
+        setNewIngredientName("");
+      } else {
+        Alert.alert("Error", res.error || "Failed to add ingredient");
+      }
+    } catch {
+      Alert.alert("Error", "Could not connect to the server");
+    }
+  }
+
   async function handleConfirm() {
     if (!sessionId) return;
 
@@ -114,17 +136,14 @@ export default function IngredientReviewScreen({ detectedIngredients }: Props) {
     try {
       const res = await confirmIngredients(sessionId);
       if (res.success) {
-        Alert.alert(
-          "Success",
-          "Ingredients confirmed and added to your inventory!",
-          [{ text: "OK" }]
-        );
+        const confirmedNames = res.ingredients.map((i) => i.name);
+        navigation.navigate("RecipeGeneration", { ingredients: confirmedNames });
       } else {
         Alert.alert("Error", res.error || "Failed to confirm ingredients");
+        setConfirming(false);
       }
     } catch {
       Alert.alert("Error", "Could not connect to the server");
-    } finally {
       setConfirming(false);
     }
   }
@@ -222,8 +241,31 @@ export default function IngredientReviewScreen({ detectedIngredients }: Props) {
           keyExtractor={(item) => item.id}
           renderItem={renderItem}
           contentContainerStyle={styles.list}
+          scrollEnabled={false}
         />
       )}
+
+      <View style={styles.addSection}>
+        <Text style={styles.addSectionTitle}>Add Ingredient</Text>
+        <View style={styles.addRow}>
+          <TextInput
+            style={styles.addInput}
+            placeholder="New ingredient name..."
+            placeholderTextColor="#999"
+            value={newIngredientName}
+            onChangeText={setNewIngredientName}
+            returnKeyType="done"
+            onSubmitEditing={handleAddIngredient}
+          />
+          <TouchableOpacity
+            style={styles.addButton}
+            onPress={handleAddIngredient}
+            disabled={newIngredientName.trim().length === 0}
+          >
+            <Text style={styles.addButtonText}>Add</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
 
       <TouchableOpacity
         style={[
@@ -281,7 +323,7 @@ const styles = StyleSheet.create({
   },
   list: {
     paddingHorizontal: 16,
-    paddingBottom: 16,
+    paddingBottom: 8,
   },
   itemContainer: {
     backgroundColor: "#fff",
@@ -373,6 +415,46 @@ const styles = StyleSheet.create({
   },
   cancelButtonText: {
     color: "#666",
+    fontWeight: "600",
+    fontSize: 14,
+  },
+  addSection: {
+    backgroundColor: "#fff",
+    borderTopWidth: 1,
+    borderTopColor: "#eee",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  addSectionTitle: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#666",
+    marginBottom: 8,
+    textTransform: "uppercase",
+  },
+  addRow: {
+    flexDirection: "row",
+    gap: 8,
+    alignItems: "center",
+  },
+  addInput: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: "#ddd",
+    borderRadius: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 14,
+    backgroundColor: "#f9f9f9",
+  },
+  addButton: {
+    backgroundColor: "#4CAF50",
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 6,
+  },
+  addButtonText: {
+    color: "#fff",
     fontWeight: "600",
     fontSize: 14,
   },

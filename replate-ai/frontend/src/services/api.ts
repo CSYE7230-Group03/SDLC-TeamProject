@@ -19,6 +19,33 @@ interface IngredientsResponse {
   error?: string;
 }
 
+interface DetectionResponse {
+  success: boolean;
+  imageUrl?: string;
+  ingredients: { name: string; confidence: number }[];
+  error?: string;
+}
+
+export interface Recipe {
+  id: number;
+  title: string;
+  image?: string;
+  readyInMinutes?: number;
+  servings?: number;
+  sourceUrl?: string;
+  summary?: string;
+  ingredients?: { name: string; amount: number; unit: string }[];
+  instructions?: string[];
+}
+
+interface RecipeResponse {
+  success: boolean;
+  source?: string;
+  count: number;
+  recipes: Recipe[];
+  error?: string;
+}
+
 /**
  * Create a review session from detected ingredients.
  */
@@ -88,5 +115,57 @@ export async function confirmIngredients(
     `${API_BASE_URL}/inventory/review/${sessionId}/confirm`,
     { method: "POST" }
   );
+  return res.json();
+}
+
+/**
+ * Add a new ingredient to a review session.
+ */
+export async function addIngredient(
+  sessionId: string,
+  name: string
+): Promise<IngredientsResponse> {
+  const res = await fetch(
+    `${API_BASE_URL}/inventory/review/${sessionId}/item`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name }),
+    }
+  );
+  return res.json();
+}
+
+/**
+ * Detect ingredients from an image via photo upload.
+ */
+export async function detectIngredients(imageUri: string): Promise<DetectionResponse> {
+  const formData = new FormData();
+  formData.append("image", {
+    uri: imageUri,
+    type: "image/jpeg",
+    name: "ingredient-photo.jpg",
+  } as any);
+
+  const res = await fetch(`${API_BASE_URL}/ingredients/photo`, {
+    method: "POST",
+    body: formData,
+  });
+  return res.json();
+}
+
+/**
+ * Generate recipes from a list of ingredients.
+ */
+export async function generateRecipes(
+  ingredients: string[],
+  preferences?: { restrictions?: string[]; maxCookingTime?: number },
+  count: number = 3
+): Promise<RecipeResponse> {
+  const res = await fetch(`${API_BASE_URL}/recipes/generate`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ ingredients, preferences, count }),
+  });
   return res.json();
 }

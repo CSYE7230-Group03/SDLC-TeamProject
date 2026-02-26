@@ -4,6 +4,7 @@ const {
   getSession,
   editIngredient,
   removeIngredient,
+  addIngredient,
   confirmSession,
 } = require("../services/inventoryService");
 
@@ -134,6 +135,45 @@ router.delete(
       });
     } catch (err) {
       console.error("[InventoryRoute] Error removing ingredient:", err.message);
+      return res.status(500).json({ success: false, error: err.message });
+    }
+  }
+);
+
+/**
+ * POST /inventory/review/:sessionId/item
+ *
+ * Add a new ingredient to a pending review session.
+ *
+ * Request body:
+ * { "name": "new ingredient name" }
+ */
+router.post(
+  "/review/:sessionId/item",
+  async (req, res) => {
+    try {
+      const { sessionId } = req.params;
+      const { name } = req.body;
+
+      if (!name || typeof name !== "string" || name.trim().length === 0) {
+        return res.status(400).json({
+          success: false,
+          error: "name is required and must be a non-empty string",
+        });
+      }
+
+      const result = addIngredient(sessionId, name);
+
+      if (!result.ingredients) {
+        return res.status(404).json({ success: false, error: "Session not found" });
+      }
+
+      return res.status(201).json({
+        success: true,
+        ingredients: result.ingredients,
+      });
+    } catch (err) {
+      console.error("[InventoryRoute] Error adding ingredient:", err.message);
       return res.status(500).json({ success: false, error: err.message });
     }
   }
