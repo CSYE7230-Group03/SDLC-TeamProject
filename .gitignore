@@ -4,6 +4,8 @@ node_modules/
 # Virtual environment
 venv/
 
+package-lock.json
+
 # Python cache
 __pycache__/
 *.pyc

@@ -6,7 +6,10 @@ const {
   removeIngredient,
   addIngredient,
   confirmSession,
+  saveIngredient,
+  saveIngredientsBatch
 } = require("../services/inventoryService");
+const { verifyFirebaseToken } = require("../../../../../sdk/firebase/firestore");
 
 const router = express.Router();
 
@@ -185,24 +188,69 @@ router.post(
  * Confirm the reviewed ingredients and finalize them into the inventory.
  * Destroys the pending session.
  */
-router.post("/review/:sessionId/confirm", async (req, res) => {
+router.post("/review/:sessionId/confirm", verifyFirebaseToken, async (req, res) => {
   try {
     const { sessionId } = req.params;
+    const userId = req.userId;
     const result = confirmSession(sessionId);
 
     if (!result.confirmed) {
       return res.status(404).json({ success: false, error: "Session not found" });
     }
 
+    //Saves the confirmed ingredient list to inventory
+    const savedItems = await saveIngredientsBatch(
+        userId,
+        result.ingredients
+      );
+
     return res.status(200).json({
       success: true,
       message: "Ingredients confirmed and finalized in inventory",
-      ingredients: result.ingredients,
+      ingredients: savedItems,
     });
   } catch (err) {
     console.error("[InventoryRoute] Error confirming ingredients:", err.message);
     return res.status(500).json({ success: false, error: err.message });
   }
+});
+
+/**
+ * POST /inventory/update
+ *
+ * Store userID and ingredient list to the inventory via firestore SDK
+ *
+ * Request body:
+ * { "userID": "userID",
+ *    "items": [{
+      "ingredientName": "",
+      "quant": ,
+      "unit": "",
+      "expiryDate": "",
+      "s3Url": ""
+    }] }
+ */
+router.post("/update", verifyFirebaseToken, async (req, res) => {
+    try{
+        const userId = req.userId;
+        const { items } = req.body;
+
+        if (!Array.isArray(items) || items.length === 0) {
+            return res.status(400).json({ message: "No items to save in Inventory" });
+        }
+
+        const savedItems = await saveIngredientsBatch(userId, items);
+
+        res.status(201).json({
+            message: "Ingredients saved successfully",
+            items: savedItems,
+        });
+      
+    }catch(err){
+        res.status(500).json({
+            message: err.message || "Failed to save ingredients",
+        });
+    }
 });
 
 module.exports = router;

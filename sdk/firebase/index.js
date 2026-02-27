@@ -1,5 +1,5 @@
 const admin = require('firebase-admin');
-
+const serviceAccount = require("../../replate-ai-firebase-adminsdk.json");
 let firebaseApp = null;
 
 /**
@@ -12,13 +12,13 @@ function initializeFirebase() {
   }
 
   const projectId = process.env.FIREBASE_PROJECT_ID;
-  
-  if (!projectId) {
-    throw new Error('FIREBASE_PROJECT_ID environment variable is required');
-  }
+  // if (!projectId) {
+  //   throw new Error('FIREBASE_PROJECT_ID environment variable is required');
+  // }
 
   firebaseApp = admin.initializeApp({
-    projectId: projectId
+    // projectId: projectId
+    credential: admin.credential.cert(serviceAccount)
   });
 
   return firebaseApp;
