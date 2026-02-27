@@ -1,4 +1,4 @@
-const { getFirestore, admin } = require('./index');
+const { getFirestore, admin, getAuth } = require('./index');
 
 /**
  * Create a document in Firestore
@@ -58,9 +58,9 @@ async function deleteDocument(collection, docId) {
  * @param {Object} filters - Query filters
  * @returns {Promise<Array>}
  */
-async function queryDocuments(collection, filters = {}) {
+async function queryDocuments(path, filters = {}) {
   const db = getFirestore();
-  let query = db.collection(collection);
+  let query = db.collection(path);
   
   Object.entries(filters).forEach(([field, value]) => {
     query = query.where(field, '==', value);
@@ -70,10 +70,55 @@ async function queryDocuments(collection, filters = {}) {
   return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 }
 
+async function addSubDocument(collection, docId, subCollection, data) {
+  const db = getFirestore();
+
+  const docRef = await db
+    .collection(collection)
+    .doc(docId)
+    .collection(subCollection)
+    .add(data);
+
+  return { id: docRef.id, ...data };
+}
+
+/**
+ * Middleware to verify Firebase ID tokens.
+ *
+ * This function checks the "Authorization" header for a Bearer token,
+ * verifies it using Firebase Admin SDK, and attaches the user's UID
+ * to the request object (`req.userId`) for downstream route handlers.
+ *
+ * Usage:
+ * router.post("/some-route", verifyFirebaseToken, (req, res) => { ... });
+ */
+async function verifyFirebaseToken(req, res, next) {
+  try {
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    const token = authHeader.split("Bearer ")[1];
+    const decodedToken = await getAuth().verifyIdToken(token);
+    req.userId = decodedToken.uid;
+    next();
+  } catch (err) {
+    console.log(err.message)
+    return res.status(401).json({ message: "Invalid token" });
+  }
+}
+
+const { FieldValue } = admin.firestore;
+
 module.exports = {
   createDocument,
   readDocument,
   updateDocument,
   deleteDocument,
-  queryDocuments
+  queryDocuments,
+  verifyFirebaseToken,
+  addSubDocument,
+  serverTimestamp: () => FieldValue.serverTimestamp()
 };
