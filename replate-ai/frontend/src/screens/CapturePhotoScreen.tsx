@@ -90,7 +90,12 @@ export default function CapturePhotoScreen({ navigation }: Props) {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Capture Ingredients</Text>
+      <View style={styles.header}>
+        <Text style={styles.title}>Capture Ingredients</Text>
+        <TouchableOpacity style={styles.logoutButton} onPress={() => {}}>
+          <Text style={styles.logoutText}>Log Out</Text>
+        </TouchableOpacity>
+      </View>
       <Text style={styles.subtitle}>
         Take a photo or pick an image of your ingredients
       </Text>
@@ -151,11 +156,28 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 24,
   },
+  header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 8,
+  },
   title: {
     fontSize: 24,
     fontWeight: "bold",
     color: "#333",
-    marginBottom: 8,
+  },
+  logoutButton: {
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+  },
+  logoutText: {
+    fontSize: 13,
+    color: "#666",
+    fontWeight: "600",
   },
   subtitle: {
     fontSize: 14,
