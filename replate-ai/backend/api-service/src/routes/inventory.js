@@ -6,12 +6,37 @@ const {
   removeIngredient,
   addIngredient,
   confirmSession,
-  saveIngredient,
-  saveIngredientsBatch
+  saveIngredientsBatch,
+  updateIngredient,
+  getUserInventory
 } = require("../services/inventoryService");
 const { verifyFirebaseToken } = require("../../../../../sdk/firebase/firestore");
 
 const router = express.Router();
+
+
+/**
+ * GET /inventory
+ *
+ * Retrieve all inventory items for the authenticated user.
+ * Each item includes a computed isExpired boolean so the client
+ * can clearly distinguish usable vs expired ingredients.
+ *
+ */
+router.get("/", verifyFirebaseToken, async (req, res) => {
+  try {
+    const userId = req.userId;
+    const items = await getUserInventory(userId);
+
+    return res.status(200).json({
+      success: true,
+      items,
+    });
+  } catch (err) {
+    console.error("[InventoryRoute] Error fetching inventory:", err.message);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
 
 /**
  * POST /inventory/review
@@ -251,6 +276,47 @@ router.post("/update", verifyFirebaseToken, async (req, res) => {
             message: err.message || "Failed to save ingredients",
         });
     }
+});
+
+router.patch("/item/:itemId", verifyFirebaseToken, async(req, res) => {
+  try{
+    const userId = req.userId;
+    const { itemId } = req.params;
+    const { quant, unit, expiryDate } = req.body;
+    console.log(req.body);
+
+    if (quant === undefined && unit === undefined && expiryDate === undefined) {
+      return res.status(400).json({
+        success: false,
+        error: "At least one field (quant, unit, expiryDate) is required",
+      });
+    }
+
+    if (quant !== undefined && (typeof quant !== "number" || quant < 0)) {
+      return res.status(400).json({
+        success: false,
+        error: "Quantity must be a non-negative number",
+      });
+    }
+
+    if (expiryDate !== undefined && isNaN(Date.parse(expiryDate))) {
+      return res.status(400).json({
+        success: false,
+        error: "ExpiryDate must be a valid date",
+      });
+    }
+
+    const updated = await updateIngredient(userId, itemId, {
+      quant,
+      unit,
+      expiryDate,
+    });
+    console.log(updated);
+
+    return res.status(200).json({ success: true, item: updated });
+  }catch(err){
+    console.log("Error in patch")
+  }
 });
 
 module.exports = router;

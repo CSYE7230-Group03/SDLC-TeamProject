@@ -9,13 +9,18 @@
 
 const crypto = require("crypto");
 // const admin = require("firebase-admin");
-const { createDocument, addSubDocument, serverTimestamp, queryDocuments} = require("../../../../../sdk/firebase/firestore");
+const { createDocument, addSubDocument, serverTimestamp, queryDocuments, updateSubDocument} = require("../../../../../sdk/firebase/firestore");
 // const { getFirestore } = require("../../../../../sdk/firebase/index");
 
 // In-memory store keyed by sessionId.
 const pendingSessions = new Map();
 
 const DEFAULT_EXPIRY = "2099-12-12";
+
+function checkIsExpired(expiryDate) {
+  if (!expiryDate || expiryDate === DEFAULT_EXPIRY) return false;
+  return new Date(expiryDate) < new Date();
+}
 
 /**
  * Create a new review session from detected ingredients.
@@ -120,7 +125,7 @@ async function saveIngredient(userId, ingredient) {
         { ingredientName: ingredient.ingredientName.toLowerCase() }
     );
 
-    if (existingItems > 0) {
+    if (existingItems.length > 0) {
         throw new Error("Ingredient already exists");
     }
 
@@ -130,7 +135,7 @@ async function saveIngredient(userId, ingredient) {
         quant: ingredient.quant || 1,
         unit: ingredient.unit || "unit",
         expiryDate: ingredient.expiryDate || DEFAULT_EXPIRY,
-        isExpired: false,
+        isExpired: checkIsExpired(ingredient.expiryDate),
         s3Url: ingredient.s3Url || null,
         createdAt: serverTimestamp()
     };
@@ -174,7 +179,65 @@ async function saveIngredientsBatch(userId, items) {
     }
   
     return savedItems;
+}
+
+async function updateIngredient(userId, itemId, updates){
+  const path = `IngredientInventory/${userId}/items/`;
+  const updateData = {};
+
+  if(updates.quant !== undefined) updateData.quant = updates.quant;
+
+  if(updates.unit !== undefined) updateData.unit = updates.unit;
+
+  if(updates.expiryDate !== undefined) {
+    updateData.expiryDate = updates.expiryDate;
+    updateData.isExpired = checkIsExpired(updates.expiryDate);
   }
+
+  updateData.updatedAt = serverTimestamp();
+
+  return await updateSubDocument(path, itemId, updateData);
+}
+
+/**
+ * Fetches all inventory items for a user and recomputes expiry status.
+ *
+ * Why recompute at read time?
+ * An item saved yesterday with expiryDate "2026-03-13" was not expired then,
+ * but IS expired today. Recomputing avoids stale isExpired flags without
+ * needing a background job.
+ *
+ * Also updates Firestore if any item's isExpired flag has gone stale,
+ * so the DB stays consistent.
+ *
+ * @param {string} userId
+ * @returns {Promise<Array<Object>>} items with accurate isExpired flags
+ */
+async function getUserInventory(userId) {
+  const path = `IngredientInventory/${userId}/items`;
+  const items = await queryDocuments(path, {});
+
+  const results = [];
+
+  for (const item of items) {
+    const currentExpired = checkIsExpired(item.expiryDate);
+
+    // If the stored flag is stale, update it in Firestore
+    if (item.isExpired !== currentExpired) {
+      await updateSubDocument(path, item.id, {
+        isExpired: currentExpired,
+        updatedAt: serverTimestamp(),
+      });
+    }
+
+    results.push({
+      ...item,
+      isExpired: currentExpired,
+    });
+  }
+
+  return results;
+}
 
 module.exports = {
   createSession,
@@ -184,5 +247,7 @@ module.exports = {
   addIngredient,
   confirmSession,
   saveIngredient,
-  saveIngredientsBatch
+  saveIngredientsBatch,
+  updateIngredient,
+  getUserInventory
 };

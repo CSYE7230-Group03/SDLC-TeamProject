@@ -110,6 +110,36 @@ async function verifyFirebaseToken(req, res, next) {
   }
 }
 
+
+/**
+ * Update a document at any depth using a full path.
+ *
+ * Accepts paths like:
+ *   "IngredientInventory/userId123/items"  + docId
+ *   "TopLevelCollection"                   + docId
+ *
+ * This is consistent with how queryDocuments(path, filters) works.
+ *
+ * @param {string} path   - Collection path (e.g. "IngredientInventory/uid/items")
+ * @param {string} docId  - Document ID to update
+ * @param {Object} data   - Fields to update (shallow merge)
+ * @returns {Promise<Object>} - Updated document with id
+ */
+async function updateSubDocument(path, docId, data) {
+  const db = getFirestore();
+  const docRef = db.collection(path).doc(docId);
+
+  const snapshot = await docRef.get();
+  if (!snapshot.exists) {
+    throw new Error(`Document ${docId} not found in ${path}`);
+  }
+
+  await docRef.update(data);
+
+  const updated = await docRef.get();
+  return { id: updated.id, ...updated.data() };
+}
+
 const { FieldValue } = admin.firestore;
 
 module.exports = {
@@ -120,5 +150,6 @@ module.exports = {
   queryDocuments,
   verifyFirebaseToken,
   addSubDocument,
+  updateSubDocument,
   serverTimestamp: () => FieldValue.serverTimestamp()
 };
