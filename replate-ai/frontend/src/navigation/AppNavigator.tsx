@@ -3,8 +3,14 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import CapturePhotoScreen from "../screens/CapturePhotoScreen";
 import IngredientReviewScreen from "../screens/IngredientReviewScreen";
 import RecipeGenerationScreen from "../screens/RecipeGenerationScreen";
+import LoginScreen from "../screens/LoginScreen";
+import SignupScreen from "../screens/SignupScreen";
+import ForgotPasswordScreen from "../screens/ForgotPasswordScreen";
 
 export type RootStackParamList = {
+  Login: undefined;
+  Signup: undefined;
+  ForgotPassword: undefined;
   Capture: undefined;
   IngredientReview: {
     detectedIngredients: { name: string; confidence: number }[];
@@ -23,6 +29,21 @@ export default function AppNavigator() {
         headerShown: true,
       }}
     >
+      <Stack.Screen
+        name="Login"
+        component={LoginScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="Signup"
+        component={SignupScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="ForgotPassword"
+        component={ForgotPasswordScreen}
+        options={{ headerShown: false }}
+      />
       <Stack.Screen
         name="Capture"
         component={CapturePhotoScreen}
