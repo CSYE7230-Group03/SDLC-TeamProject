@@ -14,10 +14,10 @@ import {
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../navigation/AppNavigator";
 import { signUp, signIn, saveSession } from "../services/api";
+import { EMAIL_REGEX } from "../utils/validation";
+import { authStyles } from "../styles/authStyles";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Signup">;
-
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export default function SignupScreen({ navigation }: Props) {
   const [displayName, setDisplayName] = useState("");
@@ -105,7 +105,8 @@ export default function SignupScreen({ navigation }: Props) {
       } else {
         setFormError("Account creation failed. Please try again.");
       }
-    } catch {
+    } catch (err) {
+      console.error("[SignupScreen] signUp error:", err);
       setFormError("Could not connect to the server. Check your internet connection and try again.");
     } finally {
       setLoading(false);
@@ -131,13 +132,13 @@ export default function SignupScreen({ navigation }: Props) {
           <Text style={styles.subtitle}>Join Replate AI today</Text>
 
           {formError ? (
-            <View style={styles.formErrorBox}>
-              <Text style={styles.formErrorText}>{formError}</Text>
+            <View style={authStyles.formErrorBox}>
+              <Text style={authStyles.formErrorText}>{formError}</Text>
             </View>
           ) : null}
 
           <TextInput
-            style={[styles.input, displayNameError ? styles.inputError : null]}
+            style={[styles.input, displayNameError ? authStyles.inputError : null]}
             placeholder="Display name"
             placeholderTextColor="#b0b0b0"
             value={displayName}
@@ -148,10 +149,10 @@ export default function SignupScreen({ navigation }: Props) {
             autoCorrect={false}
             returnKeyType="next"
           />
-          {displayNameError ? <Text style={styles.fieldError}>{displayNameError}</Text> : null}
+          {displayNameError ? <Text style={authStyles.fieldError}>{displayNameError}</Text> : null}
 
           <TextInput
-            style={[styles.input, emailError ? styles.inputError : null]}
+            style={[styles.input, emailError ? authStyles.inputError : null]}
             placeholder="Email address"
             placeholderTextColor="#b0b0b0"
             value={email}
@@ -165,10 +166,10 @@ export default function SignupScreen({ navigation }: Props) {
             autoCorrect={false}
             returnKeyType="next"
           />
-          {emailError ? <Text style={styles.fieldError}>{emailError}</Text> : null}
+          {emailError ? <Text style={authStyles.fieldError}>{emailError}</Text> : null}
 
           <TextInput
-            style={[styles.input, passwordError ? styles.inputError : null]}
+            style={[styles.input, passwordError ? authStyles.inputError : null]}
             placeholder="Password"
             placeholderTextColor="#b0b0b0"
             value={password}
@@ -186,13 +187,13 @@ export default function SignupScreen({ navigation }: Props) {
             returnKeyType="next"
           />
           {passwordError ? (
-            <Text style={styles.fieldError}>{passwordError}</Text>
+            <Text style={authStyles.fieldError}>{passwordError}</Text>
           ) : (
-            <Text style={styles.fieldHint}>Minimum 6 characters</Text>
+            <Text style={authStyles.fieldHint}>Minimum 6 characters</Text>
           )}
 
           <TextInput
-            style={[styles.input, confirmPasswordError ? styles.inputError : null]}
+            style={[styles.input, confirmPasswordError ? authStyles.inputError : null]}
             placeholder="Confirm password"
             placeholderTextColor="#b0b0b0"
             value={confirmPassword}
@@ -208,7 +209,7 @@ export default function SignupScreen({ navigation }: Props) {
             returnKeyType="done"
             onSubmitEditing={handleSignUp}
           />
-          {confirmPasswordError ? <Text style={styles.fieldError}>{confirmPasswordError}</Text> : null}
+          {confirmPasswordError ? <Text style={authStyles.fieldError}>{confirmPasswordError}</Text> : null}
 
           <TouchableOpacity
             style={[styles.button, loading && styles.buttonDisabled]}
@@ -277,20 +278,6 @@ const styles = StyleSheet.create({
     color: "#888",
     marginBottom: 32,
   },
-  formErrorBox: {
-    backgroundColor: "#FFF0F0",
-    borderWidth: 1,
-    borderColor: "#FFCDD2",
-    borderRadius: 8,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    marginBottom: 16,
-  },
-  formErrorText: {
-    fontSize: 13,
-    color: "#C62828",
-    lineHeight: 18,
-  },
   input: {
     backgroundColor: "#f8f9fa",
     borderWidth: 1,
@@ -301,22 +288,6 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: "#1a1a1a",
     marginBottom: 4,
-  },
-  inputError: {
-    borderColor: "#E53935",
-    backgroundColor: "#FFF8F8",
-  },
-  fieldError: {
-    fontSize: 12,
-    color: "#E53935",
-    marginBottom: 10,
-    marginLeft: 4,
-  },
-  fieldHint: {
-    fontSize: 12,
-    color: "#aaa",
-    marginBottom: 10,
-    marginLeft: 4,
   },
   button: {
     backgroundColor: "#2196F3",

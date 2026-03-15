@@ -76,9 +76,12 @@ export async function loadStoredSession(): Promise<boolean> {
       await saveSession(result.idToken, result.refreshToken ?? refreshToken);
       return true;
     }
+    // Token was explicitly rejected — clear it
     await clearSession();
     return false;
   } catch {
+    // Network error — don't clear the session, just fail silently.
+    // The user can retry when connectivity is restored.
     return false;
   }
 }
@@ -307,7 +310,7 @@ export async function generateRecipes(
 ): Promise<RecipeResponse> {
   const res = await fetch(`${API_BASE_URL}/recipes/generate`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ...authHeaders() },
     body: JSON.stringify({ ingredients, preferences, count }),
   });
   return parseResponse<RecipeResponse>(res);

@@ -14,10 +14,10 @@ import {
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../navigation/AppNavigator";
 import { forgotPassword } from "../services/api";
+import { EMAIL_REGEX } from "../utils/validation";
+import { authStyles } from "../styles/authStyles";
 
 type Props = NativeStackScreenProps<RootStackParamList, "ForgotPassword">;
-
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export default function ForgotPasswordScreen({ navigation }: Props) {
   const [email, setEmail] = useState("");
@@ -48,7 +48,8 @@ export default function ForgotPasswordScreen({ navigation }: Props) {
     try {
       await forgotPassword(email.trim());
       setSubmitted(true);
-    } catch {
+    } catch (err) {
+      console.error("[ForgotPasswordScreen] error:", err);
       setFormError("Could not connect to the server. Check your internet connection and try again.");
     } finally {
       setLoading(false);
@@ -100,13 +101,13 @@ export default function ForgotPasswordScreen({ navigation }: Props) {
           </Text>
 
           {formError ? (
-            <View style={styles.formErrorBox}>
-              <Text style={styles.formErrorText}>{formError}</Text>
+            <View style={authStyles.formErrorBox}>
+              <Text style={authStyles.formErrorText}>{formError}</Text>
             </View>
           ) : null}
 
           <TextInput
-            style={[styles.input, emailError ? styles.inputError : null]}
+            style={[styles.input, emailError ? authStyles.inputError : null]}
             placeholder="Email address"
             placeholderTextColor="#b0b0b0"
             value={email}
@@ -121,7 +122,7 @@ export default function ForgotPasswordScreen({ navigation }: Props) {
             returnKeyType="done"
             onSubmitEditing={handleSendReset}
           />
-          {emailError ? <Text style={styles.fieldError}>{emailError}</Text> : null}
+          {emailError ? <Text style={authStyles.fieldError}>{emailError}</Text> : null}
 
           <TouchableOpacity
             style={[styles.button, loading && styles.buttonDisabled]}
@@ -206,20 +207,6 @@ const styles = StyleSheet.create({
     color: "#1a1a1a",
     fontWeight: "600",
   },
-  formErrorBox: {
-    backgroundColor: "#FFF0F0",
-    borderWidth: 1,
-    borderColor: "#FFCDD2",
-    borderRadius: 8,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    marginBottom: 16,
-  },
-  formErrorText: {
-    fontSize: 13,
-    color: "#C62828",
-    lineHeight: 18,
-  },
   input: {
     backgroundColor: "#f8f9fa",
     borderWidth: 1,
@@ -230,16 +217,6 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: "#1a1a1a",
     marginBottom: 4,
-  },
-  inputError: {
-    borderColor: "#E53935",
-    backgroundColor: "#FFF8F8",
-  },
-  fieldError: {
-    fontSize: 12,
-    color: "#E53935",
-    marginBottom: 20,
-    marginLeft: 4,
   },
   button: {
     backgroundColor: "#2196F3",

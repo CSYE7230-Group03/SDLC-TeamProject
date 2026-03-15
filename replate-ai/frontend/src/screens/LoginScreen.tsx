@@ -14,10 +14,10 @@ import {
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../navigation/AppNavigator";
 import { signIn, saveSession } from "../services/api";
+import { EMAIL_REGEX } from "../utils/validation";
+import { authStyles } from "../styles/authStyles";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Login">;
-
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function mapSignInError(error: string): string {
   if (error.toLowerCase().includes("invalid email or password")) {
@@ -77,7 +77,8 @@ export default function LoginScreen({ navigation }: Props) {
       } else {
         setFormError(mapSignInError(result.error || ""));
       }
-    } catch {
+    } catch (err) {
+      console.error("[LoginScreen] signIn error:", err);
       setFormError("Could not connect to the server. Check your internet connection and try again.");
     } finally {
       setLoading(false);
@@ -103,13 +104,13 @@ export default function LoginScreen({ navigation }: Props) {
           <Text style={styles.subtitle}>Sign in to your account</Text>
 
           {formError ? (
-            <View style={styles.formErrorBox}>
-              <Text style={styles.formErrorText}>{formError}</Text>
+            <View style={authStyles.formErrorBox}>
+              <Text style={authStyles.formErrorText}>{formError}</Text>
             </View>
           ) : null}
 
           <TextInput
-            style={[styles.input, emailError ? styles.inputError : null]}
+            style={[styles.input, emailError ? authStyles.inputError : null]}
             placeholder="Email address"
             placeholderTextColor="#b0b0b0"
             value={email}
@@ -123,10 +124,10 @@ export default function LoginScreen({ navigation }: Props) {
             autoCorrect={false}
             returnKeyType="next"
           />
-          {emailError ? <Text style={styles.fieldError}>{emailError}</Text> : null}
+          {emailError ? <Text style={authStyles.fieldError}>{emailError}</Text> : null}
 
           <TextInput
-            style={[styles.input, passwordError ? styles.inputError : null]}
+            style={[styles.input, passwordError ? authStyles.inputError : null]}
             placeholder="Password"
             placeholderTextColor="#b0b0b0"
             value={password}
@@ -139,7 +140,7 @@ export default function LoginScreen({ navigation }: Props) {
             returnKeyType="done"
             onSubmitEditing={handleSignIn}
           />
-          {passwordError ? <Text style={styles.fieldError}>{passwordError}</Text> : null}
+          {passwordError ? <Text style={authStyles.fieldError}>{passwordError}</Text> : null}
 
           <TouchableOpacity
             style={styles.forgotPassword}
@@ -215,20 +216,6 @@ const styles = StyleSheet.create({
     color: "#888",
     marginBottom: 32,
   },
-  formErrorBox: {
-    backgroundColor: "#FFF0F0",
-    borderWidth: 1,
-    borderColor: "#FFCDD2",
-    borderRadius: 8,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    marginBottom: 16,
-  },
-  formErrorText: {
-    fontSize: 13,
-    color: "#C62828",
-    lineHeight: 18,
-  },
   input: {
     backgroundColor: "#f8f9fa",
     borderWidth: 1,
@@ -239,16 +226,6 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: "#1a1a1a",
     marginBottom: 4,
-  },
-  inputError: {
-    borderColor: "#E53935",
-    backgroundColor: "#FFF8F8",
-  },
-  fieldError: {
-    fontSize: 12,
-    color: "#E53935",
-    marginBottom: 10,
-    marginLeft: 4,
   },
   forgotPassword: {
     alignSelf: "flex-end",
