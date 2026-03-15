@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
+import { ActivityIndicator, View } from "react-native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import CapturePhotoScreen from "../screens/CapturePhotoScreen";
 import IngredientReviewScreen from "../screens/IngredientReviewScreen";
@@ -6,6 +7,7 @@ import RecipeGenerationScreen from "../screens/RecipeGenerationScreen";
 import LoginScreen from "../screens/LoginScreen";
 import SignupScreen from "../screens/SignupScreen";
 import ForgotPasswordScreen from "../screens/ForgotPasswordScreen";
+import { loadStoredSession } from "../services/api";
 import RecipeHistoryScreen from "../screens/RecipeHistoryScreen";
 
 export type RootStackParamList = {
@@ -25,11 +27,31 @@ export type RootStackParamList = {
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export default function AppNavigator() {
+  const [initializing, setInitializing] = useState(true);
+  const [initialRoute, setInitialRoute] =
+    useState<keyof RootStackParamList>("Login");
+
+  useEffect(() => {
+    loadStoredSession().then((loggedIn) => {
+      setInitialRoute(loggedIn ? "Capture" : "Login");
+      setInitializing(false);
+    });
+  }, []);
+
+  if (initializing) {
+    return (
+      <View
+        style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#fff" }}
+      >
+        <ActivityIndicator size="large" color="#2d6a4f" />
+      </View>
+    );
+  }
+
   return (
     <Stack.Navigator
-      screenOptions={{
-        headerShown: true,
-      }}
+      initialRouteName={initialRoute}
+      screenOptions={{ headerShown: true }}
     >
       <Stack.Screen
         name="Login"

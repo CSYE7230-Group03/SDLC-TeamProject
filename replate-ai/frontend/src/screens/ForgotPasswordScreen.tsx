@@ -5,7 +5,6 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  Alert,
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
@@ -14,6 +13,9 @@ import {
 } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../navigation/AppNavigator";
+import { forgotPassword } from "../services/api";
+import { EMAIL_REGEX } from "../utils/validation";
+import { authStyles } from "../styles/authStyles";
 
 type Props = NativeStackScreenProps<RootStackParamList, "ForgotPassword">;
 
@@ -22,17 +24,36 @@ export default function ForgotPasswordScreen({ navigation }: Props) {
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
-  function handleSendReset() {
+  const [emailError, setEmailError] = useState("");
+  const [formError, setFormError] = useState("");
+
+  function validate(): boolean {
     if (!email.trim()) {
-      Alert.alert("Missing Email", "Please enter your email address.");
-      return;
+      setEmailError("Email is required.");
+      return false;
     }
+    if (!EMAIL_REGEX.test(email.trim())) {
+      setEmailError("Please enter a valid email address.");
+      return false;
+    }
+    setEmailError("");
+    return true;
+  }
+
+  async function handleSendReset() {
+    setFormError("");
+    if (!validate()) return;
+
     setLoading(true);
-    // TODO: wire real Firebase Auth sendPasswordResetEmail in backend integration task
-    setTimeout(() => {
-      setLoading(false);
+    try {
+      await forgotPassword(email.trim());
       setSubmitted(true);
-    }, 800);
+    } catch (err) {
+      console.error("[ForgotPasswordScreen] error:", err);
+      setFormError("Could not connect to the server. Check your internet connection and try again.");
+    } finally {
+      setLoading(false);
+    }
   }
 
   if (submitted) {
@@ -45,8 +66,8 @@ export default function ForgotPasswordScreen({ navigation }: Props) {
           <Text style={styles.confirmIcon}>✉️</Text>
           <Text style={styles.title}>Check your email</Text>
           <Text style={styles.subtitle}>
-            We sent a password reset link to{"\n"}
-            <Text style={styles.emailHighlight}>{email.trim()}</Text>
+            If <Text style={styles.emailHighlight}>{email.trim()}</Text> is registered,{"\n"}
+            we've sent a password reset link.
           </Text>
           <TouchableOpacity
             style={styles.button}
@@ -61,7 +82,6 @@ export default function ForgotPasswordScreen({ navigation }: Props) {
 
   return (
     <SafeAreaView style={styles.safe}>
-      {/* Branded header */}
       <View style={styles.header}>
         <Text style={styles.brand}>🌿 ReplateAI</Text>
       </View>
@@ -80,16 +100,29 @@ export default function ForgotPasswordScreen({ navigation }: Props) {
             Enter your email and we'll send you a reset link
           </Text>
 
+          {formError ? (
+            <View style={authStyles.formErrorBox}>
+              <Text style={authStyles.formErrorText}>{formError}</Text>
+            </View>
+          ) : null}
+
           <TextInput
-            style={styles.input}
+            style={[styles.input, emailError ? authStyles.inputError : null]}
             placeholder="Email address"
             placeholderTextColor="#b0b0b0"
             value={email}
-            onChangeText={setEmail}
+            onChangeText={(v) => {
+              setEmail(v);
+              if (emailError) setEmailError("");
+              if (formError) setFormError("");
+            }}
             keyboardType="email-address"
             autoCapitalize="none"
             autoCorrect={false}
+            returnKeyType="done"
+            onSubmitEditing={handleSendReset}
           />
+          {emailError ? <Text style={authStyles.fieldError}>{emailError}</Text> : null}
 
           <TouchableOpacity
             style={[styles.button, loading && styles.buttonDisabled]}
@@ -183,7 +216,7 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     fontSize: 15,
     color: "#1a1a1a",
-    marginBottom: 24,
+    marginBottom: 4,
   },
   button: {
     backgroundColor: "#2196F3",

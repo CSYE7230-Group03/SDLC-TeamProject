@@ -47,7 +47,7 @@ router.get("/", verifyFirebaseToken, async (req, res) => {
  * Request body:
  * { "ingredients": [{ "name": "tomato", "confidence": 0.94 }, ...] }
  */
-router.post("/review", async (req, res) => {
+router.post("/review", verifyFirebaseToken, async (req, res) => {
   try {
     const { ingredients } = req.body;
 
@@ -76,7 +76,7 @@ router.post("/review", async (req, res) => {
  *
  * Retrieve the current state of a review session.
  */
-router.get("/review/:sessionId", async (req, res) => {
+router.get("/review/:sessionId", verifyFirebaseToken, async (req, res) => {
   try {
     const items = getSession(req.params.sessionId);
 
@@ -104,6 +104,7 @@ router.get("/review/:sessionId", async (req, res) => {
  */
 router.patch(
   "/review/:sessionId/item/:ingredientId",
+  verifyFirebaseToken,
   async (req, res) => {
     try {
       const { sessionId, ingredientId } = req.params;
@@ -144,6 +145,7 @@ router.patch(
  */
 router.delete(
   "/review/:sessionId/item/:ingredientId",
+  verifyFirebaseToken,
   async (req, res) => {
     try {
       const { sessionId, ingredientId } = req.params;
@@ -178,6 +180,7 @@ router.delete(
  */
 router.post(
   "/review/:sessionId/item",
+  verifyFirebaseToken,
   async (req, res) => {
     try {
       const { sessionId } = req.params;

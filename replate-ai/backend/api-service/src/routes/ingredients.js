@@ -2,6 +2,7 @@ const express = require("express");
 const multer = require("multer");
 const { uploadIngredientImage } = require("../services/s3Service");
 const { detectIngredientsFromImage } = require("../services/ingredientVisionService");
+const { verifyFirebaseToken } = require("../../../../../sdk/firebase/firestore");
 
 const router = express.Router();
 
@@ -35,7 +36,7 @@ const upload = multer({
  *   ]
  * }
  */
-router.post("/photo", upload.single("image"), async (req, res) => {
+router.post("/photo", verifyFirebaseToken, upload.single("image"), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({

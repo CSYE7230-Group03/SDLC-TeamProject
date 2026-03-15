@@ -5,7 +5,6 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  Alert,
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
@@ -14,27 +13,80 @@ import {
 } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../navigation/AppNavigator";
+import { signIn, saveSession } from "../services/api";
+import { EMAIL_REGEX } from "../utils/validation";
+import { authStyles } from "../styles/authStyles";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Login">;
+
+function mapSignInError(error: string): string {
+  if (error.toLowerCase().includes("invalid email or password")) {
+    return "Incorrect email or password. Please try again.";
+  }
+  if (error.toLowerCase().includes("too many attempts")) {
+    return "Too many failed attempts. Please wait a few minutes and try again.";
+  }
+  if (error.toLowerCase().includes("disabled")) {
+    return "This account has been disabled. Please contact support.";
+  }
+  return "Sign in failed. Please check your credentials and try again.";
+}
 
 export default function LoginScreen({ navigation }: Props) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
-  function handleSignIn() {
-    if (!email.trim() || !password) {
-      Alert.alert("Missing Fields", "Please enter your email and password.");
-      return;
+  const [emailError, setEmailError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+  const [formError, setFormError] = useState("");
+
+  function validate(): boolean {
+    let valid = true;
+
+    if (!email.trim()) {
+      setEmailError("Email is required.");
+      valid = false;
+    } else if (!EMAIL_REGEX.test(email.trim())) {
+      setEmailError("Please enter a valid email address.");
+      valid = false;
+    } else {
+      setEmailError("");
     }
+
+    if (!password) {
+      setPasswordError("Password is required.");
+      valid = false;
+    } else {
+      setPasswordError("");
+    }
+
+    return valid;
+  }
+
+  async function handleSignIn() {
+    setFormError("");
+    if (!validate()) return;
+
     setLoading(true);
-    // TODO: wire real Firebase Auth in backend integration task
-    setTimeout(() => setLoading(false), 800);
+    try {
+      const result = await signIn({ email: email.trim(), password });
+      if (result.success && result.idToken && result.refreshToken) {
+        await saveSession(result.idToken, result.refreshToken);
+        navigation.replace("Capture");
+      } else {
+        setFormError(mapSignInError(result.error || ""));
+      }
+    } catch (err) {
+      console.error("[LoginScreen] signIn error:", err);
+      setFormError("Could not connect to the server. Check your internet connection and try again.");
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
     <SafeAreaView style={styles.safe}>
-      {/* Branded header */}
       <View style={styles.header}>
         <Text style={styles.brand}>🌿 ReplateAI</Text>
       </View>
@@ -51,25 +103,44 @@ export default function LoginScreen({ navigation }: Props) {
           <Text style={styles.title}>Welcome back</Text>
           <Text style={styles.subtitle}>Sign in to your account</Text>
 
+          {formError ? (
+            <View style={authStyles.formErrorBox}>
+              <Text style={authStyles.formErrorText}>{formError}</Text>
+            </View>
+          ) : null}
+
           <TextInput
-            style={styles.input}
+            style={[styles.input, emailError ? authStyles.inputError : null]}
             placeholder="Email address"
             placeholderTextColor="#b0b0b0"
             value={email}
-            onChangeText={setEmail}
+            onChangeText={(v) => {
+              setEmail(v);
+              if (emailError) setEmailError("");
+              if (formError) setFormError("");
+            }}
             keyboardType="email-address"
             autoCapitalize="none"
             autoCorrect={false}
+            returnKeyType="next"
           />
+          {emailError ? <Text style={authStyles.fieldError}>{emailError}</Text> : null}
 
           <TextInput
-            style={styles.input}
+            style={[styles.input, passwordError ? authStyles.inputError : null]}
             placeholder="Password"
             placeholderTextColor="#b0b0b0"
             value={password}
-            onChangeText={setPassword}
+            onChangeText={(v) => {
+              setPassword(v);
+              if (passwordError) setPasswordError("");
+              if (formError) setFormError("");
+            }}
             secureTextEntry
+            returnKeyType="done"
+            onSubmitEditing={handleSignIn}
           />
+          {passwordError ? <Text style={authStyles.fieldError}>{passwordError}</Text> : null}
 
           <TouchableOpacity
             style={styles.forgotPassword}
@@ -154,12 +225,12 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     fontSize: 15,
     color: "#1a1a1a",
-    marginBottom: 14,
+    marginBottom: 4,
   },
   forgotPassword: {
     alignSelf: "flex-end",
+    marginTop: 6,
     marginBottom: 24,
-    marginTop: -4,
   },
   forgotPasswordText: {
     fontSize: 13,

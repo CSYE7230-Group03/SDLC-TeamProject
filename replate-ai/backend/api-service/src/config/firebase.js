@@ -1,5 +1,5 @@
 const admin = require('firebase-admin');
-const fs = require('fs');
+
 let firebaseApp = null;
 
 /**
@@ -11,28 +11,22 @@ function initializeFirebase() {
     return firebaseApp;
   }
 
-  const saKey = process.env.FIREBASE_SA_KEY;
-  if (!saKey) {
-    throw new Error('FIREBASE_SA_KEY environment variable is required');
+  try {
+    firebaseApp = admin.initializeApp({
+      projectId: process.env.FIREBASE_PROJECT_ID,
+      storageBucket: process.env.FIREBASE_STORAGE_BUCKET
+    });
+
+    console.log('Firebase initialized successfully');
+    return firebaseApp;
+  } catch (error) {
+    console.error('Failed to initialize Firebase:', error.message);
+    throw error;
   }
-
-  // Support both inline JSON and a file path to a JSON file
-  let serviceAccount;
-  if (saKey.trim().startsWith('{')) {
-    serviceAccount = JSON.parse(saKey);
-  } else {
-    serviceAccount = JSON.parse(fs.readFileSync(saKey, 'utf8'));
-  }
-
-  firebaseApp = admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount)
-  });
-
-  return firebaseApp;
 }
 
 /**
- * Get Firestore instance
+ * Get Firestore database instance
  * @returns {admin.firestore.Firestore}
  */
 function getFirestore() {
@@ -43,7 +37,7 @@ function getFirestore() {
 }
 
 /**
- * Get Auth instance
+ * Get Firebase Auth instance
  * @returns {admin.auth.Auth}
  */
 function getAuth() {
@@ -54,7 +48,7 @@ function getAuth() {
 }
 
 /**
- * Get Storage instance
+ * Get Firebase Storage instance
  * @returns {admin.storage.Storage}
  */
 function getStorage() {
@@ -68,6 +62,5 @@ module.exports = {
   initializeFirebase,
   getFirestore,
   getAuth,
-  getStorage,
-  admin
+  getStorage
 };
