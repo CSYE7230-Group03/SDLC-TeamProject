@@ -1,7 +1,10 @@
-require("dotenv").config();
+require("dotenv").config({ path: ".env.local" }); // load local overrides first
+require("dotenv").config(); // fallback: load .env for any vars not set above
 const express = require("express");
+const cors = require("cors");
 const path = require("path");
 const { checkExternalApiConnectivity } = require("./services/externalApiService");
+const authRoutes = require("./routes/auth");
 const recipeRoutes = require("./routes/recipes");
 const ingredientRoutes = require("./routes/ingredients");
 const inventoryRoutes = require("./routes/inventory");
@@ -9,10 +12,21 @@ const inventoryRoutes = require("./routes/inventory");
 const app = express();
 const PORT = process.env.PORT || 5050;
 
+app.use(cors({
+  origin: [
+    "http://localhost:8081",  // Expo web
+    "http://localhost:19006", // Expo web (older)
+    /^http:\/\/192\.168\./,   // LAN devices
+    /^http:\/\/10\./,         // LAN devices (10.x.x.x)
+  ],
+  methods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+}));
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "..", "public")));
 
 // Routes
+app.use("/auth", authRoutes);
 app.use("/recipes", recipeRoutes);
 app.use("/ingredients", ingredientRoutes);
 app.use("/inventory", inventoryRoutes);

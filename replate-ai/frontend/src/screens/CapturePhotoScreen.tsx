@@ -11,7 +11,7 @@ import {
 import * as ImagePicker from "expo-image-picker";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../navigation/AppNavigator";
-import { detectIngredients } from "../services/api";
+import { detectIngredients, clearSession } from "../services/api";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Capture">;
 
@@ -92,7 +92,13 @@ export default function CapturePhotoScreen({ navigation }: Props) {
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>Capture Ingredients</Text>
-        <TouchableOpacity style={styles.logoutButton} onPress={() => {}}>
+        <TouchableOpacity
+          style={styles.logoutButton}
+          onPress={async () => {
+            await clearSession();
+            navigation.replace("Login");
+          }}
+        >
           <Text style={styles.logoutText}>Log Out</Text>
         </TouchableOpacity>
       </View>

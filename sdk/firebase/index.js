@@ -1,5 +1,5 @@
 const admin = require('firebase-admin');
-const serviceAccount = require("../../replate-ai-firebase-adminsdk.json");
+const fs = require('fs');
 let firebaseApp = null;
 
 /**
@@ -11,13 +11,20 @@ function initializeFirebase() {
     return firebaseApp;
   }
 
-  const projectId = process.env.FIREBASE_PROJECT_ID;
-  // if (!projectId) {
-  //   throw new Error('FIREBASE_PROJECT_ID environment variable is required');
-  // }
+  const saKey = process.env.FIREBASE_SA_KEY;
+  if (!saKey) {
+    throw new Error('FIREBASE_SA_KEY environment variable is required');
+  }
+
+  // Support both inline JSON and a file path to a JSON file
+  let serviceAccount;
+  if (saKey.trim().startsWith('{')) {
+    serviceAccount = JSON.parse(saKey);
+  } else {
+    serviceAccount = JSON.parse(fs.readFileSync(saKey, 'utf8'));
+  }
 
   firebaseApp = admin.initializeApp({
-    // projectId: projectId
     credential: admin.credential.cert(serviceAccount)
   });
 
