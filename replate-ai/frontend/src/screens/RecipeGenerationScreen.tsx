@@ -12,11 +12,15 @@ import {
 } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../navigation/AppNavigator";
-import { generateRecipes, Recipe } from "../services/api";
+import { generateRecipes, saveRecipeToHistory, Recipe } from "../services/api";
+
+// PLACEHOLDER: Replace with `await getAuth().currentUser?.getIdToken()` from "firebase/auth"
+// once auth (#33) is merged.
+const PLACEHOLDER_TOKEN = "placeholder-token";
 
 type Props = NativeStackScreenProps<RootStackParamList, "RecipeGeneration">;
 
-export default function RecipeGenerationScreen({ route }: Props) {
+export default function RecipeGenerationScreen({ route, navigation }: Props) {
   const { ingredients } = route.params;
 
   const [recipes, setRecipes] = useState<Recipe[]>([]);
@@ -25,6 +29,17 @@ export default function RecipeGenerationScreen({ route }: Props) {
 
   useEffect(() => {
     loadRecipes();
+    navigation.setOptions({
+      headerRight: () => (
+        <TouchableOpacity
+          onPress={() => navigation.navigate("RecipeHistory")}
+          style={{ marginRight: 16, flexDirection: "row", alignItems: "center", gap: 5 }}
+        >
+          <Text style={{ fontSize: 16 }}>⏱</Text>
+          <Text style={{ fontSize: 14, fontWeight: "600", color: "#6C63FF" }}>History</Text>
+        </TouchableOpacity>
+      ),
+    });
   }, []);
 
   async function loadRecipes() {
@@ -43,8 +58,13 @@ export default function RecipeGenerationScreen({ route }: Props) {
     }
   }
 
-  function showRecipeDetails(recipe: Recipe) {
+  async function showRecipeDetails(recipe: Recipe) {
     setSelectedRecipe(recipe);
+    try {
+      await saveRecipeToHistory(recipe, PLACEHOLDER_TOKEN);
+    } catch {
+      // fail silently
+    }
   }
 
   function closeDetails() {

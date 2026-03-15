@@ -154,6 +154,50 @@ export async function detectIngredients(imageUri: string): Promise<DetectionResp
   return res.json();
 }
 
+export interface RecipeHistoryItem extends Recipe {
+  historyId: string;
+  savedAt: string;
+}
+
+interface SaveHistoryResponse {
+  success: boolean;
+}
+
+interface GetHistoryResponse {
+  success: boolean;
+  recipes: RecipeHistoryItem[];
+}
+
+/**
+ * Save a recipe to the authenticated user's history.
+ */
+export async function saveRecipeToHistory(
+  recipe: Recipe,
+  token: string
+): Promise<SaveHistoryResponse> {
+  const res = await fetch(`${API_BASE_URL}/recipe-history`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ recipe }),
+  });
+  return res.json();
+}
+
+/**
+ * Get all saved recipes for the authenticated user.
+ */
+export async function getRecipeHistory(
+  token: string
+): Promise<GetHistoryResponse> {
+  const res = await fetch(`${API_BASE_URL}/recipe-history`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return res.json();
+}
+
 /**
  * Generate recipes from a list of ingredients.
  */

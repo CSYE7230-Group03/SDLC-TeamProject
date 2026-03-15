@@ -6,6 +6,7 @@ import RecipeGenerationScreen from "../screens/RecipeGenerationScreen";
 import LoginScreen from "../screens/LoginScreen";
 import SignupScreen from "../screens/SignupScreen";
 import ForgotPasswordScreen from "../screens/ForgotPasswordScreen";
+import RecipeHistoryScreen from "../screens/RecipeHistoryScreen";
 
 export type RootStackParamList = {
   Login: undefined;
@@ -18,6 +19,7 @@ export type RootStackParamList = {
   RecipeGeneration: {
     ingredients: string[];
   };
+  RecipeHistory: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -58,6 +60,11 @@ export default function AppNavigator() {
         name="RecipeGeneration"
         component={RecipeGenerationScreen}
         options={{ title: "Generated Recipes" }}
+      />
+      <Stack.Screen
+        name="RecipeHistory"
+        component={RecipeHistoryScreen}
+        options={{ title: "Recipe History" }}
       />
     </Stack.Navigator>
   );
