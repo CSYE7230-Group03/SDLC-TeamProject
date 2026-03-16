@@ -34,9 +34,13 @@ function generateObjectKey(originalName) {
  */
 async function uploadIngredientImage(buffer, originalName, mimeType) {
   if (!bucketName || !s3Region) {
-    throw new Error(
-      "S3_INGREDIENT_BUCKET and AWS_REGION must be set in the environment to upload images."
-    );
+    // DEV MODE: Skip S3 upload and return a placeholder URL
+    console.warn("[S3Service] S3 not configured, using placeholder URL for development");
+    return {
+      bucket: "dev-placeholder",
+      key: `ingredients/${Date.now()}-${originalName}`,
+      url: `https://placeholder.local/ingredients/${Date.now()}-${originalName}`,
+    };
   }
 
   const key = generateObjectKey(originalName);

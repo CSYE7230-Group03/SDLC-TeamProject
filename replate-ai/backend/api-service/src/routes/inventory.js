@@ -8,8 +8,10 @@ const {
   confirmSession,
   saveIngredientsBatch,
   updateIngredient,
-  getUserInventory
+  getUserInventory,
+  deductIngredientsForRecipe
 } = require("../services/inventoryService");
+const { analyzeUserProfile } = require("../services/profileAnalysisService");
 const { verifyFirebaseToken } = require("../../../../../sdk/firebase/firestore");
 
 const router = express.Router();
@@ -226,10 +228,19 @@ router.post("/review/:sessionId/confirm", verifyFirebaseToken, async (req, res) 
       return res.status(404).json({ success: false, error: "Session not found" });
     }
 
+    // Map session ingredients to inventory format
+    // Session has: { name, confidence, quantity, unit }
+    // Inventory expects: { ingredientName, quant, unit }
+    const inventoryItems = result.ingredients.map((ing) => ({
+      ingredientName: ing.name,
+      quant: ing.quantity || 1,
+      unit: ing.unit || "item",
+    }));
+
     //Saves the confirmed ingredient list to inventory
     const savedItems = await saveIngredientsBatch(
         userId,
-        result.ingredients
+        inventoryItems
       );
 
     return res.status(200).json({
@@ -319,6 +330,79 @@ router.patch("/item/:itemId", verifyFirebaseToken, async(req, res) => {
     return res.status(200).json({ success: true, item: updated });
   }catch(err){
     console.log("Error in patch")
+  }
+});
+
+/**
+ * POST /inventory/cook
+ *
+ * Deduct ingredients from inventory after cooking a recipe.
+ * Called when user marks a recipe as "cooked" / "Start Cooking".
+ *
+ * Request body:
+ * { "ingredients": [{ "name": "chicken", "amount": 2, "unit": "pieces" }, ...] }
+ *
+ * Response:
+ * { success: true, deducted: [...], skipped: [...], errors: [...] }
+ */
+router.post("/cook", verifyFirebaseToken, async (req, res) => {
+  try {
+    const userId = req.userId;
+    const { ingredients } = req.body;
+
+    if (!Array.isArray(ingredients) || ingredients.length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: "ingredients array is required",
+      });
+    }
+
+    const result = await deductIngredientsForRecipe(userId, ingredients);
+
+    return res.status(200).json({
+      success: true,
+      message: "Inventory updated after cooking",
+      ...result,
+    });
+  } catch (err) {
+    console.error("[InventoryRoute] Error deducting ingredients:", err.message);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+/**
+ * GET /inventory/profile-analysis
+ *
+ * Analyze user profile based on their fridge ingredients.
+ * Uses AI to determine lifestyle, diet type, cooking style, etc.
+ */
+router.get("/profile-analysis", verifyFirebaseToken, async (req, res) => {
+  try {
+    const userId = req.userId;
+    const items = await getUserInventory(userId);
+    
+    // Get active ingredients only
+    const activeIngredients = items
+      .filter(item => item.quant > 0)
+      .map(item => item.ingredientName);
+
+    if (activeIngredients.length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: "No ingredients in inventory to analyze",
+      });
+    }
+
+    const analysis = await analyzeUserProfile(activeIngredients);
+
+    return res.status(200).json({
+      success: true,
+      analysis,
+      ingredientCount: activeIngredients.length,
+    });
+  } catch (err) {
+    console.error("[InventoryRoute] Error analyzing profile:", err.message);
+    return res.status(500).json({ success: false, error: err.message });
   }
 });
 
