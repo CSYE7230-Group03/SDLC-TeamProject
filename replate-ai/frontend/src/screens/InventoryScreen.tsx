@@ -32,7 +32,7 @@ function formatTimeAgo(timestamp: number): string {
 
 // Ingredient icon mapping
 type IconInfo = {
-  name: keyof typeof MaterialCommunityIcons.glyphMap;
+  name: string;
   color: string;
   bg: string;
 };

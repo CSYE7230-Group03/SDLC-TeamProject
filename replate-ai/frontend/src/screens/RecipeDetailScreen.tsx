@@ -48,7 +48,7 @@ export default function RecipeDetailScreen({ route, navigation }: Props) {
 
   async function handleStartCooking() {
     try {
-      const result = await markRecipeAsCooked(recipe);
+      const result = await markRecipeAsCooked(recipe.ingredients || []);
       if (result.success) {
         navigation.navigate("CookingComplete", {
           recipe: {

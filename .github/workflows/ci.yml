@@ -1,0 +1,98 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  # Backend API Service - Build & Test
+  backend-api:
+    name: Backend API
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: replate-ai/backend/api-service
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: replate-ai/backend/api-service/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run linter
+        run: npm run lint --if-present
+
+      - name: Run tests
+        run: npm test --if-present
+
+      - name: Build check
+        run: node -c src/app.js
+
+  # Backend AI Service - Build & Test
+  backend-ai:
+    name: Backend AI Service
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: replate-ai/backend/ai-service
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Syntax check
+        run: python -m py_compile app.py
+
+  # Frontend Expo App - Build & Test
+  frontend:
+    name: Frontend (Expo)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: replate-ai/frontend
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: replate-ai/frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: TypeScript check
+        run: npx tsc --noEmit
+
+      - name: Run linter
+        run: npm run lint --if-present
+
+      - name: Run tests
+        run: npm test --if-present
+
+      - name: Expo doctor check
+        run: npx expo-doctor
