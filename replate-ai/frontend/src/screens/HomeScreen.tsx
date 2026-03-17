@@ -26,6 +26,7 @@ import {
   getProfileAnalysis,
   ProfileAnalysis,
 } from "../services/api";
+import { useAppTheme } from "../theme/ThemeProvider";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Home">;
 
@@ -45,6 +46,7 @@ const TEXT_MID = "#666666";
 const TEXT_LIGHT = "#999999";
 
 export default function HomeScreen({ navigation }: Props) {
+  const { theme } = useAppTheme();
   const [userName, setUserName] = useState<string>("");
   const [recommendations, setRecommendations] = useState<Recipe[]>([]);
   const [loadingRecs, setLoadingRecs] = useState(true);
@@ -196,7 +198,8 @@ export default function HomeScreen({ navigation }: Props) {
         const ingredientNames = activeItems.map((i) => i.ingredientName);
         
         if (ingredientNames.length > 0) {
-          const recRes = await generateRecipes(ingredientNames, {}, 3);
+          // Preferences are loaded server-side from the user's profile.
+          const recRes = await generateRecipes(ingredientNames, undefined, 3);
           if (recRes.success && recRes.recipes.length > 0) {
             setRecommendations(recRes.recipes);
             await AsyncStorage.setItem(CACHE_KEY_RECOMMENDATIONS, JSON.stringify(recRes.recipes));
@@ -259,12 +262,12 @@ export default function HomeScreen({ navigation }: Props) {
   }
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={["top"]}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.colors.background }]} edges={["top"]}>
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: theme.colors.card, borderBottomColor: theme.colors.border }]}>
         <View style={styles.logoRow}>
-          <MaterialCommunityIcons name="leaf" size={24} color={PRIMARY} />
-          <Text style={styles.logoText}>ReplateAI</Text>
+          <MaterialCommunityIcons name="leaf" size={24} color={theme.colors.primary} />
+          <Text style={[styles.logoText, { color: theme.colors.primary }]}>ReplateAI</Text>
         </View>
         <TouchableOpacity
           style={styles.logoutButton}
@@ -273,11 +276,11 @@ export default function HomeScreen({ navigation }: Props) {
             navigation.replace("Login");
           }}
         >
-          <Ionicons name="log-out-outline" size={20} color={TEXT_MID} />
+          <Ionicons name="log-out-outline" size={20} color={theme.colors.textMuted} />
         </TouchableOpacity>
       </View>
 
-      <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+      <ScrollView style={[styles.container, { backgroundColor: theme.colors.background }]} showsVerticalScrollIndicator={false}>
         {/* Greeting with Profile Badge */}
         <Animated.View
           style={[
@@ -287,8 +290,8 @@ export default function HomeScreen({ navigation }: Props) {
         >
           <View style={styles.greetingRow}>
             <View style={styles.greetingText}>
-              <Text style={styles.greeting}>Hello,</Text>
-              <Text style={styles.userName}>{userName}!</Text>
+              <Text style={[styles.greeting, { color: theme.colors.textMuted }]}>Hello,</Text>
+              <Text style={[styles.userName, { color: theme.colors.text }]}>{userName}!</Text>
             </View>
             
             {/* Compact Profile Badge */}
@@ -413,6 +416,18 @@ export default function HomeScreen({ navigation }: Props) {
               </View>
               <Text style={styles.menuTitle}>History</Text>
               <Text style={styles.menuDesc}>Past recipes</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.menuCard}
+              onPress={() => navigation.navigate("ProfilePreferences")}
+              activeOpacity={0.7}
+            >
+              <View style={[styles.menuIconBg, { backgroundColor: "#f3e5f5" }]}>
+                <Ionicons name="settings-outline" size={24} color="#7b1fa2" />
+              </View>
+              <Text style={styles.menuTitle}>Preferences</Text>
+              <Text style={styles.menuDesc}>Diet & profile</Text>
             </TouchableOpacity>
           </View>
         </Animated.View>
@@ -673,9 +688,10 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     paddingHorizontal: 20,
     gap: 12,
+    flexWrap: "wrap",
   },
   menuCard: {
-    flex: 1,
+    width: "48%",
     backgroundColor: CARD_BG,
     borderRadius: 14,
     padding: 16,

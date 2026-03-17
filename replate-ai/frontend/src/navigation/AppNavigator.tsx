@@ -6,6 +6,7 @@ import IngredientReviewScreen from "../screens/IngredientReviewScreen";
 import RecipeGenerationScreen from "../screens/RecipeGenerationScreen";
 import RecipeDetailScreen from "../screens/RecipeDetailScreen";
 import ProfileDetailScreen from "../screens/ProfileDetailScreen";
+import ProfilePreferencesScreen from "../screens/ProfilePreferencesScreen";
 import CookingCompleteScreen from "../screens/CookingCompleteScreen";
 import HomeScreen from "../screens/HomeScreen";
 import InventoryScreen from "../screens/InventoryScreen";
@@ -51,6 +52,7 @@ export type RootStackParamList = {
       funFact: string;
     };
   };
+  ProfilePreferences: undefined;
   RecipeHistory: undefined;
   CookingComplete: {
     recipe: {
@@ -161,6 +163,11 @@ export default function AppNavigator() {
         name="ProfileDetail"
         component={ProfileDetailScreen}
         options={{ title: "Your Fridge Profile" }}
+      />
+      <Stack.Screen
+        name="ProfilePreferences"
+        component={ProfilePreferencesScreen}
+        options={{ title: "Profile & Preferences" }}
       />
       <Stack.Screen
         name="RecipeHistory"
