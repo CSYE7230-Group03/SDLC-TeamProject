@@ -250,11 +250,22 @@ Only return valid JSON, no other text.`;
  * @returns {object[]}
  */
 function filterByPreferences(recipes, preferences) {
-  if (!preferences || !preferences.restrictions || preferences.restrictions.length === 0) {
-    return recipes;
+  if (!preferences) return recipes;
+
+  let filtered = recipes;
+
+  // Filter by max cooking time if provided
+  if (preferences.maxCookingTime && Number.isFinite(Number(preferences.maxCookingTime))) {
+    const max = Number(preferences.maxCookingTime);
+    filtered = filtered.filter((r) => !r.readyInMinutes || r.readyInMinutes <= max);
   }
 
-  return recipes.filter((recipe) => {
+  // Filter by dietary restrictions (Spoonacular diets list)
+  if (!preferences.restrictions || preferences.restrictions.length === 0) {
+    return filtered;
+  }
+
+  return filtered.filter((recipe) => {
     const recipeDiets = recipe.diets.map((d) => d.toLowerCase());
     return preferences.restrictions.every((restriction) =>
       recipeDiets.includes(restriction.toLowerCase())

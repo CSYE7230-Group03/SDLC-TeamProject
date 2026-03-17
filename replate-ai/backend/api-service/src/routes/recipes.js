@@ -1,5 +1,6 @@
 const express = require("express");
 const { generateRecipes } = require("../services/recipeService");
+const { verifyFirebaseToken, readDocument } = require("../../../../../sdk/firebase/firestore");
 
 const router = express.Router();
 
@@ -19,7 +20,7 @@ const router = express.Router();
  *   "count": 3
  * }
  */
-router.post("/generate", async (req, res) => {
+router.post("/generate", verifyFirebaseToken, async (req, res) => {
   try {
     const { ingredients, preferences, count } = req.body;
 
@@ -29,7 +30,18 @@ router.post("/generate", async (req, res) => {
       });
     }
 
-    const result = await generateRecipes(ingredients, preferences || {}, count || 3);
+    // If the client didn't provide preferences, load them from the user's profile.
+    let resolvedPreferences = preferences;
+    const noPrefsProvided =
+      !resolvedPreferences ||
+      (typeof resolvedPreferences === "object" && Object.keys(resolvedPreferences).length === 0);
+
+    if (noPrefsProvided) {
+      const userDoc = await readDocument("Users", req.userId);
+      resolvedPreferences = userDoc?.dietaryPreferences || {};
+    }
+
+    const result = await generateRecipes(ingredients, resolvedPreferences || {}, count || 3);
 
     return res.status(200).json({
       success: true,

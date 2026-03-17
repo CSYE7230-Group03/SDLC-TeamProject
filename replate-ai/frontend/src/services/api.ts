@@ -64,6 +64,12 @@ export async function getUserDisplayName(): Promise<string | null> {
   return storageLoad(USER_DISPLAY_NAME_KEY);
 }
 
+/** Update stored user display name (used by Home greeting). */
+export async function saveUserDisplayName(displayName: string): Promise<void> {
+  if (!displayName) return;
+  await storageSave(USER_DISPLAY_NAME_KEY, displayName);
+}
+
 /** Clear stored session and in-memory token (sign-out). */
 export async function clearSession(): Promise<void> {
   _authToken = null;
@@ -154,6 +160,74 @@ interface AuthResponse {
   refreshToken?: string;
   expiresIn?: string;
   error?: string;
+}
+
+// ---------------------------------------------------------------------------
+// Profile / Dietary Preferences
+// ---------------------------------------------------------------------------
+
+export interface DietaryPreferences {
+  restrictions: string[];
+  allergies: string[];
+  skillLevel?: string;
+  maxCookingTime?: number | null;
+}
+
+export interface AppSettings {
+  themeMode: "light" | "dark" | "system";
+  notifications: {
+    expiryRemindersEnabled: boolean;
+    reminderLeadDays?: number;
+    reminderTime?: string; // "HH:MM"
+  };
+}
+
+export interface AppSettingsResponse {
+  success: boolean;
+  appSettings?: AppSettings;
+  error?: string;
+}
+
+export interface UserProfileResponse {
+  success: boolean;
+  profile?: { uid: string; email: string | null; displayName: string };
+  dietaryPreferences?: DietaryPreferences;
+  error?: string;
+}
+
+export async function getUserProfile(): Promise<UserProfileResponse> {
+  const res = await fetch(`${API_BASE_URL}/profile`, {
+    headers: { ...authHeaders() },
+  });
+  return parseResponse<UserProfileResponse>(res);
+}
+
+export async function updateUserProfile(params: {
+  displayName?: string;
+  dietaryPreferences?: Partial<DietaryPreferences>;
+}): Promise<UserProfileResponse> {
+  const res = await fetch(`${API_BASE_URL}/profile`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...authHeaders() },
+    body: JSON.stringify(params),
+  });
+  return parseResponse<UserProfileResponse>(res);
+}
+
+export async function getAppSettings(): Promise<AppSettingsResponse> {
+  const res = await fetch(`${API_BASE_URL}/settings`, {
+    headers: { ...authHeaders() },
+  });
+  return parseResponse<AppSettingsResponse>(res);
+}
+
+export async function updateAppSettings(appSettings: Partial<AppSettings>): Promise<AppSettingsResponse> {
+  const res = await fetch(`${API_BASE_URL}/settings`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...authHeaders() },
+    body: JSON.stringify({ appSettings }),
+  });
+  return parseResponse<AppSettingsResponse>(res);
 }
 
 // ---------------------------------------------------------------------------

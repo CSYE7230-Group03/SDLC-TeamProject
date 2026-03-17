@@ -148,7 +148,8 @@ export default function RecipeGenerationScreen({ route, navigation }: Props) {
     try {
       setLoading(true);
       const [recipeRes, inventoryRes] = await Promise.all([
-        generateRecipes(ingredients, {}, 5),
+        // Preferences are loaded server-side from the user's profile.
+        generateRecipes(ingredients, undefined, 5),
         getUserInventory(),
       ]);
 
