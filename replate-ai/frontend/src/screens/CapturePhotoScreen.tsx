@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   View,
   Text,
@@ -7,25 +7,55 @@ import {
   Alert,
   ActivityIndicator,
   Image,
+  Animated,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { RootStackParamList } from "../navigation/AppNavigator";
-import { detectIngredients, clearSession } from "../services/api";
+import { detectIngredients } from "../services/api";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Capture">;
+
+const LAST_INGREDIENT_IMAGE_KEY = "replate_last_ingredient_image";
+
+// Colors
+const PRIMARY = "#2d6a4f";
+const PRIMARY_LIGHT = "#40916c";
+const BG = "#f8faf9";
+const CARD_BG = "#ffffff";
+const TEXT_DARK = "#1a1a1a";
+const TEXT_MID = "#666666";
+const TEXT_LIGHT = "#999999";
 
 export default function CapturePhotoScreen({ navigation }: Props) {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const scaleAnim = useRef(new Animated.Value(0.95)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 400,
+        useNativeDriver: true,
+      }),
+      Animated.spring(scaleAnim, {
+        toValue: 1,
+        tension: 50,
+        friction: 8,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, []);
 
   async function pickImage() {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== "granted") {
-      Alert.alert(
-        "Permission Denied",
-        "We need camera roll permissions to proceed"
-      );
+      Alert.alert("Permission Denied", "We need camera roll permissions to proceed");
       return;
     }
 
@@ -69,20 +99,21 @@ export default function CapturePhotoScreen({ navigation }: Props) {
     try {
       const response = await detectIngredients(selectedImage);
       if (response.success && response.ingredients.length > 0) {
+        // Save the image for inventory screen
+        await AsyncStorage.setItem(LAST_INGREDIENT_IMAGE_KEY, JSON.stringify({
+          uri: selectedImage,
+          timestamp: Date.now(),
+        }));
+        
         navigation.navigate("IngredientReview", {
           detectedIngredients: response.ingredients,
+          imageUri: selectedImage,
         });
       } else {
-        Alert.alert(
-          "No Ingredients",
-          response.error || "Could not detect ingredients in the image"
-        );
+        Alert.alert("No Ingredients", response.error || "Could not detect ingredients in the image");
       }
     } catch (error) {
-      Alert.alert(
-        "Error",
-        "Failed to detect ingredients. Please try again."
-      );
+      Alert.alert("Error", "Failed to detect ingredients. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -90,67 +121,100 @@ export default function CapturePhotoScreen({ navigation }: Props) {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Capture Ingredients</Text>
-        <TouchableOpacity
-          style={styles.logoutButton}
-          onPress={async () => {
-            await clearSession();
-            navigation.replace("Login");
-          }}
-        >
-          <Text style={styles.logoutText}>Log Out</Text>
-        </TouchableOpacity>
-      </View>
-      <Text style={styles.subtitle}>
-        Take a photo or pick an image of your ingredients
-      </Text>
+      {/* Instructions */}
+      <Animated.View style={[styles.instructionCard, { opacity: fadeAnim }]}>
+        <Ionicons name="information-circle" size={20} color={PRIMARY} />
+        <Text style={styles.instructionText}>
+          Take a clear photo of your ingredients for best results
+        </Text>
+      </Animated.View>
 
-      <View style={styles.photoArea}>
+      {/* Photo Area */}
+      <Animated.View
+        style={[
+          styles.photoArea,
+          {
+            opacity: fadeAnim,
+            transform: [{ scale: scaleAnim }],
+          },
+        ]}
+      >
         {selectedImage ? (
-          <Image
-            source={{ uri: selectedImage }}
-            style={styles.image}
-            resizeMode="cover"
-          />
+          <Image source={{ uri: selectedImage }} style={styles.image} resizeMode="cover" />
         ) : (
           <View style={styles.placeholder}>
-            <Text style={styles.placeholderText}>No image selected</Text>
+            <View style={styles.placeholderIcon}>
+              <Ionicons name="image-outline" size={48} color={TEXT_LIGHT} />
+            </View>
+            <Text style={styles.placeholderTitle}>No image selected</Text>
+            <Text style={styles.placeholderSubtitle}>
+              Take a photo or choose from gallery
+            </Text>
           </View>
         )}
-      </View>
+        
+        {selectedImage && (
+          <TouchableOpacity
+            style={styles.clearButton}
+            onPress={() => setSelectedImage(null)}
+          >
+            <Ionicons name="close-circle" size={28} color="rgba(0,0,0,0.6)" />
+          </TouchableOpacity>
+        )}
+      </Animated.View>
 
-      <View style={styles.buttonContainer}>
+      {/* Action Buttons */}
+      <Animated.View style={[styles.buttonContainer, { opacity: fadeAnim }]}>
         <TouchableOpacity
-          style={styles.button}
+          style={styles.actionButton}
           onPress={openCamera}
           disabled={loading}
+          activeOpacity={0.7}
         >
-          <Text style={styles.buttonText}>📷 Take Photo</Text>
+          <View style={[styles.actionIconBg, { backgroundColor: "#e3f2fd" }]}>
+            <Ionicons name="camera" size={24} color="#1976d2" />
+          </View>
+          <Text style={styles.actionButtonText}>Take Photo</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={styles.button}
+          style={styles.actionButton}
           onPress={pickImage}
           disabled={loading}
+          activeOpacity={0.7}
         >
-          <Text style={styles.buttonText}>🖼️ Pick from Gallery</Text>
+          <View style={[styles.actionIconBg, { backgroundColor: "#f3e5f5" }]}>
+            <Ionicons name="images" size={24} color="#7b1fa2" />
+          </View>
+          <Text style={styles.actionButtonText}>Gallery</Text>
         </TouchableOpacity>
-      </View>
+      </Animated.View>
 
-      <TouchableOpacity
-        style={[styles.detectButton, !selectedImage && styles.detectButtonDisabled]}
-        onPress={handleDetectIngredients}
-        disabled={!selectedImage || loading}
-      >
-        {loading ? (
-          <ActivityIndicator color="#fff" />
-        ) : (
-          <Text style={styles.detectButtonText}>
-            Detect Ingredients
-          </Text>
-        )}
-      </TouchableOpacity>
+      {/* Detect Button */}
+      <Animated.View style={{ opacity: fadeAnim }}>
+        <TouchableOpacity
+          style={[
+            styles.detectButton,
+            !selectedImage && styles.detectButtonDisabled,
+          ]}
+          onPress={handleDetectIngredients}
+          disabled={!selectedImage || loading}
+          activeOpacity={0.8}
+        >
+          {loading ? (
+            <View style={styles.loadingRow}>
+              <ActivityIndicator color="#fff" size="small" />
+              <Text style={styles.detectButtonText}>Analyzing...</Text>
+            </View>
+          ) : (
+            <View style={styles.detectButtonContent}>
+              <MaterialCommunityIcons name="food-apple" size={22} color="#fff" />
+              <Text style={styles.detectButtonText}>Detect Ingredients</Text>
+              <Ionicons name="arrow-forward" size={20} color="#fff" />
+            </View>
+          )}
+        </TouchableOpacity>
+      </Animated.View>
     </View>
   );
 }
@@ -158,92 +222,132 @@ export default function CapturePhotoScreen({ navigation }: Props) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f5f5f5",
-    paddingHorizontal: 16,
-    paddingTop: 24,
+    backgroundColor: BG,
+    paddingHorizontal: 20,
+    paddingTop: 16,
   },
-  header: {
+  instructionCard: {
     flexDirection: "row",
-    justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 8,
+    gap: 10,
+    backgroundColor: "#e8f5e9",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 10,
+    marginBottom: 20,
   },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#333",
-  },
-  logoutButton: {
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 6,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-  },
-  logoutText: {
+  instructionText: {
+    flex: 1,
     fontSize: 13,
-    color: "#666",
-    fontWeight: "600",
-  },
-  subtitle: {
-    fontSize: 14,
-    color: "#666",
-    marginBottom: 24,
+    color: PRIMARY,
+    lineHeight: 18,
   },
   photoArea: {
     flex: 1,
-    borderRadius: 12,
-    backgroundColor: "#fff",
-    marginBottom: 24,
+    borderRadius: 16,
+    backgroundColor: CARD_BG,
+    marginBottom: 20,
     overflow: "hidden",
     borderWidth: 2,
-    borderColor: "#ddd",
-    justifyContent: "center",
-    alignItems: "center",
+    borderColor: "#e8e8e8",
+    borderStyle: "dashed",
   },
   image: {
     width: "100%",
     height: "100%",
   },
   placeholder: {
+    flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    flex: 1,
+    padding: 32,
   },
-  placeholderText: {
+  placeholderIcon: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: "#f5f5f5",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  placeholderTitle: {
     fontSize: 16,
-    color: "#999",
+    fontWeight: "600",
+    color: TEXT_DARK,
+    marginBottom: 6,
+  },
+  placeholderSubtitle: {
+    fontSize: 13,
+    color: TEXT_LIGHT,
+  },
+  clearButton: {
+    position: "absolute",
+    top: 12,
+    right: 12,
+    backgroundColor: "rgba(255,255,255,0.9)",
+    borderRadius: 14,
   },
   buttonContainer: {
     flexDirection: "row",
-    gap: 12,
+    gap: 16,
     marginBottom: 16,
   },
-  button: {
+  actionButton: {
     flex: 1,
-    backgroundColor: "#2196F3",
-    paddingVertical: 12,
-    borderRadius: 8,
+    backgroundColor: CARD_BG,
+    paddingVertical: 16,
+    borderRadius: 14,
     alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
   },
-  buttonText: {
-    color: "#fff",
+  actionIconBg: {
+    width: 48,
+    height: 48,
+    borderRadius: 12,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  actionButtonText: {
     fontSize: 14,
     fontWeight: "600",
+    color: TEXT_DARK,
   },
   detectButton: {
-    backgroundColor: "#4CAF50",
-    paddingVertical: 16,
-    borderRadius: 10,
-    alignItems: "center",
-    marginBottom: 24,
+    backgroundColor: PRIMARY,
+    paddingVertical: 18,
+    borderRadius: 14,
+    marginBottom: 20,
+    shadowColor: PRIMARY,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
   },
   detectButtonDisabled: {
-    backgroundColor: "#A5D6A7",
+    backgroundColor: "#a5d6a7",
+    shadowOpacity: 0,
+  },
+  detectButtonContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 10,
   },
   detectButtonText: {
     color: "#fff",
     fontSize: 16,
-    fontWeight: "bold",
+    fontWeight: "700",
+  },
+  loadingRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 10,
   },
 });

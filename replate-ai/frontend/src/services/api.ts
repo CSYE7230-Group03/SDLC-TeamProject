@@ -8,6 +8,7 @@ const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || "http://localhost:5050";
 // ---------------------------------------------------------------------------
 const SESSION_TOKEN_KEY = "replate_auth_token";
 const SESSION_REFRESH_KEY = "replate_refresh_token";
+const USER_DISPLAY_NAME_KEY = "replate_user_name";
 
 async function storageSave(key: string, value: string): Promise<void> {
   if (Platform.OS === "web") {
@@ -49,10 +50,18 @@ export function getAuthToken(): string | null {
 // ---------------------------------------------------------------------------
 
 /** Save idToken + refreshToken to secure storage and update in-memory token. */
-export async function saveSession(idToken: string, refreshToken: string): Promise<void> {
+export async function saveSession(idToken: string, refreshToken: string, displayName?: string): Promise<void> {
   _authToken = idToken;
   await storageSave(SESSION_TOKEN_KEY, idToken);
   await storageSave(SESSION_REFRESH_KEY, refreshToken);
+  if (displayName) {
+    await storageSave(USER_DISPLAY_NAME_KEY, displayName);
+  }
+}
+
+/** Get stored user display name */
+export async function getUserDisplayName(): Promise<string | null> {
+  return storageLoad(USER_DISPLAY_NAME_KEY);
 }
 
 /** Clear stored session and in-memory token (sign-out). */
@@ -60,6 +69,7 @@ export async function clearSession(): Promise<void> {
   _authToken = null;
   await storageDelete(SESSION_TOKEN_KEY);
   await storageDelete(SESSION_REFRESH_KEY);
+  await storageDelete(USER_DISPLAY_NAME_KEY);
 }
 
 /**
@@ -191,6 +201,27 @@ export async function signIn(params: {
   return parseResponse<AuthResponse>(res);
 }
 
+export async function signInWithGoogle(idToken: string): Promise<AuthResponse> {
+  const res = await fetch(`${API_BASE_URL}/auth/google`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ idToken }),
+  });
+  return parseResponse<AuthResponse>(res);
+}
+
+export async function signInWithApple(params: {
+  identityToken: string;
+  fullName?: { givenName?: string; familyName?: string } | null;
+}): Promise<AuthResponse> {
+  const res = await fetch(`${API_BASE_URL}/auth/apple`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(params),
+  });
+  return parseResponse<AuthResponse>(res);
+}
+
 export async function forgotPassword(email: string): Promise<AuthResponse> {
   const res = await fetch(`${API_BASE_URL}/auth/forgot-password`, {
     method: "POST",
@@ -289,11 +320,21 @@ export async function detectIngredients(
   imageUri: string
 ): Promise<DetectionResponse> {
   const formData = new FormData();
-  formData.append("image", {
-    uri: imageUri,
-    type: "image/jpeg",
-    name: "ingredient-photo.jpg",
-  } as any);
+
+  // Handle web vs native differently
+  if (Platform.OS === "web") {
+    // On web, imageUri is a blob URL - fetch it and append as blob
+    const response = await fetch(imageUri);
+    const blob = await response.blob();
+    formData.append("image", blob, "ingredient-photo.jpg");
+  } else {
+    // On native, use the React Native style object
+    formData.append("image", {
+      uri: imageUri,
+      type: "image/jpeg",
+      name: "ingredient-photo.jpg",
+    } as any);
+  }
 
   const res = await fetch(`${API_BASE_URL}/ingredients/photo`, {
     method: "POST",
@@ -358,4 +399,90 @@ export async function generateRecipes(
     body: JSON.stringify({ ingredients, preferences, count }),
   });
   return parseResponse<RecipeResponse>(res);
+}
+
+// ---------------------------------------------------------------------------
+// Inventory
+// ---------------------------------------------------------------------------
+
+export interface InventoryItem {
+  id: string;
+  ingredientName: string;
+  quant: number;
+  unit: string;
+  expiryDate: string;
+  isExpired: boolean;
+}
+
+interface InventoryResponse {
+  success: boolean;
+  items: InventoryItem[];
+  error?: string;
+}
+
+/** Fetch the authenticated user's current ingredient inventory. */
+export async function getUserInventory(): Promise<InventoryResponse> {
+  const res = await fetch(`${API_BASE_URL}/inventory`, {
+    headers: authHeaders(),
+  });
+  return parseResponse<InventoryResponse>(res);
+}
+
+// ---------------------------------------------------------------------------
+// Cook / Deduct Inventory
+// ---------------------------------------------------------------------------
+
+interface CookResponse {
+  success: boolean;
+  message?: string;
+  deducted: { name: string; previousQty: number; deductedAmount: number; newQty: number }[];
+  skipped: { name: string; reason: string }[];
+  errors: { name: string; error: string }[];
+  error?: string;
+}
+
+/**
+ * Deduct ingredients from inventory after cooking a recipe.
+ * Called when user clicks "Start Cooking".
+ */
+export async function markRecipeAsCooked(
+  ingredients: { name: string; amount: number; unit: string }[]
+): Promise<CookResponse> {
+  const res = await fetch(`${API_BASE_URL}/inventory/cook`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...authHeaders() },
+    body: JSON.stringify({ ingredients }),
+  });
+  return parseResponse<CookResponse>(res);
+}
+
+// ---------------------------------------------------------------------------
+// Profile Analysis
+// ---------------------------------------------------------------------------
+
+export interface ProfileAnalysis {
+  persona: string;
+  emoji: string;
+  description: string;
+  dietType: string;
+  cookingStyle: string;
+  healthScore: number;
+  funFact: string;
+}
+
+export interface ProfileAnalysisResponse {
+  success: boolean;
+  analysis?: ProfileAnalysis;
+  ingredientCount?: number;
+  error?: string;
+}
+
+/**
+ * Analyze user profile based on fridge ingredients.
+ */
+export async function getProfileAnalysis(): Promise<ProfileAnalysisResponse> {
+  const res = await fetch(`${API_BASE_URL}/inventory/profile-analysis`, {
+    headers: authHeaders(),
+  });
+  return parseResponse<ProfileAnalysisResponse>(res);
 }

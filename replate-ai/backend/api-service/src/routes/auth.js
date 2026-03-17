@@ -177,4 +177,129 @@ router.post("/refresh", async (req, res) => {
   }
 });
 
+/**
+ * POST /auth/google
+ *
+ * Sign in with Google OAuth. Verifies the Google ID token and creates/signs in the user.
+ *
+ * Request body: { idToken }
+ * Response 200: { success, idToken, refreshToken, uid, displayName, email }
+ */
+router.post("/google", async (req, res) => {
+  const { idToken } = req.body;
+
+  if (!idToken) {
+    return res.status(400).json({ success: false, error: "idToken is required" });
+  }
+
+  const apiKey = process.env.FIREBASE_API_KEY;
+  try {
+    // Verify Google ID token with Firebase
+    const response = await axios.post(
+      `https://identitytoolkit.googleapis.com/v1/accounts:signInWithIdp?key=${apiKey}`,
+      {
+        postBody: `id_token=${idToken}&providerId=google.com`,
+        requestUri: "http://localhost",
+        returnIdpCredential: true,
+        returnSecureToken: true,
+      }
+    );
+
+    const { idToken: firebaseIdToken, refreshToken, localId, displayName, email } = response.data;
+
+    // Create user profile if first time
+    try {
+      await createDocument("Users", localId, {
+        uid: localId,
+        email: email?.toLowerCase(),
+        displayName: displayName || email?.split("@")[0],
+        provider: "google",
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      });
+    } catch (e) {
+      // Document may already exist, ignore
+    }
+
+    return res.status(200).json({
+      success: true,
+      idToken: firebaseIdToken,
+      refreshToken,
+      uid: localId,
+      displayName: displayName || email?.split("@")[0],
+      email,
+    });
+  } catch (err) {
+    console.error("[AuthRoute] Google sign-in error:", err.response?.data || err.message);
+    return res.status(401).json({ success: false, error: "Google sign-in failed" });
+  }
+});
+
+/**
+ * POST /auth/apple
+ *
+ * Sign in with Apple. Verifies the Apple identity token and creates/signs in the user.
+ *
+ * Request body: { identityToken, fullName? }
+ * Response 200: { success, idToken, refreshToken, uid, displayName, email }
+ */
+router.post("/apple", async (req, res) => {
+  const { identityToken, fullName } = req.body;
+
+  if (!identityToken) {
+    return res.status(400).json({ success: false, error: "identityToken is required" });
+  }
+
+  const apiKey = process.env.FIREBASE_API_KEY;
+  try {
+    // Verify Apple identity token with Firebase
+    const response = await axios.post(
+      `https://identitytoolkit.googleapis.com/v1/accounts:signInWithIdp?key=${apiKey}`,
+      {
+        postBody: `id_token=${identityToken}&providerId=apple.com`,
+        requestUri: "http://localhost",
+        returnIdpCredential: true,
+        returnSecureToken: true,
+      }
+    );
+
+    const { idToken: firebaseIdToken, refreshToken, localId, email } = response.data;
+    
+    // Build display name from Apple's fullName if provided
+    let displayName = "";
+    if (fullName?.givenName || fullName?.familyName) {
+      displayName = [fullName.givenName, fullName.familyName].filter(Boolean).join(" ");
+    }
+    if (!displayName && email) {
+      displayName = email.split("@")[0];
+    }
+
+    // Create user profile if first time
+    try {
+      await createDocument("Users", localId, {
+        uid: localId,
+        email: email?.toLowerCase(),
+        displayName,
+        provider: "apple",
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      });
+    } catch (e) {
+      // Document may already exist, ignore
+    }
+
+    return res.status(200).json({
+      success: true,
+      idToken: firebaseIdToken,
+      refreshToken,
+      uid: localId,
+      displayName,
+      email,
+    });
+  } catch (err) {
+    console.error("[AuthRoute] Apple sign-in error:", err.response?.data || err.message);
+    return res.status(401).json({ success: false, error: "Apple sign-in failed" });
+  }
+});
+
 module.exports = router;

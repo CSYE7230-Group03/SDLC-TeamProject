@@ -47,11 +47,17 @@ router.post("/photo", verifyFirebaseToken, upload.single("image"), async (req, r
 
     const { originalname, mimetype, buffer } = req.file;
 
-    // 1) Upload to S3
-    const { url } = await uploadIngredientImage(buffer, originalname, mimetype);
+    // 1) Upload to S3 (optional, for storage)
+    let url = null;
+    try {
+      const uploadResult = await uploadIngredientImage(buffer, originalname, mimetype);
+      url = uploadResult.url;
+    } catch (uploadErr) {
+      console.warn("[IngredientsRoute] S3 upload skipped:", uploadErr.message);
+    }
 
-    // 2) Run ingredient detection
-    const detection = await detectIngredientsFromImage(url);
+    // 2) Run ingredient detection with image buffer (more reliable than URL)
+    const detection = await detectIngredientsFromImage(url, buffer);
 
     return res.status(200).json({
       success: true,
