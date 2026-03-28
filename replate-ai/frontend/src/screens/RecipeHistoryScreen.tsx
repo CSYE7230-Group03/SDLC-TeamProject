@@ -9,9 +9,10 @@ import {
   Image,
   ScrollView,
 } from "react-native";
-import { NativeStackScreenProps } from "@react-navigation/native-stack";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { BottomTabScreenProps, useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { Ionicons } from "@expo/vector-icons";
-import { RootStackParamList } from "../navigation/AppNavigator";
+import { TabParamList } from "../navigation/AppNavigator";
 import { getRecipeHistory, RecipeHistoryItem } from "../services/api";
 import { useAppTheme } from "../theme/ThemeProvider";
 
@@ -29,10 +30,11 @@ function formatDate(iso: string): string {
   return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
-type Props = NativeStackScreenProps<RootStackParamList, "RecipeHistory">;
+type Props = BottomTabScreenProps<TabParamList, "History">;
 
 export default function RecipeHistoryScreen({ navigation }: Props) {
   const { theme } = useAppTheme();
+  const tabBarHeight = useBottomTabBarHeight();
   const [recipes, setRecipes] = useState<RecipeHistoryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedRecipe, setSelectedRecipe] = useState<RecipeHistoryItem | null>(null);
@@ -94,17 +96,17 @@ export default function RecipeHistoryScreen({ navigation }: Props) {
 
   if (loading) {
     return (
-      <View style={[styles.centered, { backgroundColor: theme.colors.background }]}>
+      <SafeAreaView style={[styles.centered, { backgroundColor: theme.colors.background }]} edges={["top"]}>
         <ActivityIndicator size="large" color={theme.colors.primary} />
         <Text style={[styles.loadingText, { color: theme.colors.textSecondary }]}>Loading history...</Text>
-      </View>
+      </SafeAreaView>
     );
   }
 
   if (selectedRecipe) {
     return (
-      <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-        <ScrollView showsVerticalScrollIndicator={false}>
+      <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]} edges={["top"]}>
+        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: tabBarHeight }}>
           <TouchableOpacity style={styles.backRow} onPress={() => setSelectedRecipe(null)}>
             <Text style={[styles.backArrow, { color: theme.colors.text }]}>‹</Text>
             <Text style={[styles.backText, { color: theme.colors.text }]}>Back</Text>
@@ -185,13 +187,13 @@ export default function RecipeHistoryScreen({ navigation }: Props) {
             )}
           </View>
         </ScrollView>
-      </View>
+      </SafeAreaView>
     );
   }
 
   if (recipes.length === 0) {
     return (
-      <View style={[styles.centered, { backgroundColor: theme.colors.background }]}>
+      <SafeAreaView style={[styles.centered, { backgroundColor: theme.colors.background }]} edges={["top"]}>
         <View style={styles.emptyIconWrap}>
           <Ionicons name="document-text-outline" size={52} color={theme.colors.textMuted} />
         </View>
@@ -205,17 +207,17 @@ export default function RecipeHistoryScreen({ navigation }: Props) {
         >
           <Text style={styles.emptyButtonText}>Generate Recipes</Text>
         </TouchableOpacity>
-      </View>
+      </SafeAreaView>
     );
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]} edges={["top"]}>
       <FlatList
         data={recipes}
         keyExtractor={(item) => item.historyId || item.id.toString()}
         renderItem={renderRecipeCard}
-        contentContainerStyle={styles.list}
+        contentContainerStyle={[styles.list, { paddingBottom: tabBarHeight }]}
         showsVerticalScrollIndicator={false}
         ListHeaderComponent={
           <Text style={[styles.listCount, { color: theme.colors.textMuted }]}>
@@ -223,7 +225,7 @@ export default function RecipeHistoryScreen({ navigation }: Props) {
           </Text>
         }
       />
-    </View>
+    </SafeAreaView>
   );
 }
 

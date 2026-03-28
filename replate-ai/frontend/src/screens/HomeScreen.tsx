@@ -14,10 +14,10 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { NativeStackScreenProps } from "@react-navigation/native-stack";
+import { BottomTabScreenProps, useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { useFocusEffect } from "@react-navigation/native";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
-import { RootStackParamList } from "../navigation/AppNavigator";
+import { TabParamList } from "../navigation/AppNavigator";
 import {
   clearSession,
   getUserDisplayName,
@@ -29,19 +29,21 @@ import {
 } from "../services/api";
 import { useAppTheme } from "../theme/ThemeProvider";
 import { spacing, radii } from "../theme/theme";
+import { useNavigation } from "@react-navigation/native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { RootStackParamList } from "../navigation/AppNavigator";
 
-type Props = NativeStackScreenProps<RootStackParamList, "Home">;
+type Props = BottomTabScreenProps<TabParamList, "Home">;
+type RootNavProp = NativeStackNavigationProp<RootStackParamList>;
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 // ─── Design tokens for the new green palette ────────────────────────────────
 const GREEN_BG = "#F0F8F0";
 const GREEN_DARK = "#2D5A27";
-const GREEN_DARK_LIGHT = "rgba(45,90,39,0.08)";
 const CARD_WHITE = "#FFFFFF";
 const TEXT_PRIMARY = "#1A1A1A";
 const TEXT_SECONDARY = "#666666";
-const BORDER_GRAY = "#E0E0E0";
 
 const REC_CARD_WIDTH = 260;
 const WEEK_CARD_WIDTH = 180;
@@ -49,16 +51,10 @@ const WEEK_CARD_WIDTH = 180;
 const CACHE_KEY_RECOMMENDATIONS = "replate_cached_recommendations";
 const CACHE_KEY_INVENTORY_COUNT = "replate_cached_inventory_count";
 
-// Bottom tab definition
-const TABS = [
-  { key: "home", label: "Home", icon: "home" as const },
-  { key: "capture", label: "Capture", icon: "camera" as const },
-  { key: "history", label: "History", icon: "time" as const },
-  { key: "profile", label: "Profile", icon: "person" as const },
-] as const;
-
 export default function HomeScreen({ navigation }: Props) {
   const { theme } = useAppTheme();
+  const rootNavigation = useNavigation<RootNavProp>();
+  const tabBarHeight = useBottomTabBarHeight();
 
   // ─── Existing state ──────────────────────────────────────────────────────
   const [userName, setUserName] = useState<string>("");
@@ -71,11 +67,6 @@ export default function HomeScreen({ navigation }: Props) {
   const [profileAnalysis, setProfileAnalysis] =
     useState<ProfileAnalysis | null>(null);
   const [loadingProfile, setLoadingProfile] = useState(false);
-
-  // ─── New UI state ────────────────────────────────────────────────────────
-  const [activeTab, setActiveTab] = useState<
-    "home" | "capture" | "history" | "profile"
-  >("home");
 
   // ─── Animations ──────────────────────────────────────────────────────────
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -257,24 +248,6 @@ export default function HomeScreen({ navigation }: Props) {
     }
   }
 
-  // ─── Tab press handler ───────────────────────────────────────────────────
-  function handleTabPress(key: typeof activeTab) {
-    setActiveTab(key);
-    switch (key) {
-      case "capture":
-        navigation.navigate("Capture");
-        break;
-      case "history":
-        navigation.navigate("RecipeHistory");
-        break;
-      case "profile":
-        navigation.navigate("ProfilePreferences");
-        break;
-      default:
-        break;
-    }
-  }
-
   // ─── Helpers ─────────────────────────────────────────────────────────────
   function getInitials(name: string): string {
     return name
@@ -307,7 +280,7 @@ export default function HomeScreen({ navigation }: Props) {
     return (
       <TouchableOpacity
         style={styles.recCard}
-        onPress={() => navigation.navigate("RecipeDetail", { recipe: item })}
+        onPress={() => rootNavigation.navigate("RecipeDetail", { recipe: item })}
         activeOpacity={0.88}
       >
         {/* Image fill */}
@@ -356,7 +329,7 @@ export default function HomeScreen({ navigation }: Props) {
       <TouchableOpacity
         key={item.id.toString()}
         style={styles.weekCard}
-        onPress={() => navigation.navigate("RecipeDetail", { recipe: item })}
+        onPress={() => rootNavigation.navigate("RecipeDetail", { recipe: item })}
         activeOpacity={0.88}
       >
         {item.image ? (
@@ -422,7 +395,7 @@ export default function HomeScreen({ navigation }: Props) {
           {/* Hamburger / menu */}
           <TouchableOpacity
             style={styles.menuButton}
-            onPress={() => navigation.navigate("ProfilePreferences")}
+            onPress={() => navigation.navigate("Profile")}
             activeOpacity={0.7}
           >
             <View style={styles.hamburgerLine} />
@@ -447,7 +420,7 @@ export default function HomeScreen({ navigation }: Props) {
           <View style={styles.sectionHeaderRow}>
             <Text style={styles.sectionTitle}>Recommendation</Text>
             <TouchableOpacity
-              onPress={() => navigation.navigate("RecipeHistory")}
+              onPress={() => navigation.navigate("History")}
               activeOpacity={0.7}
             >
               <Text style={styles.seeAllText}>See All</Text>
@@ -483,6 +456,7 @@ export default function HomeScreen({ navigation }: Props) {
                 onPress={() => navigation.navigate("Capture")}
                 activeOpacity={0.85}
               >
+
                 <Ionicons name="camera-outline" size={16} color={CARD_WHITE} />
                 <Text style={styles.scanButtonText}>Scan Ingredients</Text>
               </TouchableOpacity>
@@ -509,157 +483,10 @@ export default function HomeScreen({ navigation }: Props) {
           </View>
         )}
 
-        {/* ── Quick Actions grid ─────────────────────────────────────────── */}
-        <View style={styles.section}>
-          <View style={styles.menuGrid}>
-            <TouchableOpacity
-              style={styles.menuCard}
-              onPress={() => navigation.navigate("Capture")}
-              activeOpacity={0.8}
-            >
-              <View style={styles.menuCardRow}>
-                <View
-                  style={[
-                    styles.menuIconBg,
-                    { backgroundColor: GREEN_DARK_LIGHT },
-                  ]}
-                >
-                  <Ionicons name="camera" size={18} color={GREEN_DARK} />
-                </View>
-                <View style={styles.menuCardText}>
-                  <Text style={styles.menuTitle}>Capture</Text>
-                  <Text style={styles.menuDesc}>Identify ingredients</Text>
-                </View>
-              </View>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.menuCard}
-              onPress={() => navigation.navigate("Inventory")}
-              activeOpacity={0.8}
-            >
-              <View style={styles.menuCardRow}>
-                <View
-                  style={[
-                    styles.menuIconBg,
-                    { backgroundColor: GREEN_DARK_LIGHT },
-                  ]}
-                >
-                  <MaterialCommunityIcons
-                    name="fridge-outline"
-                    size={18}
-                    color={GREEN_DARK}
-                  />
-                </View>
-                <View style={styles.menuCardText}>
-                  <Text style={styles.menuTitle}>Inventory</Text>
-                  <Text style={styles.menuDesc}>
-                    {inventoryCount > 0
-                      ? `${inventoryCount} items`
-                      : "View items"}
-                  </Text>
-                </View>
-              </View>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.menuCard}
-              onPress={() => navigation.navigate("RecipeHistory")}
-              activeOpacity={0.8}
-            >
-              <View style={styles.menuCardRow}>
-                <View
-                  style={[
-                    styles.menuIconBg,
-                    { backgroundColor: GREEN_DARK_LIGHT },
-                  ]}
-                >
-                  <Ionicons name="time" size={18} color={GREEN_DARK} />
-                </View>
-                <View style={styles.menuCardText}>
-                  <Text style={styles.menuTitle}>History</Text>
-                  <Text style={styles.menuDesc}>What you've cooked</Text>
-                </View>
-              </View>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.menuCard}
-              onPress={() => navigation.navigate("ProfilePreferences")}
-              activeOpacity={0.8}
-            >
-              <View style={styles.menuCardRow}>
-                <View
-                  style={[
-                    styles.menuIconBg,
-                    { backgroundColor: GREEN_DARK_LIGHT },
-                  ]}
-                >
-                  <Ionicons
-                    name="settings-outline"
-                    size={18}
-                    color={GREEN_DARK}
-                  />
-                </View>
-                <View style={styles.menuCardText}>
-                  <Text style={styles.menuTitle}>Preferences</Text>
-                  <Text style={styles.menuDesc}>Diet &amp; profile</Text>
-                </View>
-              </View>
-            </TouchableOpacity>
-          </View>
-        </View>
 
         {/* Bottom padding so content clears tab bar */}
-        <View style={{ height: 100 }} />
+        <View style={{ height: tabBarHeight }} />
       </ScrollView>
-
-      {/* ── Bottom tab bar (fixed) ────────────────────────────────────────── */}
-      <View style={styles.tabBar}>
-        {TABS.map((tab) => {
-          const isActive = activeTab === tab.key;
-          const isCapture = tab.key === "capture";
-
-          if (isCapture) {
-            return (
-              <TouchableOpacity
-                key={tab.key}
-                style={styles.tabItem}
-                onPress={() => handleTabPress(tab.key)}
-                activeOpacity={0.8}
-              >
-                <View style={styles.captureTabButton}>
-                  <Ionicons name="camera" size={24} color={CARD_WHITE} />
-                </View>
-                <Text style={[styles.tabLabel, { marginTop: 4 }]}>
-                  {tab.label}
-                </Text>
-              </TouchableOpacity>
-            );
-          }
-
-          return (
-            <TouchableOpacity
-              key={tab.key}
-              style={styles.tabItem}
-              onPress={() => handleTabPress(tab.key)}
-              activeOpacity={0.75}
-            >
-              <Ionicons
-                name={isActive ? tab.icon : (`${tab.icon}-outline` as any)}
-                size={22}
-                color={isActive ? GREEN_DARK : TEXT_SECONDARY}
-              />
-              <Text
-                style={[styles.tabLabel, isActive && styles.tabLabelActive]}
-              >
-                {tab.label}
-              </Text>
-              {isActive && <View style={styles.tabActiveDot} />}
-            </TouchableOpacity>
-          );
-        })}
-      </View>
     </SafeAreaView>
   );
 }
@@ -872,7 +699,7 @@ const styles = StyleSheet.create({
     borderRadius: radii.lg,
     padding: spacing.md,
     borderWidth: 1,
-    borderColor: BORDER_GRAY,
+    borderColor: "#E0E0E0",
   },
   menuCardRow: {
     flexDirection: "row",
@@ -940,58 +767,4 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
 
-  // Bottom tab bar
-  tabBar: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    flexDirection: "row",
-    backgroundColor: CARD_WHITE,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    paddingTop: 12,
-    paddingBottom: 24,
-    paddingHorizontal: spacing.lg,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: -3 },
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
-    elevation: 12,
-  },
-  tabItem: {
-    flex: 1,
-    alignItems: "center",
-    gap: 4,
-  },
-  captureTabButton: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    backgroundColor: GREEN_DARK,
-    justifyContent: "center",
-    alignItems: "center",
-    marginTop: -24,
-    shadowColor: GREEN_DARK,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.35,
-    shadowRadius: 8,
-    elevation: 8,
-  },
-  tabLabel: {
-    fontSize: 11,
-    fontWeight: "500",
-    color: TEXT_SECONDARY,
-  },
-  tabLabelActive: {
-    color: GREEN_DARK,
-    fontWeight: "700",
-  },
-  tabActiveDot: {
-    width: 4,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: GREEN_DARK,
-    marginTop: 2,
-  },
 });

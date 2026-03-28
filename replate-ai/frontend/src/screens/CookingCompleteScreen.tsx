@@ -155,7 +155,7 @@ export default function CookingCompleteScreen({ route, navigation }: Props) {
         <View style={styles.buttonContainer}>
           <TouchableOpacity
             style={[styles.primaryButton, { backgroundColor: theme.colors.buttonPrimary, shadowColor: theme.colors.buttonPrimary }]}
-            onPress={() => navigation.navigate("Capture")}
+            onPress={() => navigation.navigate("MainTabs")}
             activeOpacity={0.8}
           >
             <Ionicons name="camera" size={20} color="#fff" />
@@ -164,7 +164,7 @@ export default function CookingCompleteScreen({ route, navigation }: Props) {
 
           <TouchableOpacity
             style={[styles.secondaryButton, { backgroundColor: theme.colors.card, borderColor: theme.colors.buttonSecondaryBorder }]}
-            onPress={() => navigation.navigate("Home")}
+            onPress={() => navigation.navigate("MainTabs")}
             activeOpacity={0.8}
           >
             <Ionicons name="home-outline" size={20} color={theme.colors.textSecondary} />

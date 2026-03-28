@@ -10,8 +10,9 @@ import {
   ScrollView,
   Switch,
 } from "react-native";
-import { NativeStackScreenProps } from "@react-navigation/native-stack";
-import { RootStackParamList } from "../navigation/AppNavigator";
+import { BottomTabScreenProps, useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { TabParamList } from "../navigation/AppNavigator";
 import {
   getUserProfile,
   updateUserProfile,
@@ -25,7 +26,7 @@ import { useAppTheme } from "../theme/ThemeProvider";
 import { ThemeMode, spacing, radii } from "../theme/theme";
 import { cancelExpiryReminders, scheduleExpiryReminders } from "../services/expiryNotifications";
 
-type Props = NativeStackScreenProps<RootStackParamList, "ProfilePreferences">;
+type Props = BottomTabScreenProps<TabParamList, "Profile">;
 
 function parseCsv(value: string): string[] {
   return value
@@ -36,6 +37,7 @@ function parseCsv(value: string): string[] {
 
 export default function ProfilePreferencesScreen({ navigation }: Props) {
   const { themeMode, setThemeMode, theme } = useAppTheme();
+  const tabBarHeight = useBottomTabBarHeight();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -162,7 +164,8 @@ export default function ProfilePreferencesScreen({ navigation }: Props) {
   }
 
   return (
-    <ScrollView style={[styles.container, { backgroundColor: theme.colors.background }]} contentContainerStyle={styles.content}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]} edges={["top"]}>
+    <ScrollView style={{ flex: 1 }} contentContainerStyle={[styles.content, { paddingBottom: tabBarHeight }]}>
       <Text style={[styles.title, { color: theme.colors.text }]}>Profile & Preferences</Text>
 
       <View style={[styles.card, { backgroundColor: theme.colors.card, borderColor: theme.colors.border }]}>
@@ -281,6 +284,7 @@ export default function ProfilePreferencesScreen({ navigation }: Props) {
         )}
       </TouchableOpacity>
     </ScrollView>
+    </SafeAreaView>
   );
 }
 

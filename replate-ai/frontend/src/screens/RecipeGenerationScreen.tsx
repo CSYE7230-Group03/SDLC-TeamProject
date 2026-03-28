@@ -140,7 +140,7 @@ export default function RecipeGenerationScreen({ route, navigation }: Props) {
     navigation.setOptions({
       headerRight: () => (
         <TouchableOpacity
-          onPress={() => navigation.navigate("RecipeHistory")}
+          onPress={() => navigation.navigate("MainTabs")}
           style={{ marginRight: 16, flexDirection: "row", alignItems: "center", gap: 5 }}
         >
           <Ionicons name="time-outline" size={16} color={theme.colors.text} />

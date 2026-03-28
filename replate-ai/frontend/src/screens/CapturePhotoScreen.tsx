@@ -11,18 +11,24 @@ import {
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { NativeStackScreenProps } from "@react-navigation/native-stack";
+import { BottomTabScreenProps, useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
-import { RootStackParamList } from "../navigation/AppNavigator";
+import { TabParamList, RootStackParamList } from "../navigation/AppNavigator";
 import { detectIngredients } from "../services/api";
 import { useAppTheme } from "../theme/ThemeProvider";
+import { useNavigation } from "@react-navigation/native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
-type Props = NativeStackScreenProps<RootStackParamList, "Capture">;
+type Props = BottomTabScreenProps<TabParamList, "Capture">;
+type RootNavProp = NativeStackNavigationProp<RootStackParamList>;
 
 const LAST_INGREDIENT_IMAGE_KEY = "replate_last_ingredient_image";
 
 export default function CapturePhotoScreen({ navigation }: Props) {
   const { theme } = useAppTheme();
+  const rootNavigation = useNavigation<RootNavProp>();
+  const tabBarHeight = useBottomTabBarHeight();
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -98,7 +104,7 @@ export default function CapturePhotoScreen({ navigation }: Props) {
           timestamp: Date.now(),
         }));
 
-        navigation.navigate("IngredientReview", {
+        rootNavigation.navigate("IngredientReview", {
           detectedIngredients: response.ingredients,
           imageUri: selectedImage,
         });
@@ -113,7 +119,8 @@ export default function CapturePhotoScreen({ navigation }: Props) {
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.colors.background }]} edges={["top"]}>
+    <View style={[styles.container, { backgroundColor: theme.colors.background, paddingBottom: tabBarHeight }]}>
       {/* Instructions */}
       <Animated.View style={[styles.instructionCard, { opacity: fadeAnim, backgroundColor: theme.colors.accentLight }]}>
         <Ionicons name="information-circle" size={20} color={theme.colors.accent} />
@@ -211,10 +218,14 @@ export default function CapturePhotoScreen({ navigation }: Props) {
         </TouchableOpacity>
       </Animated.View>
     </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+  },
   container: {
     flex: 1,
     paddingHorizontal: 20,

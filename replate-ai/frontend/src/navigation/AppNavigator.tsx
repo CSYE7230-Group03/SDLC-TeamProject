@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { ActivityIndicator, View, Text, TouchableOpacity } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
+import { ActivityIndicator, View } from "react-native";
 import { useAppTheme } from "../theme/ThemeProvider";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import CapturePhotoScreen from "../screens/CapturePhotoScreen";
 import IngredientReviewScreen from "../screens/IngredientReviewScreen";
 import RecipeGenerationScreen from "../screens/RecipeGenerationScreen";
@@ -18,14 +18,13 @@ import ForgotPasswordScreen from "../screens/ForgotPasswordScreen";
 import { loadStoredSession } from "../services/api";
 import RecipeHistoryScreen from "../screens/RecipeHistoryScreen";
 import GroceryListScreen from "../screens/GroceryListScreen";
+import BottomTabBar from "../components/BottomTabBar";
 
 export type RootStackParamList = {
   Login: undefined;
   Signup: undefined;
   ForgotPassword: undefined;
-  Home: undefined;
-  Capture: undefined;
-  Inventory: undefined;
+  MainTabs: undefined;
   IngredientReview: {
     detectedIngredients: { name: string; confidence: number; quantity?: number; unit?: string }[];
     imageUri?: string;
@@ -55,8 +54,6 @@ export type RootStackParamList = {
       funFact: string;
     };
   };
-  ProfilePreferences: undefined;
-  RecipeHistory: undefined;
   CookingComplete: {
     recipe: {
       title: string;
@@ -72,17 +69,40 @@ export type RootStackParamList = {
   };
 };
 
+export type TabParamList = {
+  Home: undefined;
+  Inventory: undefined;
+  Capture: undefined;
+  History: undefined;
+  Profile: undefined;
+};
+
 const Stack = createNativeStackNavigator<RootStackParamList>();
+const Tab = createBottomTabNavigator<TabParamList>();
+
+function TabNavigator() {
+  return (
+    <Tab.Navigator
+      tabBar={(props) => <BottomTabBar {...props} />}
+      screenOptions={{ headerShown: false }}
+    >
+      <Tab.Screen name="Home" component={HomeScreen} />
+      <Tab.Screen name="Inventory" component={InventoryScreen} />
+      <Tab.Screen name="Capture" component={CapturePhotoScreen} />
+      <Tab.Screen name="History" component={RecipeHistoryScreen} />
+      <Tab.Screen name="Profile" component={ProfilePreferencesScreen} />
+    </Tab.Navigator>
+  );
+}
 
 export default function AppNavigator() {
   const { theme } = useAppTheme();
   const [initializing, setInitializing] = useState(true);
-  const [initialRoute, setInitialRoute] =
-    useState<keyof RootStackParamList>("Login");
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
     loadStoredSession().then((loggedIn) => {
-      setInitialRoute(loggedIn ? "Home" : "Login");
+      setIsLoggedIn(loggedIn);
       setInitializing(false);
     });
   }, []);
@@ -99,106 +119,38 @@ export default function AppNavigator() {
 
   return (
     <Stack.Navigator
-      initialRouteName={initialRoute}
-      screenOptions={{ headerShown: true }}
+      initialRouteName={isLoggedIn ? "MainTabs" : "Login"}
+      screenOptions={{ headerShown: false }}
     >
-      <Stack.Screen
-        name="Login"
-        component={LoginScreen}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="Signup"
-        component={SignupScreen}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="ForgotPassword"
-        component={ForgotPasswordScreen}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="Home"
-        component={HomeScreen}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="Capture"
-        component={CapturePhotoScreen}
-        options={({ navigation }) => ({
-          title: "Capture Ingredients",
-          headerLeft: () => (
-            <TouchableOpacity
-              onPress={() => navigation.navigate("Home")}
-              style={{ marginLeft: 8, padding: 4, flexDirection: "row", alignItems: "center", gap: 2 }}
-            >
-              <Ionicons name="chevron-back" size={20} color={theme.colors.primary} />
-              <Text style={{ fontSize: 15, fontWeight: "600", color: theme.colors.primary }}>Home</Text>
-            </TouchableOpacity>
-          ),
-        })}
-      />
-      <Stack.Screen
-        name="Inventory"
-        component={InventoryScreen}
-        options={({ navigation }) => ({
-          title: "My Inventory",
-          headerLeft: () => (
-            <TouchableOpacity
-              onPress={() => navigation.navigate("Home")}
-              style={{ marginLeft: 8, padding: 4, flexDirection: "row", alignItems: "center", gap: 2 }}
-            >
-              <Ionicons name="chevron-back" size={20} color={theme.colors.primary} />
-              <Text style={{ fontSize: 15, fontWeight: "600", color: theme.colors.primary }}>Home</Text>
-            </TouchableOpacity>
-          ),
-        })}
-      />
+      <Stack.Screen name="Login" component={LoginScreen} />
+      <Stack.Screen name="Signup" component={SignupScreen} />
+      <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
+      <Stack.Screen name="MainTabs" component={TabNavigator} />
       <Stack.Screen
         name="IngredientReview"
         component={IngredientReviewScreen}
-        options={{ title: "Review Ingredients" }}
+        options={{ headerShown: true, title: "Review Ingredients" }}
       />
       <Stack.Screen
         name="RecipeGeneration"
         component={RecipeGenerationScreen}
-        options={{ title: "Generated Recipes" }}
+        options={{ headerShown: true, title: "Generated Recipes" }}
       />
       <Stack.Screen
         name="RecipeDetail"
         component={RecipeDetailScreen}
-        options={{ title: "Recipe Details" }}
+        options={{ headerShown: true, title: "Recipe Details" }}
       />
       <Stack.Screen
         name="ProfileDetail"
         component={ProfileDetailScreen}
-        options={{ title: "Your Fridge Profile" }}
-      />
-      <Stack.Screen
-        name="ProfilePreferences"
-        component={ProfilePreferencesScreen}
-        options={{ title: "Profile & Preferences" }}
-      />
-      <Stack.Screen
-        name="RecipeHistory"
-        component={RecipeHistoryScreen}
-        options={({ navigation }) => ({
-          title: "Recipe History",
-          headerLeft: () => (
-            <TouchableOpacity
-              onPress={() => navigation.navigate("Home")}
-              style={{ marginLeft: 8, padding: 4, flexDirection: "row", alignItems: "center", gap: 2 }}
-            >
-              <Ionicons name="chevron-back" size={20} color={theme.colors.primary} />
-              <Text style={{ fontSize: 15, fontWeight: "600", color: theme.colors.primary }}>Home</Text>
-            </TouchableOpacity>
-          ),
-        })}
+        options={{ headerShown: true, title: "Your Fridge Profile" }}
       />
       <Stack.Screen
         name="CookingComplete"
         component={CookingCompleteScreen}
         options={{
+          headerShown: true,
           title: "Cooking Complete",
           headerLeft: () => null,
           headerBackVisible: false,
@@ -207,7 +159,7 @@ export default function AppNavigator() {
       <Stack.Screen
         name="GroceryList"
         component={GroceryListScreen}
-        options={{ title: "Grocery List" }}
+        options={{ headerShown: true, title: "Grocery List" }}
       />
     </Stack.Navigator>
   );

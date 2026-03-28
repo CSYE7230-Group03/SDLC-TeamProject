@@ -102,7 +102,7 @@ export default function SignupScreen({ navigation }: Props) {
         const loginResult = await signIn({ email: email.trim(), password });
         if (loginResult.success && loginResult.idToken && loginResult.refreshToken) {
           await saveSession(loginResult.idToken, loginResult.refreshToken, displayName.trim());
-          navigation.replace("Home");
+          navigation.replace("MainTabs");
         } else {
           // Account created but auto-login failed — send to Login
           navigation.replace("Login");

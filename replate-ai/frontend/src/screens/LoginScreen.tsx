@@ -138,7 +138,7 @@ export default function LoginScreen({ navigation }: Props) {
       const result = await signIn({ email: email.trim(), password });
       if (result.success && result.idToken && result.refreshToken) {
         await saveSession(result.idToken, result.refreshToken, result.displayName || email.split("@")[0]);
-        navigation.replace("Home");
+        navigation.replace("MainTabs");
       } else {
         setFormError(mapSignInError(result.error || ""));
       }

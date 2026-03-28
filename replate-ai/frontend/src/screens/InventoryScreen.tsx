@@ -10,10 +10,11 @@ import {
   Animated,
   Image,
 } from "react-native";
-import { NativeStackScreenProps } from "@react-navigation/native-stack";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { BottomTabScreenProps, useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
-import { RootStackParamList } from "../navigation/AppNavigator";
+import { TabParamList } from "../navigation/AppNavigator";
 import { getUserInventory, InventoryItem } from "../services/api";
 import { useAppTheme } from "../theme/ThemeProvider";
 import { spacing, radii } from "../theme/theme";
@@ -64,10 +65,11 @@ function getIngredientIcon(ingredientName: string): IconInfo {
   return { name: "food-apple-outline", color: "#888888", bg: "#F5F5F3" };
 }
 
-type Props = NativeStackScreenProps<RootStackParamList, "Inventory">;
+type Props = BottomTabScreenProps<TabParamList, "Inventory">;
 
 export default function InventoryScreen({ navigation }: Props) {
   const { theme } = useAppTheme();
+  const tabBarHeight = useBottomTabBarHeight();
   const [items, setItems] = useState<InventoryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -175,10 +177,12 @@ export default function InventoryScreen({ navigation }: Props) {
 
   if (loading) {
     return (
-      <View style={[styles.centered, { backgroundColor: theme.colors.background }]}>
-        <ActivityIndicator size="large" color={theme.colors.text} />
-        <Text style={[styles.loadingText, { color: theme.colors.textSecondary }]}>Loading inventory...</Text>
-      </View>
+      <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.colors.background }]} edges={["top"]}>
+        <View style={[styles.centered, { backgroundColor: theme.colors.background, flex: 1 }]}>
+          <ActivityIndicator size="large" color={theme.colors.text} />
+          <Text style={[styles.loadingText, { color: theme.colors.textSecondary }]}>Loading inventory...</Text>
+        </View>
+      </SafeAreaView>
     );
   }
 
@@ -186,88 +190,93 @@ export default function InventoryScreen({ navigation }: Props) {
   const emptyItems = items.filter((i) => i.quant === 0);
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      {/* Summary Header */}
-      <View style={[styles.summary, { backgroundColor: theme.colors.card, borderBottomColor: theme.colors.border }]}>
-        <View style={styles.summaryItem}>
-          <Text style={[styles.summaryNumber, { color: theme.colors.text }]}>{activeItems.length}</Text>
-          <Text style={[styles.summaryLabel, { color: theme.colors.textMuted }]}>Available</Text>
-        </View>
-        <View style={[styles.summaryDivider, { backgroundColor: theme.colors.border }]} />
-        <View style={styles.summaryItem}>
-          <Text style={[styles.summaryNumber, { color: theme.colors.textMuted }]}>{emptyItems.length}</Text>
-          <Text style={[styles.summaryLabel, { color: theme.colors.textMuted }]}>Out of stock</Text>
-        </View>
-      </View>
-
-      {items.length === 0 ? (
-        <View style={[styles.centered, { backgroundColor: theme.colors.background }]}>
-          <View style={[styles.emptyIconContainer, { backgroundColor: theme.colors.inputBg }]}>
-            <MaterialCommunityIcons name="fridge-outline" size={64} color={theme.colors.textMuted} />
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.colors.background }]} edges={["top"]}>
+      <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+        {/* Summary Header */}
+        <View style={[styles.summary, { backgroundColor: theme.colors.card, borderBottomColor: theme.colors.border }]}>
+          <View style={styles.summaryItem}>
+            <Text style={[styles.summaryNumber, { color: theme.colors.text }]}>{activeItems.length}</Text>
+            <Text style={[styles.summaryLabel, { color: theme.colors.textMuted }]}>Available</Text>
           </View>
-          <Text style={[styles.emptyTitle, { color: theme.colors.text }]}>Nothing in your pantry yet</Text>
-          <Text style={[styles.emptySubtitle, { color: theme.colors.textMuted }]}>
-            Photograph your ingredients to start tracking what you have.
-          </Text>
+          <View style={[styles.summaryDivider, { backgroundColor: theme.colors.border }]} />
+          <View style={styles.summaryItem}>
+            <Text style={[styles.summaryNumber, { color: theme.colors.textMuted }]}>{emptyItems.length}</Text>
+            <Text style={[styles.summaryLabel, { color: theme.colors.textMuted }]}>Out of stock</Text>
+          </View>
+        </View>
+
+        {items.length === 0 ? (
+          <View style={[styles.centered, { backgroundColor: theme.colors.background }]}>
+            <View style={[styles.emptyIconContainer, { backgroundColor: theme.colors.inputBg }]}>
+              <MaterialCommunityIcons name="fridge-outline" size={64} color={theme.colors.textMuted} />
+            </View>
+            <Text style={[styles.emptyTitle, { color: theme.colors.text }]}>Nothing in your pantry yet</Text>
+            <Text style={[styles.emptySubtitle, { color: theme.colors.textMuted }]}>
+              Photograph your ingredients to start tracking what you have.
+            </Text>
+            <TouchableOpacity
+              style={[styles.addButton, { backgroundColor: theme.colors.buttonPrimary }]}
+              onPress={() => navigation.navigate("Capture")}
+            >
+              <Ionicons name="camera" size={20} color={theme.colors.buttonPrimaryText} />
+              <Text style={[styles.addButtonText, { color: theme.colors.buttonPrimaryText }]}>Scan Ingredients</Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <FlatList
+            data={[...activeItems, ...emptyItems]}
+            keyExtractor={(item) => item.id}
+            renderItem={renderItem}
+            contentContainerStyle={[styles.list, { paddingBottom: 16 }]}
+            showsVerticalScrollIndicator={false}
+            ListHeaderComponent={
+              lastImage ? (
+                <View style={[styles.lastImageContainer, { backgroundColor: theme.colors.card }]}>
+                  <View style={[styles.lastImageHeader, { borderBottomColor: theme.colors.border }]}>
+                    <Ionicons name="image" size={18} color={theme.colors.text} />
+                    <Text style={[styles.lastImageTitle, { color: theme.colors.text }]}>Recent Scan</Text>
+                    <Text style={[styles.lastImageTime, { color: theme.colors.textMuted }]}>
+                      {formatTimeAgo(lastImage.timestamp)}
+                    </Text>
+                  </View>
+                  <Image
+                    source={{ uri: lastImage.uri }}
+                    style={styles.lastImage}
+                    resizeMode="cover"
+                  />
+                </View>
+              ) : null
+            }
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                tintColor={theme.colors.text}
+              />
+            }
+          />
+        )}
+
+        {/* Bottom Action — sits above the tab bar */}
+        <View style={[styles.bottomAction, { backgroundColor: theme.colors.background, borderTopColor: theme.colors.border, paddingBottom: tabBarHeight }]}>
           <TouchableOpacity
-            style={[styles.addButton, { backgroundColor: theme.colors.buttonPrimary }]}
+            style={[styles.captureButton, { backgroundColor: theme.colors.buttonPrimary }]}
             onPress={() => navigation.navigate("Capture")}
+            activeOpacity={0.8}
           >
             <Ionicons name="camera" size={20} color={theme.colors.buttonPrimaryText} />
-            <Text style={[styles.addButtonText, { color: theme.colors.buttonPrimaryText }]}>Scan Ingredients</Text>
+            <Text style={[styles.captureButtonText, { color: theme.colors.buttonPrimaryText }]}>Scan More Ingredients</Text>
           </TouchableOpacity>
         </View>
-      ) : (
-        <FlatList
-          data={[...activeItems, ...emptyItems]}
-          keyExtractor={(item) => item.id}
-          renderItem={renderItem}
-          contentContainerStyle={styles.list}
-          showsVerticalScrollIndicator={false}
-          ListHeaderComponent={
-            lastImage ? (
-              <View style={[styles.lastImageContainer, { backgroundColor: theme.colors.card }]}>
-                <View style={[styles.lastImageHeader, { borderBottomColor: theme.colors.border }]}>
-                  <Ionicons name="image" size={18} color={theme.colors.text} />
-                  <Text style={[styles.lastImageTitle, { color: theme.colors.text }]}>Recent Scan</Text>
-                  <Text style={[styles.lastImageTime, { color: theme.colors.textMuted }]}>
-                    {formatTimeAgo(lastImage.timestamp)}
-                  </Text>
-                </View>
-                <Image
-                  source={{ uri: lastImage.uri }}
-                  style={styles.lastImage}
-                  resizeMode="cover"
-                />
-              </View>
-            ) : null
-          }
-          refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={onRefresh}
-              tintColor={theme.colors.text}
-            />
-          }
-        />
-      )}
-
-      {/* Bottom Action */}
-      <View style={[styles.bottomAction, { backgroundColor: theme.colors.background, borderTopColor: theme.colors.border }]}>
-        <TouchableOpacity
-          style={[styles.captureButton, { backgroundColor: theme.colors.buttonPrimary }]}
-          onPress={() => navigation.navigate("Capture")}
-          activeOpacity={0.8}
-        >
-          <Ionicons name="camera" size={20} color={theme.colors.buttonPrimaryText} />
-          <Text style={[styles.captureButtonText, { color: theme.colors.buttonPrimaryText }]}>Scan More Ingredients</Text>
-        </TouchableOpacity>
       </View>
-    </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+  },
   container: {
     flex: 1,
   },
@@ -386,10 +395,6 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   bottomAction: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
     padding: spacing.lg,
     borderTopWidth: 1,
   },
@@ -429,4 +434,5 @@ const styles = StyleSheet.create({
     width: "100%",
     height: 160,
   },
+
 });
