@@ -15,14 +15,14 @@ import {
   toggleGroceryItemAvailability,
   GroceryListItem,
 } from "../services/api";
-
-const PRIMARY = "#1A1A1A";
-const BG = "#FAFAF8";
+import { useAppTheme } from "../theme/ThemeProvider";
+import { spacing, radii } from "../theme/theme";
 
 type Props = NativeStackScreenProps<RootStackParamList, "GroceryList">;
 
 export default function GroceryListScreen({ route, navigation }: Props) {
   const { listId, recipeTitle } = route.params;
+  const { theme } = useAppTheme();
 
   const [items, setItems] = useState<GroceryListItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -42,7 +42,7 @@ export default function GroceryListScreen({ route, navigation }: Props) {
       if (res.success && res.list) {
         setItems(res.list.items);
       } else {
-        setLoadError(res.error ?? "Failed to load grocery list.");
+        setLoadError(res.error ?? "Couldn't load your grocery list.");
       }
     } catch {
       setLoadError("Network error. Please try again.");
@@ -83,7 +83,7 @@ export default function GroceryListScreen({ route, navigation }: Props) {
               i.id === item.id ? { ...i, isAvailableAtHome: item.isAvailableAtHome } : i
             )
           );
-          Alert.alert("Error", res.error ?? "Could not update item.");
+          Alert.alert("Couldn't Update", res.error ?? "This item couldn't be updated. Please try again.");
         }
       } catch {
         // Revert on network error
@@ -92,7 +92,7 @@ export default function GroceryListScreen({ route, navigation }: Props) {
             i.id === item.id ? { ...i, isAvailableAtHome: item.isAvailableAtHome } : i
           )
         );
-        Alert.alert("Error", "Network error. Please try again.");
+        Alert.alert("Connection Error", "Check your connection and try again.");
       } finally {
         setTogglingId(null);
       }
@@ -108,7 +108,7 @@ export default function GroceryListScreen({ route, navigation }: Props) {
       .map((i) => `• ${i.name} — ${i.amount} ${i.unit}`.trim())
       .join("\n");
 
-    Alert.alert("Grocery Order", `Items to buy:\n\n${itemLines}`);
+    Alert.alert("Items to Buy", `Here's what to pick up:\n\n${itemLines}`);
   }
 
   const neededCount = items.filter((i) => !i.isAvailableAtHome).length;
@@ -119,9 +119,13 @@ export default function GroceryListScreen({ route, navigation }: Props) {
     const isToggling = togglingId === item.id;
 
     return (
-      <View style={styles.itemRow}>
+      <View style={[styles.itemRow, { backgroundColor: theme.colors.card }]}>
         <TouchableOpacity
-          style={[styles.checkbox, available && styles.checkboxChecked]}
+          style={[
+            styles.checkbox,
+            { borderColor: theme.colors.border },
+            available && { backgroundColor: theme.colors.text, borderColor: theme.colors.text },
+          ]}
           onPress={() => handleToggle(item)}
           disabled={isToggling}
           accessibilityRole="checkbox"
@@ -132,17 +136,17 @@ export default function GroceryListScreen({ route, navigation }: Props) {
         </TouchableOpacity>
 
         <View style={styles.itemInfo}>
-          <Text style={[styles.itemName, available && styles.itemNameMuted]}>
+          <Text style={[styles.itemName, { color: available ? theme.colors.textMuted : theme.colors.text }]}>
             {item.name}
           </Text>
-          <Text style={[styles.itemAmount, available && styles.itemAmountMuted]}>
+          <Text style={[styles.itemAmount, { color: available ? theme.colors.divider : theme.colors.textMuted }]}>
             {item.amount} {item.unit}
           </Text>
         </View>
 
         {available && (
-          <View style={styles.atHomeBadge}>
-            <Text style={styles.atHomeBadgeText}>At home</Text>
+          <View style={[styles.atHomeBadge, { backgroundColor: theme.colors.successLight }]}>
+            <Text style={[styles.atHomeBadgeText, { color: theme.colors.success }]}>At home</Text>
           </View>
         )}
       </View>
@@ -151,29 +155,32 @@ export default function GroceryListScreen({ route, navigation }: Props) {
 
   if (loading) {
     return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" color={PRIMARY} />
-        <Text style={styles.loadingText}>Loading grocery list...</Text>
+      <View style={[styles.centered, { backgroundColor: theme.colors.background }]}>
+        <ActivityIndicator size="large" color={theme.colors.text} />
+        <Text style={[styles.loadingText, { color: theme.colors.textMuted }]}>Loading grocery list...</Text>
       </View>
     );
   }
 
   if (loadError) {
     return (
-      <View style={styles.centered}>
-        <Text style={styles.errorText}>{loadError}</Text>
-        <TouchableOpacity style={styles.retryButton} onPress={fetchList}>
-          <Text style={styles.retryButtonText}>Retry</Text>
+      <View style={[styles.centered, { backgroundColor: theme.colors.background }]}>
+        <Text style={[styles.errorText, { color: theme.colors.danger }]}>{loadError}</Text>
+        <TouchableOpacity
+          style={[styles.retryButton, { backgroundColor: theme.colors.buttonPrimary }]}
+          onPress={fetchList}
+        >
+          <Text style={[styles.retryButtonText, { color: theme.colors.buttonPrimaryText }]}>Retry</Text>
         </TouchableOpacity>
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
-      <View style={styles.counterBar}>
-        <Text style={styles.counterText}>
-          {neededCount} of {items.length} items needed
+    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      <View style={[styles.counterBar, { backgroundColor: theme.colors.card, borderBottomColor: theme.colors.border }]}>
+        <Text style={[styles.counterText, { color: theme.colors.textMuted }]}>
+          {neededCount} of {items.length} items to buy
         </Text>
       </View>
 
@@ -185,16 +192,20 @@ export default function GroceryListScreen({ route, navigation }: Props) {
         ItemSeparatorComponent={() => <View style={styles.separator} />}
       />
 
-      <View style={styles.footer}>
+      <View style={[styles.footer, { backgroundColor: theme.colors.card, borderTopColor: theme.colors.border }]}>
         <TouchableOpacity
-          style={[styles.orderButton, allAvailable && styles.orderButtonDisabled]}
+          style={[
+            styles.orderButton,
+            { backgroundColor: theme.colors.buttonPrimary },
+            allAvailable && styles.orderButtonDisabled,
+          ]}
           onPress={handleOrder}
           disabled={allAvailable}
           accessibilityRole="button"
-          accessibilityLabel={allAvailable ? "Nothing to order" : `Order ${neededCount} items`}
+          accessibilityLabel={allAvailable ? "You have everything" : `See ${neededCount} items to buy`}
         >
-          <Text style={styles.orderButtonText}>
-            {allAvailable ? "Nothing to order! 🎉" : `Order ${neededCount} Items`}
+          <Text style={[styles.orderButtonText, { color: theme.colors.buttonPrimaryText }]}>
+            {allAvailable ? "You have everything! 🎉" : `See ${neededCount} Items to Buy`}
           </Text>
         </TouchableOpacity>
       </View>
@@ -205,62 +216,52 @@ export default function GroceryListScreen({ route, navigation }: Props) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: BG,
   },
   centered: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: BG,
-    paddingHorizontal: 32,
+    paddingHorizontal: spacing.xxxl,
   },
   loadingText: {
-    marginTop: 12,
+    marginTop: spacing.md,
     fontSize: 15,
-    color: "#666",
   },
   errorText: {
     fontSize: 15,
-    color: "#C62828",
     textAlign: "center",
-    marginBottom: 16,
+    marginBottom: spacing.lg,
   },
   retryButton: {
-    backgroundColor: "#1A1A1A",
-    paddingVertical: 10,
-    paddingHorizontal: 24,
-    borderRadius: 8,
+    paddingVertical: spacing.sm + 2,
+    paddingHorizontal: spacing.xxl,
+    borderRadius: radii.sm,
   },
   retryButtonText: {
-    color: "#fff",
     fontWeight: "600",
     fontSize: 14,
   },
   counterBar: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: "#FFFFFF",
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: "#F0EFED",
   },
   counterText: {
     fontSize: 14,
-    color: "#555",
     fontWeight: "500",
   },
   listContent: {
-    paddingHorizontal: 16,
-    paddingTop: 8,
-    paddingBottom: 16,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.sm,
+    paddingBottom: spacing.lg,
   },
   itemRow: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 14,
-    backgroundColor: "#FFFFFF",
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    marginTop: 8,
+    paddingVertical: spacing.md + 2,
+    borderRadius: radii.md,
+    paddingHorizontal: spacing.md,
+    marginTop: spacing.sm,
   },
   separator: {
     height: 0,
@@ -268,17 +269,11 @@ const styles = StyleSheet.create({
   checkbox: {
     width: 26,
     height: 26,
-    borderRadius: 13,
+    borderRadius: radii.full,
     borderWidth: 2,
-    borderColor: "#aaa",
     justifyContent: "center",
     alignItems: "center",
-    marginRight: 12,
-    backgroundColor: "#fff",
-  },
-  checkboxChecked: {
-    backgroundColor: "#1A1A1A",
-    borderColor: "#1A1A1A",
+    marginRight: spacing.md,
   },
   checkmark: {
     color: "#fff",
@@ -292,48 +287,34 @@ const styles = StyleSheet.create({
   itemName: {
     fontSize: 15,
     fontWeight: "500",
-    color: "#222",
     marginBottom: 2,
-  },
-  itemNameMuted: {
-    color: "#999",
   },
   itemAmount: {
     fontSize: 13,
-    color: "#666",
-  },
-  itemAmountMuted: {
-    color: "#bbb",
   },
   atHomeBadge: {
-    backgroundColor: "#E8F5E9",
-    borderRadius: 4,
-    paddingHorizontal: 8,
+    borderRadius: radii.sm,
+    paddingHorizontal: spacing.sm,
     paddingVertical: 3,
-    marginLeft: 8,
+    marginLeft: spacing.sm,
   },
   atHomeBadgeText: {
     fontSize: 12,
-    color: "#2E7D32",
     fontWeight: "600",
   },
   footer: {
-    padding: 16,
-    backgroundColor: "#FFFFFF",
+    padding: spacing.lg,
     borderTopWidth: 1,
-    borderTopColor: "#F0EFED",
   },
   orderButton: {
-    backgroundColor: "#1A1A1A",
-    paddingVertical: 14,
-    borderRadius: 8,
+    paddingVertical: spacing.md + 2,
+    borderRadius: radii.lg,
     alignItems: "center",
   },
   orderButtonDisabled: {
-    backgroundColor: "#CCCCCC",
+    opacity: 0.45,
   },
   orderButtonText: {
-    color: "#fff",
     fontWeight: "bold",
     fontSize: 16,
   },

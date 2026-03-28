@@ -27,6 +27,7 @@ import {
   ProfileAnalysis,
 } from "../services/api";
 import { useAppTheme } from "../theme/ThemeProvider";
+import { spacing, radii } from "../theme/theme";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Home">;
 
@@ -36,16 +37,8 @@ const CARD_WIDTH = SCREEN_WIDTH - 64;
 const CACHE_KEY_RECOMMENDATIONS = "replate_cached_recommendations";
 const CACHE_KEY_INVENTORY_COUNT = "replate_cached_inventory_count";
 
-// Colors
-const PRIMARY = "#1A1A1A";
-const PRIMARY_LIGHT = "#333333";
-const BG = "#FAFAF8";
-const CARD_BG = "#FFFFFF";
-const TEXT_DARK = "#1A1A1A";
-const TEXT_MID = "#555555";
-const TEXT_LIGHT = "#999999";
+// Colors — static values only; dynamic theme colors are applied inline via useAppTheme()
 const ACCENT = "#D4A017";
-const BORDER = "#F0EFED";
 
 export default function HomeScreen({ navigation }: Props) {
   const { theme } = useAppTheme();
@@ -219,11 +212,11 @@ export default function HomeScreen({ navigation }: Props) {
   }
 
   function renderRecipeCard({ item }: { item: Recipe & { matchRate: number } }) {
-    const matchColor = item.matchRate >= 80 ? "#4caf50" : item.matchRate >= 50 ? "#ff9800" : "#f44336";
-    
+    const matchColor = item.matchRate >= 80 ? theme.colors.success : item.matchRate >= 50 ? theme.colors.warning : theme.colors.danger;
+
     return (
       <TouchableOpacity
-        style={styles.recipeCard}
+        style={[styles.recipeCard, { backgroundColor: theme.colors.card }]}
         onPress={() => {
           navigation.navigate("RecipeDetail", { recipe: item });
         }}
@@ -232,11 +225,11 @@ export default function HomeScreen({ navigation }: Props) {
         {item.image ? (
           <Image source={{ uri: item.image }} style={styles.recipeImage} resizeMode="cover" />
         ) : (
-          <View style={[styles.recipeImage, styles.recipeImagePlaceholder]}>
-            <Ionicons name="restaurant-outline" size={40} color={PRIMARY_LIGHT} />
+          <View style={[styles.recipeImage, styles.recipeImagePlaceholder, { backgroundColor: theme.colors.inputBg }]}>
+            <Ionicons name="restaurant-outline" size={40} color={theme.colors.textSecondary} />
           </View>
         )}
-        
+
         {/* Match Rate Badge */}
         <View style={[styles.matchBadge, { backgroundColor: matchColor }]}>
           <Ionicons name="checkmark-circle" size={12} color="#fff" />
@@ -272,7 +265,7 @@ export default function HomeScreen({ navigation }: Props) {
           <Text style={[styles.logoText, { color: theme.colors.primary }]}>ReplateAI</Text>
         </View>
         <TouchableOpacity
-          style={styles.logoutButton}
+          style={[styles.logoutButton, { backgroundColor: theme.colors.inputBg }]}
           onPress={async () => {
             await clearSession();
             navigation.replace("Login");
@@ -303,30 +296,30 @@ export default function HomeScreen({ navigation }: Props) {
                 onPress={() => navigation.navigate("ProfileDetail", { analysis: profileAnalysis })}
                 activeOpacity={0.7}
               >
-                <View style={styles.profileMini}>
+                <View style={[styles.profileMini, { backgroundColor: theme.colors.card }]}>
                   <Text style={styles.profileMiniEmoji}>{profileAnalysis.emoji}</Text>
                   <View style={styles.profileMiniStats}>
                     <View style={styles.miniStatRow}>
-                      <View style={[styles.miniDot, { backgroundColor: "#4caf50" }]} />
-                      <Text style={styles.miniStatText}>{profileAnalysis.healthScore}/10</Text>
+                      <View style={[styles.miniDot, { backgroundColor: theme.colors.success }]} />
+                      <Text style={[styles.miniStatText, { color: theme.colors.text }]}>{profileAnalysis.healthScore}/10</Text>
                     </View>
-                    <Text style={styles.miniStatLabel}>{profileAnalysis.dietType.split(" ")[0]}</Text>
+                    <Text style={[styles.miniStatLabel, { color: theme.colors.textMuted }]}>{profileAnalysis.dietType.split(" ")[0]}</Text>
                   </View>
-                  <Ionicons name="chevron-forward" size={16} color="#ccc" />
+                  <Ionicons name="chevron-forward" size={16} color={theme.colors.textMuted} />
                 </View>
-                <Text style={styles.profileCta}>Check your diet habits →</Text>
+                <Text style={[styles.profileCta, { color: theme.colors.textSecondary }]}>View your food profile →</Text>
               </TouchableOpacity>
             ) : inventoryCount > 0 && !loadingProfile ? (
               <TouchableOpacity
-                style={styles.profileMiniEmpty}
+                style={[styles.profileMiniEmpty, { backgroundColor: theme.colors.accentLight }]}
                 onPress={loadProfileAnalysis}
                 activeOpacity={0.7}
               >
-                <Ionicons name="analytics-outline" size={20} color={PRIMARY} />
+                <Ionicons name="analytics-outline" size={20} color={theme.colors.text} />
               </TouchableOpacity>
             ) : loadingProfile ? (
-              <View style={styles.profileMiniEmpty}>
-                <ActivityIndicator size="small" color={PRIMARY} />
+              <View style={[styles.profileMiniEmpty, { backgroundColor: theme.colors.accentLight }]}>
+                <ActivityIndicator size="small" color={theme.colors.text} />
               </View>
             ) : null}
           </View>
@@ -335,14 +328,14 @@ export default function HomeScreen({ navigation }: Props) {
         {/* Recommended Recipes */}
         <Animated.View style={[styles.section, { opacity: fadeAnim }]}>
           <View style={styles.sectionHeader}>
-            <Ionicons name="sparkles" size={20} color={PRIMARY} />
-            <Text style={styles.sectionTitle}>Recommended for You</Text>
+            <Ionicons name="sparkles" size={20} color={theme.colors.text} />
+            <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Recommended for You</Text>
           </View>
-          
+
           {loadingRecs ? (
             <View style={styles.loadingContainer}>
-              <ActivityIndicator size="small" color={PRIMARY} />
-              <Text style={styles.loadingText}>Finding recipes...</Text>
+              <ActivityIndicator size="small" color={theme.colors.text} />
+              <Text style={[styles.loadingText, { color: theme.colors.textSecondary }]}>Finding recipes...</Text>
             </View>
           ) : recommendations.length > 0 ? (
             <FlatList
@@ -357,18 +350,18 @@ export default function HomeScreen({ navigation }: Props) {
             />
           ) : (
             <View style={styles.emptyRecs}>
-              <Ionicons name="leaf-outline" size={48} color={TEXT_LIGHT} />
-              <Text style={styles.emptyRecsText}>
+              <Ionicons name="leaf-outline" size={48} color={theme.colors.textMuted} />
+              <Text style={[styles.emptyRecsText, { color: theme.colors.textMuted }]}>
                 {inventoryCount > 0
-                  ? "No recipes found. Try adding more ingredients!"
-                  : "Add ingredients to get personalized recommendations"}
+                  ? "No matching recipes found. Try adding more ingredients."
+                  : "Photograph your ingredients to get personalized recipe ideas."}
               </Text>
               <TouchableOpacity
-                style={styles.addIngredientsBtn}
+                style={[styles.addIngredientsBtn, { backgroundColor: theme.colors.buttonPrimary }]}
                 onPress={() => navigation.navigate("Capture")}
               >
-                <Ionicons name="add" size={18} color="#fff" />
-                <Text style={styles.addIngredientsBtnText}>Add Ingredients</Text>
+                <Ionicons name="add" size={18} color={theme.colors.buttonPrimaryText} />
+                <Text style={[styles.addIngredientsBtnText, { color: theme.colors.buttonPrimaryText }]}>Scan Ingredients</Text>
               </TouchableOpacity>
             </View>
           )}
@@ -377,59 +370,59 @@ export default function HomeScreen({ navigation }: Props) {
         {/* Quick Actions */}
         <Animated.View style={[styles.section, { opacity: fadeAnim }]}>
           <View style={styles.sectionHeader}>
-            <Ionicons name="flash" size={20} color={PRIMARY} />
-            <Text style={styles.sectionTitle}>Quick Actions</Text>
+            <Ionicons name="flash" size={20} color={theme.colors.text} />
+            <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Quick Actions</Text>
           </View>
-          
+
           <View style={styles.menuGrid}>
             <TouchableOpacity
-              style={styles.menuCard}
+              style={[styles.menuCard, { backgroundColor: theme.colors.card }]}
               onPress={() => navigation.navigate("Capture")}
               activeOpacity={0.7}
             >
-              <View style={[styles.menuIconBg, { backgroundColor: "#F5F0E6" }]}>
-                <Ionicons name="camera" size={24} color={PRIMARY} />
+              <View style={[styles.menuIconBg, { backgroundColor: theme.mode === "dark" ? theme.colors.inputBg : "#F5F0E6" }]}>
+                <Ionicons name="camera" size={24} color={theme.colors.text} />
               </View>
-              <Text style={styles.menuTitle}>Capture</Text>
-              <Text style={styles.menuDesc}>Scan ingredients</Text>
+              <Text style={[styles.menuTitle, { color: theme.colors.text }]}>Capture</Text>
+              <Text style={[styles.menuDesc, { color: theme.colors.textMuted }]}>Identify ingredients</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={styles.menuCard}
+              style={[styles.menuCard, { backgroundColor: theme.colors.card }]}
               onPress={() => navigation.navigate("Inventory")}
               activeOpacity={0.7}
             >
-              <View style={[styles.menuIconBg, { backgroundColor: "#EAF0F5" }]}>
-                <MaterialCommunityIcons name="fridge-outline" size={24} color="#1976d2" />
+              <View style={[styles.menuIconBg, { backgroundColor: theme.mode === "dark" ? theme.colors.inputBg : "#EAF0F5" }]}>
+                <MaterialCommunityIcons name="fridge-outline" size={24} color={theme.mode === "dark" ? "#90caf9" : "#1976d2"} />
               </View>
-              <Text style={styles.menuTitle}>Inventory</Text>
-              <Text style={styles.menuDesc}>
+              <Text style={[styles.menuTitle, { color: theme.colors.text }]}>Inventory</Text>
+              <Text style={[styles.menuDesc, { color: theme.colors.textMuted }]}>
                 {inventoryCount > 0 ? `${inventoryCount} items` : "View items"}
               </Text>
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={styles.menuCard}
+              style={[styles.menuCard, { backgroundColor: theme.colors.card }]}
               onPress={() => navigation.navigate("RecipeHistory")}
               activeOpacity={0.7}
             >
-              <View style={[styles.menuIconBg, { backgroundColor: "#FDF3E3" }]}>
-                <Ionicons name="time" size={24} color="#D4A017" />
+              <View style={[styles.menuIconBg, { backgroundColor: theme.mode === "dark" ? theme.colors.inputBg : "#FDF3E3" }]}>
+                <Ionicons name="time" size={24} color={theme.colors.accent} />
               </View>
-              <Text style={styles.menuTitle}>History</Text>
-              <Text style={styles.menuDesc}>Past recipes</Text>
+              <Text style={[styles.menuTitle, { color: theme.colors.text }]}>History</Text>
+              <Text style={[styles.menuDesc, { color: theme.colors.textMuted }]}>What you've cooked</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={styles.menuCard}
+              style={[styles.menuCard, { backgroundColor: theme.colors.card }]}
               onPress={() => navigation.navigate("ProfilePreferences")}
               activeOpacity={0.7}
             >
-              <View style={[styles.menuIconBg, { backgroundColor: "#F3EEF5" }]}>
-                <Ionicons name="settings-outline" size={24} color="#7b1fa2" />
+              <View style={[styles.menuIconBg, { backgroundColor: theme.mode === "dark" ? theme.colors.inputBg : "#F3EEF5" }]}>
+                <Ionicons name="settings-outline" size={24} color={theme.mode === "dark" ? "#ce93d8" : "#7b1fa2"} />
               </View>
-              <Text style={styles.menuTitle}>Preferences</Text>
-              <Text style={styles.menuDesc}>Diet & profile</Text>
+              <Text style={[styles.menuTitle, { color: theme.colors.text }]}>Preferences</Text>
+              <Text style={[styles.menuDesc, { color: theme.colors.textMuted }]}>Diet & profile</Text>
             </TouchableOpacity>
           </View>
         </Animated.View>
@@ -443,41 +436,36 @@ export default function HomeScreen({ navigation }: Props) {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: BG,
   },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    backgroundColor: CARD_BG,
+    paddingHorizontal: spacing.xl,
+    paddingVertical: spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: BORDER,
   },
   logoRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
+    gap: spacing.sm,
   },
   logoText: {
     fontSize: 20,
     fontWeight: "700",
-    color: PRIMARY,
     letterSpacing: 0.3,
   },
   logoutButton: {
-    padding: 8,
-    borderRadius: 8,
-    backgroundColor: "#F5F5F3",
+    padding: spacing.sm,
+    borderRadius: radii.sm,
   },
   container: {
     flex: 1,
   },
   greetingSection: {
-    paddingHorizontal: 20,
-    paddingTop: 24,
-    paddingBottom: 8,
+    paddingHorizontal: spacing.xl,
+    paddingTop: spacing.xxl,
+    paddingBottom: spacing.sm,
   },
   greetingRow: {
     flexDirection: "row",
@@ -489,12 +477,10 @@ const styles = StyleSheet.create({
   },
   greeting: {
     fontSize: 16,
-    color: TEXT_MID,
   },
   userName: {
     fontSize: 28,
     fontWeight: "700",
-    color: TEXT_DARK,
     marginTop: 2,
   },
   profileBadgeContainer: {
@@ -503,94 +489,76 @@ const styles = StyleSheet.create({
   profileMini: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: CARD_BG,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-    borderRadius: 14,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 6,
-    elevation: 2,
+    paddingHorizontal: spacing.sm + 2,
+    paddingVertical: spacing.sm,
+    borderRadius: radii.lg,
   },
   profileCta: {
     fontSize: 11,
-    color: PRIMARY_LIGHT,
-    marginTop: 4,
+    marginTop: spacing.xs,
     fontWeight: "500",
   },
   profileMiniEmoji: {
     fontSize: 24,
-    marginRight: 8,
+    marginRight: spacing.sm,
   },
   profileMiniStats: {
-    marginRight: 4,
+    marginRight: spacing.xs,
   },
   miniStatRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 4,
+    gap: spacing.xs,
   },
   miniDot: {
     width: 6,
     height: 6,
-    borderRadius: 3,
+    borderRadius: radii.full,
   },
   miniStatText: {
     fontSize: 12,
     fontWeight: "600",
-    color: TEXT_DARK,
   },
   miniStatLabel: {
     fontSize: 10,
-    color: TEXT_LIGHT,
     marginTop: 1,
   },
   profileMiniEmpty: {
     width: 40,
     height: 40,
-    borderRadius: 14,
-    backgroundColor: "#F5F0E6",
+    borderRadius: radii.lg,
     justifyContent: "center",
     alignItems: "center",
   },
   section: {
-    marginTop: 24,
+    marginTop: spacing.xxl,
   },
   sectionHeader: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
-    paddingHorizontal: 20,
-    marginBottom: 14,
+    gap: spacing.sm,
+    paddingHorizontal: spacing.xl,
+    marginBottom: spacing.md + 2,
   },
   sectionTitle: {
     fontSize: 17,
     fontWeight: "600",
-    color: TEXT_DARK,
   },
   recipeList: {
-    paddingHorizontal: 20,
+    paddingHorizontal: spacing.xl,
   },
   recipeCard: {
     width: CARD_WIDTH,
     height: 180,
-    borderRadius: 16,
+    borderRadius: radii.lg,
     overflow: "hidden",
-    marginRight: 16,
-    backgroundColor: CARD_BG,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.08,
-    shadowRadius: 10,
-    elevation: 3,
+    marginRight: spacing.lg,
   },
   recipeImage: {
     width: "100%",
     height: "100%",
   },
   recipeImagePlaceholder: {
-    backgroundColor: "#F5F3EF",
     justifyContent: "center",
     alignItems: "center",
   },
@@ -600,7 +568,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     backgroundColor: "rgba(0,0,0,0.55)",
-    padding: 14,
+    padding: spacing.md + 2,
   },
   recipeTitle: {
     fontSize: 16,
@@ -616,7 +584,7 @@ const styles = StyleSheet.create({
   recipeTimeRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 4,
+    gap: spacing.xs,
   },
   recipeTime: {
     fontSize: 12,
@@ -624,14 +592,14 @@ const styles = StyleSheet.create({
   },
   matchBadge: {
     position: "absolute",
-    top: 12,
-    right: 12,
+    top: spacing.md,
+    right: spacing.md,
     flexDirection: "row",
     alignItems: "center",
-    gap: 4,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
+    gap: spacing.xs,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    borderRadius: radii.md,
   },
   matchBadgeText: {
     fontSize: 12,
@@ -639,9 +607,9 @@ const styles = StyleSheet.create({
     color: "#fff",
   },
   matchIndicator: {
-    paddingHorizontal: 8,
+    paddingHorizontal: spacing.sm,
     paddingVertical: 3,
-    borderRadius: 8,
+    borderRadius: radii.sm,
   },
   matchIndicatorText: {
     fontSize: 10,
@@ -653,73 +621,61 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     paddingVertical: 40,
-    gap: 10,
+    gap: spacing.sm + 2,
   },
   loadingText: {
     fontSize: 14,
-    color: TEXT_MID,
   },
   emptyRecs: {
     alignItems: "center",
-    paddingVertical: 32,
-    paddingHorizontal: 20,
+    paddingVertical: spacing.xxxl,
+    paddingHorizontal: spacing.xl,
   },
   emptyRecsText: {
     fontSize: 14,
-    color: TEXT_LIGHT,
     textAlign: "center",
-    marginTop: 12,
-    marginBottom: 20,
+    marginTop: spacing.md,
+    marginBottom: spacing.xl,
     lineHeight: 20,
   },
   addIngredientsBtn: {
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
-    backgroundColor: PRIMARY,
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderRadius: 14,
+    paddingHorizontal: spacing.xl,
+    paddingVertical: spacing.md,
+    borderRadius: radii.lg,
   },
   addIngredientsBtnText: {
-    color: "#fff",
     fontWeight: "600",
     fontSize: 14,
   },
   menuGrid: {
     flexDirection: "row",
-    paddingHorizontal: 20,
-    gap: 12,
+    paddingHorizontal: spacing.xl,
+    gap: spacing.md,
     flexWrap: "wrap",
   },
   menuCard: {
     width: "48%",
-    backgroundColor: CARD_BG,
-    borderRadius: 14,
-    padding: 16,
+    borderRadius: radii.lg,
+    padding: spacing.lg,
     alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.07,
-    shadowRadius: 8,
-    elevation: 2,
   },
   menuIconBg: {
     width: 48,
     height: 48,
-    borderRadius: 14,
+    borderRadius: radii.lg,
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 10,
+    marginBottom: spacing.sm + 2,
   },
   menuTitle: {
     fontSize: 14,
     fontWeight: "600",
-    color: TEXT_DARK,
   },
   menuDesc: {
     fontSize: 11,
-    color: TEXT_LIGHT,
     marginTop: 3,
   },
 });

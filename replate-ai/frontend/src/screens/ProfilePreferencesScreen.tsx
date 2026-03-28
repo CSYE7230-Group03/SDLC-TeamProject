@@ -22,7 +22,7 @@ import {
   getUserInventory,
 } from "../services/api";
 import { useAppTheme } from "../theme/ThemeProvider";
-import { ThemeMode } from "../theme/theme";
+import { ThemeMode, spacing, radii } from "../theme/theme";
 import { cancelExpiryReminders, scheduleExpiryReminders } from "../services/expiryNotifications";
 
 type Props = NativeStackScreenProps<RootStackParamList, "ProfilePreferences">;
@@ -72,7 +72,7 @@ export default function ProfilePreferencesScreen({ navigation }: Props) {
         setExpiryRemindersEnabled(!!settingsRes.appSettings.notifications?.expiryRemindersEnabled);
       }
     } catch {
-      Alert.alert("Error", "Could not connect to the server");
+      Alert.alert("Connection error", "Couldn't reach the server. Check your connection and try again.");
     } finally {
       setLoading(false);
     }
@@ -80,7 +80,7 @@ export default function ProfilePreferencesScreen({ navigation }: Props) {
 
   async function save() {
     if (!displayName.trim()) {
-      Alert.alert("Invalid", "Display name is required");
+      Alert.alert("Name required", "Please enter your display name.");
       return;
     }
 
@@ -88,7 +88,7 @@ export default function ProfilePreferencesScreen({ navigation }: Props) {
       ? Number(maxCookingTime.trim())
       : null;
     if (maxCookingTime.trim() && (!Number.isFinite(max) || (max as number) <= 0)) {
-      Alert.alert("Invalid", "Max cooking time must be a positive number");
+      Alert.alert("Invalid time", "Cook time must be a positive number.");
       return;
     }
 
@@ -143,10 +143,10 @@ export default function ProfilePreferencesScreen({ navigation }: Props) {
         // Don't block saving on notification scheduling
       }
 
-      Alert.alert("Saved", "Preferences updated successfully");
+      Alert.alert("All saved!", "Your preferences are up to date.");
       navigation.goBack();
     } catch {
-      Alert.alert("Error", "Could not connect to the server");
+      Alert.alert("Connection error", "Couldn't reach the server. Check your connection and try again.");
     } finally {
       setSaving(false);
     }
@@ -154,9 +154,9 @@ export default function ProfilePreferencesScreen({ navigation }: Props) {
 
   if (loading) {
     return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" color={PRIMARY} />
-        <Text style={styles.loadingText}>Loading your profile...</Text>
+      <View style={[styles.centered, { backgroundColor: theme.colors.background }]}>
+        <ActivityIndicator size="large" color={theme.colors.text} />
+        <Text style={[styles.loadingText, { color: theme.colors.textSecondary }]}>Loading your profile...</Text>
       </View>
     );
   }
@@ -182,7 +182,7 @@ export default function ProfilePreferencesScreen({ navigation }: Props) {
       <View style={[styles.card, { backgroundColor: theme.colors.card, borderColor: theme.colors.border }]}>
         <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Dietary preferences</Text>
 
-        <Text style={[styles.label, { color: theme.colors.textMuted }]}>Restrictions (comma-separated)</Text>
+        <Text style={[styles.label, { color: theme.colors.textMuted }]}>Dietary restrictions</Text>
         <TextInput
           value={restrictionsCsv}
           onChangeText={setRestrictionsCsv}
@@ -191,7 +191,7 @@ export default function ProfilePreferencesScreen({ navigation }: Props) {
           style={[styles.input, { backgroundColor: theme.colors.inputBg, borderColor: theme.colors.border, color: theme.colors.text }]}
         />
 
-        <Text style={[styles.label, { marginTop: 12, color: theme.colors.textMuted }]}>Allergies (comma-separated)</Text>
+        <Text style={[styles.label, { marginTop: 12, color: theme.colors.textMuted }]}>Food allergies</Text>
         <TextInput
           value={allergiesCsv}
           onChangeText={setAllergiesCsv}
@@ -200,7 +200,7 @@ export default function ProfilePreferencesScreen({ navigation }: Props) {
           style={[styles.input, { backgroundColor: theme.colors.inputBg, borderColor: theme.colors.border, color: theme.colors.text }]}
         />
 
-        <Text style={[styles.label, { marginTop: 12, color: theme.colors.textMuted }]}>Skill level</Text>
+        <Text style={[styles.label, { marginTop: 12, color: theme.colors.textMuted }]}>Cooking skill level</Text>
         <TextInput
           value={skillLevel}
           onChangeText={setSkillLevel}
@@ -209,7 +209,7 @@ export default function ProfilePreferencesScreen({ navigation }: Props) {
           style={[styles.input, { backgroundColor: theme.colors.inputBg, borderColor: theme.colors.border, color: theme.colors.text }]}
         />
 
-        <Text style={[styles.label, { marginTop: 12, color: theme.colors.textMuted }]}>Max cooking time (minutes)</Text>
+        <Text style={[styles.label, { marginTop: 12, color: theme.colors.textMuted }]}>Max cook time (minutes)</Text>
         <TextInput
           value={maxCookingTime}
           onChangeText={setMaxCookingTime}
@@ -269,80 +269,68 @@ export default function ProfilePreferencesScreen({ navigation }: Props) {
       </View>
 
       <TouchableOpacity
-        style={[styles.saveButton, saving && styles.saveButtonDisabled]}
+        style={[styles.saveButton, { backgroundColor: theme.colors.buttonPrimary }, saving && styles.saveButtonDisabled]}
         onPress={save}
         disabled={saving}
         activeOpacity={0.85}
       >
         {saving ? (
-          <ActivityIndicator color="#fff" />
+          <ActivityIndicator color={theme.colors.buttonPrimaryText} />
         ) : (
-          <Text style={styles.saveButtonText}>Save</Text>
+          <Text style={[styles.saveButtonText, { color: theme.colors.buttonPrimaryText }]}>Save Preferences</Text>
         )}
       </TouchableOpacity>
     </ScrollView>
   );
 }
 
-const PRIMARY = "#1A1A1A";
-const BG = "#FAFAF8";
-const CARD_BG = "#FFFFFF";
-const TEXT_DARK = "#1A1A1A";
-const TEXT_MID = "#555555";
-
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: BG },
-  content: { padding: 16, paddingBottom: 28 },
-  centered: { flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: BG },
-  loadingText: { marginTop: 12, color: TEXT_MID },
-  title: { fontSize: 22, fontWeight: "800", color: TEXT_DARK },
-  subtitle: { marginTop: 6, fontSize: 13, color: TEXT_MID, lineHeight: 18 },
+  container: { flex: 1 },
+  content: { padding: spacing.lg, paddingBottom: spacing.xxl + spacing.xs },
+  centered: { flex: 1, justifyContent: "center", alignItems: "center" },
+  loadingText: { marginTop: spacing.md },
+  title: { fontSize: 22, fontWeight: "800" },
+  subtitle: { marginTop: 6, fontSize: 13, lineHeight: 18 },
   card: {
-    backgroundColor: CARD_BG,
-    borderRadius: 14,
-    padding: 16,
-    marginTop: 14,
+    borderRadius: radii.lg,
+    padding: spacing.lg,
+    marginTop: spacing.md + 2,
     borderWidth: 1,
-    borderColor: "#eee",
   },
-  sectionTitle: { fontSize: 14, fontWeight: "700", color: TEXT_DARK, marginBottom: 10 },
-  label: { fontSize: 12, fontWeight: "600", color: TEXT_MID, marginBottom: 6 },
+  sectionTitle: { fontSize: 14, fontWeight: "700", marginBottom: spacing.sm + 2 },
+  label: { fontSize: 12, fontWeight: "600", marginBottom: 6 },
   input: {
-    backgroundColor: "#f6f6f6",
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
+    borderRadius: radii.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm + 2,
     borderWidth: 1,
-    borderColor: "#e8e8e8",
     fontSize: 14,
-    color: TEXT_DARK,
   },
   themeRow: {
     flexDirection: "row",
-    gap: 10,
+    gap: spacing.sm + 2,
     marginTop: 6,
     marginBottom: 6,
   },
   themeChip: {
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    borderRadius: 999,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm + 2,
+    borderRadius: radii.full,
     borderWidth: 1,
   },
   switchRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
-    marginTop: 12,
+    gap: spacing.md,
+    marginTop: spacing.md,
   },
   saveButton: {
     marginTop: 18,
-    backgroundColor: "#1A1A1A",
-    borderRadius: 14,
-    paddingVertical: 14,
+    borderRadius: radii.lg,
+    paddingVertical: spacing.md + 2,
     alignItems: "center",
   },
   saveButtonDisabled: { opacity: 0.7 },
-  saveButtonText: { color: "#fff", fontWeight: "800", fontSize: 15 },
+  saveButtonText: { fontWeight: "800", fontSize: 15 },
 });
 
