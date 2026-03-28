@@ -560,3 +560,71 @@ export async function getProfileAnalysis(): Promise<ProfileAnalysisResponse> {
   });
   return parseResponse<ProfileAnalysisResponse>(res);
 }
+
+// ---------------------------------------------------------------------------
+// Grocery List
+// ---------------------------------------------------------------------------
+
+export interface GroceryListItem {
+  id: string;
+  name: string;
+  amount: number;
+  unit: string;
+  isAvailableAtHome: boolean;
+}
+
+export interface GroceryList {
+  id: string;
+  recipeId: string;
+  recipeTitle: string;
+  items: GroceryListItem[];
+  createdAt?: string;
+}
+
+interface GroceryListResponse {
+  success: boolean;
+  list?: GroceryList;
+  lists?: GroceryList[];
+  error?: string;
+}
+
+interface ToggleItemResponse {
+  success: boolean;
+  itemId?: string;
+  isAvailableAtHome?: boolean;
+  error?: string;
+}
+
+export async function createGroceryList(params: {
+  recipeId: string | number;
+  recipeTitle: string;
+  missingIngredients: { name: string; amount: number; unit: string }[];
+}): Promise<GroceryListResponse> {
+  const res = await fetch(`${API_BASE_URL}/grocery-list`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...authHeaders() },
+    body: JSON.stringify(params),
+  });
+  return parseResponse<GroceryListResponse>(res);
+}
+
+export async function getGroceryList(listId: string): Promise<GroceryListResponse> {
+  const res = await fetch(`${API_BASE_URL}/grocery-list/${listId}`, {
+    headers: authHeaders(),
+  });
+  return parseResponse<GroceryListResponse>(res);
+}
+
+export async function toggleGroceryItemAvailability(
+  listId: string,
+  itemId: string
+): Promise<ToggleItemResponse> {
+  const res = await fetch(
+    `${API_BASE_URL}/grocery-list/${listId}/item/${itemId}/toggle`,
+    {
+      method: "PATCH",
+      headers: authHeaders(),
+    }
+  );
+  return parseResponse<ToggleItemResponse>(res);
+}

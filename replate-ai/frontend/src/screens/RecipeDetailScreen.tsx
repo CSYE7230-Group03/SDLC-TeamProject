@@ -17,12 +17,14 @@ import { markRecipeAsCooked } from "../services/api";
 type Props = NativeStackScreenProps<RootStackParamList, "RecipeDetail">;
 
 // Colors
-const PRIMARY = "#2d6a4f";
-const BG = "#f8faf9";
-const CARD_BG = "#ffffff";
-const TEXT_DARK = "#1a1a1a";
-const TEXT_MID = "#666666";
+const PRIMARY = "#1A1A1A";
+const BG = "#FAFAF8";
+const CARD_BG = "#FFFFFF";
+const TEXT_DARK = "#1A1A1A";
+const TEXT_MID = "#555555";
 const TEXT_LIGHT = "#999999";
+const ACCENT = "#D4A017";
+const BORDER = "#F0EFED";
 
 export default function RecipeDetailScreen({ route, navigation }: Props) {
   const { recipe } = route.params;
@@ -170,8 +172,10 @@ const styles = StyleSheet.create({
   },
   image: {
     width: "100%",
-    height: 240,
+    height: 280,
     backgroundColor: "#e8e8e8",
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
   },
   imagePlaceholder: {
     justifyContent: "center",
@@ -202,14 +206,14 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
-    backgroundColor: "#e8f5e9",
+    backgroundColor: "#F5F5F3",
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 8,
   },
   metaText: {
     fontSize: 14,
-    color: PRIMARY,
+    color: TEXT_DARK,
     fontWeight: "500",
   },
   section: {
@@ -232,13 +236,13 @@ const styles = StyleSheet.create({
     gap: 12,
     paddingVertical: 8,
     borderBottomWidth: 1,
-    borderBottomColor: "#f5f5f5",
+    borderBottomColor: BORDER,
   },
   ingredientDot: {
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: PRIMARY,
+    backgroundColor: ACCENT,
   },
   ingredientText: {
     fontSize: 15,
@@ -277,7 +281,7 @@ const styles = StyleSheet.create({
     padding: 16,
     backgroundColor: CARD_BG,
     borderTopWidth: 1,
-    borderTopColor: "#eee",
+    borderTopColor: BORDER,
   },
   cookButton: {
     flexDirection: "row",
@@ -286,7 +290,7 @@ const styles = StyleSheet.create({
     gap: 10,
     backgroundColor: PRIMARY,
     paddingVertical: 16,
-    borderRadius: 12,
+    borderRadius: 14,
     shadowColor: PRIMARY,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,

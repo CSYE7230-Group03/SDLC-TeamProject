@@ -17,15 +17,17 @@ import { getUserInventory, InventoryItem } from "../services/api";
 type Props = NativeStackScreenProps<RootStackParamList, "CookingComplete">;
 
 // Colors
-const PRIMARY = "#2d6a4f";
-const SUCCESS = "#4caf50";
-const SUCCESS_LIGHT = "#e8f5e9";
-const BG = "#f8faf9";
-const CARD_BG = "#ffffff";
-const TEXT_DARK = "#1a1a1a";
-const TEXT_MID = "#666666";
+const PRIMARY = "#1A1A1A";
+const SUCCESS = "#2E7D32";
+const SUCCESS_LIGHT = "#E8F5E9";
+const BG = "#FAFAF8";
+const CARD_BG = "#FFFFFF";
+const TEXT_DARK = "#1A1A1A";
+const TEXT_MID = "#555555";
 const TEXT_LIGHT = "#999999";
-const WARNING = "#f57c00";
+const ACCENT = "#D4A017";
+const WARNING = "#F57C00";
+const BORDER = "#F0EFED";
 
 export default function CookingCompleteScreen({ route, navigation }: Props) {
   const { recipe, deducted, skipped } = route.params;
@@ -191,7 +193,7 @@ const styles = StyleSheet.create({
   },
   recipeImage: {
     width: "100%",
-    height: 200,
+    height: 220,
     backgroundColor: "#e8e8e8",
   },
   imagePlaceholder: {
@@ -223,7 +225,7 @@ const styles = StyleSheet.create({
   },
   recipeName: {
     fontSize: 15,
-    color: PRIMARY,
+    color: TEXT_DARK,
     textAlign: "center",
   },
   section: {
@@ -231,7 +233,7 @@ const styles = StyleSheet.create({
     marginTop: 16,
     marginHorizontal: 16,
     padding: 16,
-    borderRadius: 12,
+    borderRadius: 14,
   },
   sectionHeader: {
     flexDirection: "row",
@@ -340,7 +342,7 @@ const styles = StyleSheet.create({
     gap: 8,
     backgroundColor: PRIMARY,
     paddingVertical: 16,
-    borderRadius: 12,
+    borderRadius: 14,
     shadowColor: PRIMARY,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
@@ -357,11 +359,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
-    backgroundColor: CARD_BG,
+    backgroundColor: "#FFFFFF",
     paddingVertical: 16,
-    borderRadius: 12,
+    borderRadius: 14,
     borderWidth: 1,
-    borderColor: "#e8e8e8",
+    borderColor: "#E0E0DE",
   },
   secondaryButtonText: {
     color: TEXT_MID,

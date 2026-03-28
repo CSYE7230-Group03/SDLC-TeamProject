@@ -284,11 +284,11 @@ export default function ProfilePreferencesScreen({ navigation }: Props) {
   );
 }
 
-const PRIMARY = "#2d6a4f";
-const BG = "#f8faf9";
-const CARD_BG = "#ffffff";
-const TEXT_DARK = "#1a1a1a";
-const TEXT_MID = "#666666";
+const PRIMARY = "#1A1A1A";
+const BG = "#FAFAF8";
+const CARD_BG = "#FFFFFF";
+const TEXT_DARK = "#1A1A1A";
+const TEXT_MID = "#555555";
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: BG },
@@ -309,7 +309,7 @@ const styles = StyleSheet.create({
   label: { fontSize: 12, fontWeight: "600", color: TEXT_MID, marginBottom: 6 },
   input: {
     backgroundColor: "#f6f6f6",
-    borderRadius: 10,
+    borderRadius: 12,
     paddingHorizontal: 12,
     paddingVertical: 10,
     borderWidth: 1,
@@ -337,8 +337,8 @@ const styles = StyleSheet.create({
   },
   saveButton: {
     marginTop: 18,
-    backgroundColor: PRIMARY,
-    borderRadius: 12,
+    backgroundColor: "#1A1A1A",
+    borderRadius: 14,
     paddingVertical: 14,
     alignItems: "center",
   },

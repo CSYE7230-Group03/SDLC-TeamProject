@@ -37,13 +37,15 @@ const CACHE_KEY_RECOMMENDATIONS = "replate_cached_recommendations";
 const CACHE_KEY_INVENTORY_COUNT = "replate_cached_inventory_count";
 
 // Colors
-const PRIMARY = "#2d6a4f";
-const PRIMARY_LIGHT = "#40916c";
-const BG = "#f8faf9";
-const CARD_BG = "#ffffff";
-const TEXT_DARK = "#1a1a1a";
-const TEXT_MID = "#666666";
+const PRIMARY = "#1A1A1A";
+const PRIMARY_LIGHT = "#333333";
+const BG = "#FAFAF8";
+const CARD_BG = "#FFFFFF";
+const TEXT_DARK = "#1A1A1A";
+const TEXT_MID = "#555555";
 const TEXT_LIGHT = "#999999";
+const ACCENT = "#D4A017";
+const BORDER = "#F0EFED";
 
 export default function HomeScreen({ navigation }: Props) {
   const { theme } = useAppTheme();
@@ -385,7 +387,7 @@ export default function HomeScreen({ navigation }: Props) {
               onPress={() => navigation.navigate("Capture")}
               activeOpacity={0.7}
             >
-              <View style={[styles.menuIconBg, { backgroundColor: "#e8f5e9" }]}>
+              <View style={[styles.menuIconBg, { backgroundColor: "#F5F0E6" }]}>
                 <Ionicons name="camera" size={24} color={PRIMARY} />
               </View>
               <Text style={styles.menuTitle}>Capture</Text>
@@ -397,7 +399,7 @@ export default function HomeScreen({ navigation }: Props) {
               onPress={() => navigation.navigate("Inventory")}
               activeOpacity={0.7}
             >
-              <View style={[styles.menuIconBg, { backgroundColor: "#e3f2fd" }]}>
+              <View style={[styles.menuIconBg, { backgroundColor: "#EAF0F5" }]}>
                 <MaterialCommunityIcons name="fridge-outline" size={24} color="#1976d2" />
               </View>
               <Text style={styles.menuTitle}>Inventory</Text>
@@ -411,8 +413,8 @@ export default function HomeScreen({ navigation }: Props) {
               onPress={() => navigation.navigate("RecipeHistory")}
               activeOpacity={0.7}
             >
-              <View style={[styles.menuIconBg, { backgroundColor: "#fff3e0" }]}>
-                <Ionicons name="time" size={24} color="#f57c00" />
+              <View style={[styles.menuIconBg, { backgroundColor: "#FDF3E3" }]}>
+                <Ionicons name="time" size={24} color="#D4A017" />
               </View>
               <Text style={styles.menuTitle}>History</Text>
               <Text style={styles.menuDesc}>Past recipes</Text>
@@ -423,7 +425,7 @@ export default function HomeScreen({ navigation }: Props) {
               onPress={() => navigation.navigate("ProfilePreferences")}
               activeOpacity={0.7}
             >
-              <View style={[styles.menuIconBg, { backgroundColor: "#f3e5f5" }]}>
+              <View style={[styles.menuIconBg, { backgroundColor: "#F3EEF5" }]}>
                 <Ionicons name="settings-outline" size={24} color="#7b1fa2" />
               </View>
               <Text style={styles.menuTitle}>Preferences</Text>
@@ -451,7 +453,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     backgroundColor: CARD_BG,
     borderBottomWidth: 1,
-    borderBottomColor: "#eee",
+    borderBottomColor: BORDER,
   },
   logoRow: {
     flexDirection: "row",
@@ -467,7 +469,7 @@ const styles = StyleSheet.create({
   logoutButton: {
     padding: 8,
     borderRadius: 8,
-    backgroundColor: "#f5f5f5",
+    backgroundColor: "#F5F5F3",
   },
   container: {
     flex: 1,
@@ -504,12 +506,12 @@ const styles = StyleSheet.create({
     backgroundColor: CARD_BG,
     paddingHorizontal: 10,
     paddingVertical: 8,
-    borderRadius: 12,
+    borderRadius: 14,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 1,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
+    elevation: 2,
   },
   profileCta: {
     fontSize: 11,
@@ -547,8 +549,8 @@ const styles = StyleSheet.create({
   profileMiniEmpty: {
     width: 40,
     height: 40,
-    borderRadius: 12,
-    backgroundColor: "#e8f5e9",
+    borderRadius: 14,
+    backgroundColor: "#F5F0E6",
     justifyContent: "center",
     alignItems: "center",
   },
@@ -578,17 +580,17 @@ const styles = StyleSheet.create({
     marginRight: 16,
     backgroundColor: CARD_BG,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 5,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.08,
+    shadowRadius: 10,
+    elevation: 3,
   },
   recipeImage: {
     width: "100%",
     height: "100%",
   },
   recipeImagePlaceholder: {
-    backgroundColor: "#f0f7f4",
+    backgroundColor: "#F5F3EF",
     justifyContent: "center",
     alignItems: "center",
   },
@@ -677,7 +679,7 @@ const styles = StyleSheet.create({
     backgroundColor: PRIMARY,
     paddingHorizontal: 20,
     paddingVertical: 12,
-    borderRadius: 10,
+    borderRadius: 14,
   },
   addIngredientsBtnText: {
     color: "#fff",
@@ -698,14 +700,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
+    shadowOpacity: 0.07,
     shadowRadius: 8,
     elevation: 2,
   },
   menuIconBg: {
     width: 48,
     height: 48,
-    borderRadius: 12,
+    borderRadius: 14,
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 10,

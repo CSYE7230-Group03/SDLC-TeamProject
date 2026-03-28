@@ -18,6 +18,8 @@ import {
   saveRecipeToHistory,
   getUserInventory,
   markRecipeAsCooked,
+  createGroceryList,
+  getAuthToken,
   Recipe,
   InventoryItem,
 } from "../services/api";
@@ -128,6 +130,7 @@ export default function RecipeGenerationScreen({ route, navigation }: Props) {
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
+  const [creatingList, setCreatingList] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -138,7 +141,7 @@ export default function RecipeGenerationScreen({ route, navigation }: Props) {
           style={{ marginRight: 16, flexDirection: "row", alignItems: "center", gap: 5 }}
         >
           <Text style={{ fontSize: 16 }}>⏱</Text>
-          <Text style={{ fontSize: 14, fontWeight: "600", color: "#6C63FF" }}>History</Text>
+          <Text style={{ fontSize: 14, fontWeight: "600", color: "#1A1A1A" }}>History</Text>
         </TouchableOpacity>
       ),
     });
@@ -244,7 +247,7 @@ export default function RecipeGenerationScreen({ route, navigation }: Props) {
   if (loading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator size="large" color="#4CAF50" />
+        <ActivityIndicator size="large" color="#1A1A1A" />
         <Text style={styles.loadingText}>Generating recipes...</Text>
       </View>
     );
@@ -327,14 +330,56 @@ export default function RecipeGenerationScreen({ route, navigation }: Props) {
 
             {/* Missing ingredients summary */}
             {feasibility.missing.length > 0 && (
-              <View style={styles.missingBox}>
-                <Text style={styles.missingTitle}>
-                  Missing Ingredients ({feasibility.missing.length})
-                </Text>
-                <Text style={styles.missingList}>
-                  {feasibility.missing.join(", ")}
-                </Text>
-              </View>
+              <>
+                <View style={styles.missingBox}>
+                  <Text style={styles.missingTitle}>
+                    Missing Ingredients ({feasibility.missing.length})
+                  </Text>
+                  <Text style={styles.missingList}>
+                    {feasibility.missing.join(", ")}
+                  </Text>
+                </View>
+
+                <TouchableOpacity
+                  style={[
+                    styles.groceryListButton,
+                    creatingList && styles.groceryListButtonDisabled,
+                  ]}
+                  onPress={async () => {
+                    if (creatingList || !selectedRecipe) return;
+                    setCreatingList(true);
+                    try {
+                      const missingIngredients = (selectedRecipe.ingredients ?? []).filter(
+                        (ing) => feasibility.missing.some((m) => norm(m) === norm(ing.name))
+                      );
+                      const result = await createGroceryList({
+                        recipeId: selectedRecipe.id,
+                        recipeTitle: selectedRecipe.title,
+                        missingIngredients,
+                      });
+                      if (result.success && result.list) {
+                        navigation.navigate("GroceryList", {
+                          listId: result.list.id,
+                          recipeTitle: selectedRecipe.title,
+                        });
+                      } else {
+                        Alert.alert("Error", result.error ?? "Could not create grocery list.");
+                      }
+                    } catch {
+                      Alert.alert("Error", "Network error. Please try again.");
+                    } finally {
+                      setCreatingList(false);
+                    }
+                  }}
+                  disabled={creatingList}
+                >
+                  {creatingList ? (
+                    <ActivityIndicator size="small" color="#fff" />
+                  ) : (
+                    <Text style={styles.groceryListButtonText}>📋 Create Grocery List</Text>
+                  )}
+                </TouchableOpacity>
+              </>
             )}
 
             {selectedRecipe.instructions && selectedRecipe.instructions.length > 0 && (
@@ -439,26 +484,26 @@ export default function RecipeGenerationScreen({ route, navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f5f5f5" },
+  container: { flex: 1, backgroundColor: "#FAFAF8" },
   centered: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
     paddingHorizontal: 32,
   },
-  loadingText: { marginTop: 12, fontSize: 16, color: "#666" },
-  emptyText: { fontSize: 16, color: "#999", marginBottom: 16 },
+  loadingText: { marginTop: 12, fontSize: 16, color: "#555555" },
+  emptyText: { fontSize: 16, color: "#999999", marginBottom: 16 },
   title: {
     fontSize: 24,
     fontWeight: "bold",
-    color: "#333",
+    color: "#1A1A1A",
     paddingHorizontal: 16,
     paddingTop: 16,
     marginBottom: 4,
   },
   subtitle: {
     fontSize: 14,
-    color: "#666",
+    color: "#555555",
     paddingHorizontal: 16,
     marginBottom: 16,
   },
@@ -466,15 +511,15 @@ const styles = StyleSheet.create({
 
   // Recipe card - horizontal layout with small image
   recipeCard: {
-    backgroundColor: "#fff",
-    borderRadius: 12,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 14,
     marginBottom: 12,
     overflow: "hidden",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
   },
   cardRow: {
     flexDirection: "row",
@@ -484,21 +529,21 @@ const styles = StyleSheet.create({
   recipeThumb: {
     width: 80,
     height: 80,
-    borderRadius: 8,
+    borderRadius: 10,
     backgroundColor: "#e0e0e0",
     marginRight: 12,
   },
   recipeContent: { flex: 1 },
-  recipeTitle: { fontSize: 15, fontWeight: "600", color: "#333", marginBottom: 6 },
+  recipeTitle: { fontSize: 15, fontWeight: "600", color: "#1A1A1A", marginBottom: 6 },
   recipeMetadata: { flexDirection: "row", gap: 10, marginTop: 4 },
-  metadataText: { fontSize: 12, color: "#666" },
-  chevron: { fontSize: 24, color: "#ccc", marginLeft: 8 },
+  metadataText: { fontSize: 12, color: "#555555" },
+  chevron: { fontSize: 24, color: "#CCCCCC", marginLeft: 8 },
 
   // Feasibility badge
   badge: {
     alignSelf: "flex-start",
     borderWidth: 1,
-    borderRadius: 6,
+    borderRadius: 12,
     paddingHorizontal: 10,
     paddingVertical: 4,
     marginBottom: 8,
@@ -508,18 +553,18 @@ const styles = StyleSheet.create({
   // Detail view
   detailsContainer: { flex: 1 },
   backButton: { paddingHorizontal: 16, paddingVertical: 12, marginTop: 8 },
-  backButtonText: { color: "#4CAF50", fontSize: 14, fontWeight: "600" },
-  detailsImage: { width: "100%", height: 250, backgroundColor: "#e0e0e0" },
+  backButtonText: { color: "#1A1A1A", fontSize: 14, fontWeight: "600" },
+  detailsImage: { width: "100%", height: 280, backgroundColor: "#e0e0e0" },
   detailsContent: {
-    backgroundColor: "#fff",
-    paddingHorizontal: 16,
-    paddingTop: 16,
-    paddingBottom: 24,
+    backgroundColor: "#FFFFFF",
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 28,
   },
   detailsTitle: {
     fontSize: 22,
     fontWeight: "bold",
-    color: "#333",
+    color: "#1A1A1A",
     marginBottom: 12,
   },
   detailsMetadata: {
@@ -533,60 +578,71 @@ const styles = StyleSheet.create({
   metadataItem: { flex: 1 },
   metadataLabel: {
     fontSize: 11,
-    color: "#999",
+    color: "#999999",
     marginBottom: 2,
     textTransform: "uppercase",
   },
-  metadataValue: { fontSize: 16, fontWeight: "600", color: "#333" },
+  metadataValue: { fontSize: 16, fontWeight: "600", color: "#1A1A1A" },
   sectionTitle: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#333",
+    color: "#1A1A1A",
     marginTop: 16,
     marginBottom: 10,
   },
-  sectionText: { fontSize: 14, color: "#666", lineHeight: 22 },
+  sectionText: { fontSize: 14, color: "#555555", lineHeight: 22 },
 
   // Ingredient rows with availability
   ingredientRow: { flexDirection: "row", alignItems: "center", marginBottom: 6 },
   ingredientIcon: { fontSize: 14, marginRight: 8 },
-  ingredientItem: { fontSize: 13, color: "#666", lineHeight: 20, flex: 1 },
-  missingIngredient: { color: "#C62828" },
+  ingredientItem: { fontSize: 13, color: "#555555", lineHeight: 20, flex: 1 },
+  missingIngredient: { color: "#D32F2F" },
 
   // Missing ingredients summary box
   missingBox: {
     backgroundColor: "#FFF8E1",
     borderWidth: 1,
     borderColor: "#FFE082",
-    borderRadius: 8,
+    borderRadius: 12,
     padding: 12,
     marginTop: 16,
   },
   missingTitle: { fontSize: 14, fontWeight: "600", color: "#F57F17", marginBottom: 4 },
   missingList: { fontSize: 13, color: "#795548", lineHeight: 20 },
-
-  instructionItem: { fontSize: 13, color: "#666", marginBottom: 10, lineHeight: 20 },
-  linkButton: {
-    backgroundColor: "#2196F3",
+  groceryListButton: {
+    backgroundColor: "#1A1A1A",
     paddingVertical: 12,
-    borderRadius: 8,
+    borderRadius: 12,
+    alignItems: "center",
+    marginTop: 10,
+  },
+  groceryListButtonDisabled: {
+    backgroundColor: "#CCCCCC",
+  },
+  groceryListButtonText: { color: "#fff", fontWeight: "600", fontSize: 14 },
+
+  instructionItem: { fontSize: 13, color: "#555555", marginBottom: 10, lineHeight: 20 },
+  linkButton: {
+    backgroundColor: "#1A1A1A",
+    paddingVertical: 12,
+    borderRadius: 12,
     alignItems: "center",
     marginTop: 16,
   },
   linkButtonText: { color: "#fff", fontWeight: "600", fontSize: 14 },
   selectButton: {
-    backgroundColor: "#4CAF50",
+    backgroundColor: "#1A1A1A",
     paddingVertical: 14,
-    borderRadius: 8,
+    borderRadius: 12,
     alignItems: "center",
     marginTop: 12,
   },
   selectButtonText: { color: "#fff", fontWeight: "bold", fontSize: 16 },
   retryButton: {
-    backgroundColor: "#4CAF50",
+    backgroundColor: "#1A1A1A",
     paddingVertical: 12,
     paddingHorizontal: 24,
-    borderRadius: 8,
+    borderRadius: 12,
   },
   retryButtonText: { color: "#fff", fontWeight: "600", fontSize: 14 },
 });

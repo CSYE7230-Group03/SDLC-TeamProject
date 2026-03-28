@@ -12,11 +12,13 @@ import { RootStackParamList } from "../navigation/AppNavigator";
 
 type Props = NativeStackScreenProps<RootStackParamList, "ProfileDetail">;
 
-const PRIMARY = "#2d6a4f";
-const BG = "#f8faf9";
-const CARD_BG = "#ffffff";
-const TEXT_DARK = "#1a1a1a";
-const TEXT_MID = "#666666";
+const PRIMARY = "#1A1A1A";
+const BG = "#FAFAF8";
+const CARD_BG = "#FFFFFF";
+const TEXT_DARK = "#1A1A1A";
+const TEXT_MID = "#555555";
+const ACCENT = "#D4A017";
+const BORDER = "#F0EFED";
 
 export default function ProfileDetailScreen({ route }: Props) {
   const { analysis } = route.params;
@@ -118,18 +120,18 @@ const styles = StyleSheet.create({
   persona: { fontSize: 24, fontWeight: "700", color: "#fff", textAlign: "center" },
   description: { fontSize: 14, color: "rgba(255,255,255,0.85)", textAlign: "center", marginTop: 12, lineHeight: 20 },
   statsCard: { backgroundColor: CARD_BG, marginHorizontal: 16, borderRadius: 16, padding: 20 },
-  sectionTitle: { fontSize: 17, fontWeight: "600", color: TEXT_DARK, marginBottom: 16 },
+  sectionTitle: { fontSize: 17, fontWeight: "600", color: "#1A1A1A", marginBottom: 16 },
   statRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 8 },
   statLabel: { flexDirection: "row", alignItems: "center", gap: 8 },
   statLabelText: { fontSize: 15, color: TEXT_MID },
-  statValue: { fontSize: 18, fontWeight: "700", color: PRIMARY },
-  progressBg: { height: 8, backgroundColor: "#e8e8e8", borderRadius: 4, overflow: "hidden" },
+  statValue: { fontSize: 18, fontWeight: "700", color: "#1A1A1A" },
+  progressBg: { height: 8, backgroundColor: "#F0EFED", borderRadius: 4, overflow: "hidden" },
   progressFill: { height: "100%", borderRadius: 4 },
   tagContainer: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 8 },
   tag: { backgroundColor: "#fff3e0", paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20 },
   tagText: { fontSize: 14, fontWeight: "600", color: "#f57c00" },
-  funFactCard: { backgroundColor: "#fff8e1", marginHorizontal: 16, marginTop: 16, borderRadius: 16, padding: 20 },
+  funFactCard: { backgroundColor: "#FFF8E7", marginHorizontal: 16, marginTop: 16, borderRadius: 16, padding: 20 },
   funFactHeader: { flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 10 },
-  funFactTitle: { fontSize: 16, fontWeight: "600", color: "#f57c00" },
+  funFactTitle: { fontSize: 16, fontWeight: "600", color: "#D4A017" },
   funFactText: { fontSize: 14, color: TEXT_MID, lineHeight: 22 },
 });

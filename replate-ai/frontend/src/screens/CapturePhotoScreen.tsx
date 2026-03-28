@@ -21,13 +21,14 @@ type Props = NativeStackScreenProps<RootStackParamList, "Capture">;
 const LAST_INGREDIENT_IMAGE_KEY = "replate_last_ingredient_image";
 
 // Colors
-const PRIMARY = "#2d6a4f";
-const PRIMARY_LIGHT = "#40916c";
-const BG = "#f8faf9";
-const CARD_BG = "#ffffff";
-const TEXT_DARK = "#1a1a1a";
-const TEXT_MID = "#666666";
+const PRIMARY = "#1A1A1A";
+const PRIMARY_LIGHT = "#333333";
+const BG = "#FAFAF8";
+const CARD_BG = "#FFFFFF";
+const TEXT_DARK = "#1A1A1A";
+const TEXT_MID = "#555555";
 const TEXT_LIGHT = "#999999";
+const ACCENT = "#D4A017";
 
 export default function CapturePhotoScreen({ navigation }: Props) {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
@@ -123,7 +124,7 @@ export default function CapturePhotoScreen({ navigation }: Props) {
     <View style={styles.container}>
       {/* Instructions */}
       <Animated.View style={[styles.instructionCard, { opacity: fadeAnim }]}>
-        <Ionicons name="information-circle" size={20} color={PRIMARY} />
+        <Ionicons name="information-circle" size={20} color={ACCENT} />
         <Text style={styles.instructionText}>
           Take a clear photo of your ingredients for best results
         </Text>
@@ -171,7 +172,7 @@ export default function CapturePhotoScreen({ navigation }: Props) {
           disabled={loading}
           activeOpacity={0.7}
         >
-          <View style={[styles.actionIconBg, { backgroundColor: "#e3f2fd" }]}>
+          <View style={[styles.actionIconBg, { backgroundColor: "#E8F0FE" }]}>
             <Ionicons name="camera" size={24} color="#1976d2" />
           </View>
           <Text style={styles.actionButtonText}>Take Photo</Text>
@@ -183,7 +184,7 @@ export default function CapturePhotoScreen({ navigation }: Props) {
           disabled={loading}
           activeOpacity={0.7}
         >
-          <View style={[styles.actionIconBg, { backgroundColor: "#f3e5f5" }]}>
+          <View style={[styles.actionIconBg, { backgroundColor: "#F3E8FF" }]}>
             <Ionicons name="images" size={24} color="#7b1fa2" />
           </View>
           <Text style={styles.actionButtonText}>Gallery</Text>
@@ -230,7 +231,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
-    backgroundColor: "#e8f5e9",
+    backgroundColor: "#FFF8E7",
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderRadius: 10,
@@ -239,7 +240,7 @@ const styles = StyleSheet.create({
   instructionText: {
     flex: 1,
     fontSize: 13,
-    color: PRIMARY,
+    color: ACCENT,
     lineHeight: 18,
   },
   photoArea: {
@@ -249,7 +250,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     overflow: "hidden",
     borderWidth: 2,
-    borderColor: "#e8e8e8",
+    borderColor: "#E0E0DE",
     borderStyle: "dashed",
   },
   image: {
@@ -266,7 +267,7 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: "#f5f5f5",
+    backgroundColor: "#F5F5F3",
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 16,
@@ -323,14 +324,14 @@ const styles = StyleSheet.create({
     paddingVertical: 18,
     borderRadius: 14,
     marginBottom: 20,
-    shadowColor: PRIMARY,
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
+    shadowOpacity: 0.06,
     shadowRadius: 8,
     elevation: 4,
   },
   detectButtonDisabled: {
-    backgroundColor: "#a5d6a7",
+    backgroundColor: "#CCCCCC",
     shadowOpacity: 0,
   },
   detectButtonContent: {

@@ -265,7 +265,7 @@ export default function IngredientReviewScreen({ route, navigation }: Props) {
   if (loading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator size="large" color="#4CAF50" />
+        <ActivityIndicator size="large" color="#1A1A1A" />
         <Text style={styles.loadingText}>Analyzing your ingredients...</Text>
       </View>
     );
@@ -358,7 +358,7 @@ export default function IngredientReviewScreen({ route, navigation }: Props) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f5f5f5",
+    backgroundColor: "#FAFAF8",
   },
   scrollView: {
     flex: 1,
@@ -375,7 +375,7 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 12,
     fontSize: 16,
-    color: "#666",
+    color: "#555555",
   },
 
   // Image preview
@@ -407,14 +407,14 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 22,
     fontWeight: "bold",
-    color: "#333",
+    color: "#1A1A1A",
     paddingHorizontal: 16,
     paddingTop: 16,
     marginBottom: 4,
   },
   subtitle: {
     fontSize: 14,
-    color: "#666",
+    color: "#555555",
     paddingHorizontal: 16,
     marginBottom: 16,
   },
@@ -432,30 +432,30 @@ const styles = StyleSheet.create({
     color: "#999",
   },
   itemContainer: {
-    backgroundColor: "#fff",
-    borderRadius: 10,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 14,
     padding: 14,
     marginBottom: 10,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
     elevation: 2,
   },
-  
+
   // Edit mode with image reference
   editContainer: {
-    backgroundColor: "#fff",
-    borderRadius: 10,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 14,
     marginBottom: 10,
     overflow: "hidden",
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
     elevation: 2,
     borderWidth: 2,
-    borderColor: "#1976D2",
+    borderColor: "#1A1A1A",
   },
   editImageRef: {
     width: "100%",
@@ -476,7 +476,7 @@ const styles = StyleSheet.create({
   ingredientName: {
     fontSize: 17,
     fontWeight: "600",
-    color: "#333",
+    color: "#1A1A1A",
     textTransform: "capitalize",
   },
   metaRow: {
@@ -487,7 +487,7 @@ const styles = StyleSheet.create({
   },
   quantity: {
     fontSize: 13,
-    color: "#4CAF50",
+    color: "#D4A017",
     fontWeight: "600",
   },
   confidence: {
@@ -499,13 +499,13 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   editButton: {
-    backgroundColor: "#E3F2FD",
+    backgroundColor: "#F5F5F3",
     paddingHorizontal: 14,
     paddingVertical: 8,
-    borderRadius: 6,
+    borderRadius: 12,
   },
   editButtonText: {
-    color: "#1976D2",
+    color: "#1A1A1A",
     fontWeight: "600",
     fontSize: 14,
   },
@@ -513,7 +513,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFEBEE",
     paddingHorizontal: 12,
     paddingVertical: 8,
-    borderRadius: 6,
+    borderRadius: 12,
   },
   removeButtonText: {
     color: "#D32F2F",
@@ -525,18 +525,18 @@ const styles = StyleSheet.create({
   editLabel: {
     fontSize: 12,
     fontWeight: "600",
-    color: "#1976D2",
+    color: "#1A1A1A",
     marginBottom: 8,
     textTransform: "uppercase",
   },
   editInput: {
     borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 6,
+    borderColor: "#E0E0DE",
+    borderRadius: 10,
     paddingHorizontal: 12,
     paddingVertical: 10,
     fontSize: 15,
-    backgroundColor: "#f9f9f9",
+    backgroundColor: "#F5F5F3",
     marginBottom: 8,
   },
   quantityRow: {
@@ -556,9 +556,9 @@ const styles = StyleSheet.create({
   },
   saveButton: {
     flex: 1,
-    backgroundColor: "#4CAF50",
+    backgroundColor: "#1A1A1A",
     paddingVertical: 10,
-    borderRadius: 6,
+    borderRadius: 12,
     alignItems: "center",
   },
   saveButtonText: {
@@ -568,29 +568,29 @@ const styles = StyleSheet.create({
   },
   cancelButton: {
     flex: 1,
-    backgroundColor: "#eee",
+    backgroundColor: "#F5F5F3",
     paddingVertical: 10,
-    borderRadius: 6,
+    borderRadius: 12,
     alignItems: "center",
   },
   cancelButtonText: {
-    color: "#666",
+    color: "#555555",
     fontWeight: "600",
     fontSize: 14,
   },
 
   // Add section
   addSection: {
-    backgroundColor: "#fff",
+    backgroundColor: "#FFFFFF",
     marginHorizontal: 16,
     marginTop: 16,
     padding: 16,
-    borderRadius: 10,
+    borderRadius: 14,
   },
   addSectionTitle: {
     fontSize: 12,
     fontWeight: "600",
-    color: "#666",
+    color: "#555555",
     marginBottom: 10,
     textTransform: "uppercase",
   },
@@ -602,21 +602,21 @@ const styles = StyleSheet.create({
   addInput: {
     flex: 1,
     borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 6,
+    borderColor: "#E0E0DE",
+    borderRadius: 10,
     paddingHorizontal: 12,
     paddingVertical: 10,
     fontSize: 14,
-    backgroundColor: "#f9f9f9",
+    backgroundColor: "#F5F5F3",
   },
   addButton: {
-    backgroundColor: "#4CAF50",
+    backgroundColor: "#1A1A1A",
     paddingHorizontal: 16,
     paddingVertical: 10,
-    borderRadius: 6,
+    borderRadius: 12,
   },
   addButtonDisabled: {
-    backgroundColor: "#A5D6A7",
+    backgroundColor: "#CCCCCC",
   },
   addButtonText: {
     color: "#fff",
@@ -630,20 +630,20 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: "#fff",
+    backgroundColor: "#FFFFFF",
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderTopWidth: 1,
-    borderTopColor: "#eee",
+    borderTopColor: "#F0EFED",
   },
   confirmButton: {
-    backgroundColor: "#4CAF50",
+    backgroundColor: "#1A1A1A",
     paddingVertical: 16,
-    borderRadius: 10,
+    borderRadius: 14,
     alignItems: "center",
   },
   confirmButtonDisabled: {
-    backgroundColor: "#A5D6A7",
+    backgroundColor: "#CCCCCC",
   },
   confirmButtonText: {
     color: "#fff",

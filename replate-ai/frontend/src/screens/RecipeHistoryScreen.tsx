@@ -220,12 +220,14 @@ export default function RecipeHistoryScreen({ navigation }: Props) {
   );
 }
 
-const PRIMARY = "#6C63FF";
-const BG = "#F4F4F8";
+const PRIMARY = "#1A1A1A";
+const BG = "#FAFAF8";
 const CARD_BG = "#FFFFFF";
-const TEXT_DARK = "#1A1A2E";
-const TEXT_MID = "#5C5C7A";
-const TEXT_LIGHT = "#9999BB";
+const TEXT_DARK = "#1A1A1A";
+const TEXT_MID = "#555555";
+const TEXT_LIGHT = "#999999";
+const ACCENT = "#D4A017";
+const BORDER = "#F0EFED";
 
 const styles = StyleSheet.create({
   container: {
@@ -279,7 +281,7 @@ const styles = StyleSheet.create({
   cardImagePlaceholder: {
     width: 88,
     height: 88,
-    backgroundColor: "#EDEDF5",
+    backgroundColor: BORDER,
     justifyContent: "center",
     alignItems: "center",
   },
@@ -304,14 +306,14 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
   badge: {
-    backgroundColor: "#F0EEFF",
+    backgroundColor: "#F5F5F3",
     borderRadius: 20,
     paddingHorizontal: 8,
     paddingVertical: 3,
   },
   badgeText: {
     fontSize: 11,
-    color: PRIMARY,
+    color: TEXT_DARK,
     fontWeight: "500",
   },
   cardDate: {
@@ -377,12 +379,12 @@ const styles = StyleSheet.create({
   detailImage: {
     width: "100%",
     height: 230,
-    backgroundColor: "#EDEDF5",
+    backgroundColor: BORDER,
   },
   detailImagePlaceholder: {
     width: "100%",
     height: 180,
-    backgroundColor: "#EDEDF5",
+    backgroundColor: BORDER,
     justifyContent: "center",
     alignItems: "center",
   },
@@ -409,13 +411,13 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     paddingBottom: 20,
     borderBottomWidth: 1,
-    borderBottomColor: "#EDEDF5",
+    borderBottomColor: BORDER,
   },
   detailMetaChip: {
     flex: 1,
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#F0EEFF",
+    backgroundColor: "#F5F5F3",
     borderRadius: 12,
     paddingVertical: 10,
     paddingHorizontal: 12,
@@ -458,7 +460,7 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: PRIMARY,
+    backgroundColor: ACCENT,
     flexShrink: 0,
   },
   ingredientText: {

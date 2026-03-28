@@ -107,21 +107,22 @@ function getIngredientIcon(ingredientName: string): IconInfo {
   if (name.includes("can") || name.includes("bean")) return { name: "food-variant", color: "#78909c", bg: "#eceff1" };
   
   // Default
-  return { name: "food-apple-outline", color: PRIMARY, bg: "#e8f5e9" };
+  return { name: "food-apple-outline", color: PRIMARY, bg: "#F5F5F3" };
 }
 
 type Props = NativeStackScreenProps<RootStackParamList, "Inventory">;
 
 // Colors
-const PRIMARY = "#2d6a4f";
-const PRIMARY_LIGHT = "#40916c";
-const BG = "#f8faf9";
-const CARD_BG = "#ffffff";
-const TEXT_DARK = "#1a1a1a";
-const TEXT_MID = "#666666";
+const PRIMARY = "#1A1A1A";
+const PRIMARY_LIGHT = "#333333";
+const BG = "#FAFAF8";
+const CARD_BG = "#FFFFFF";
+const TEXT_DARK = "#1A1A1A";
+const TEXT_MID = "#555555";
 const TEXT_LIGHT = "#999999";
-const WARNING = "#f57c00";
-const SUCCESS = "#4caf50";
+const WARNING = "#F57C00";
+const SUCCESS = "#2E7D32";
+const BORDER = "#F0EFED";
 
 export default function InventoryScreen({ navigation }: Props) {
   const [items, setItems] = useState<InventoryItem[]>([]);
@@ -247,7 +248,7 @@ export default function InventoryScreen({ navigation }: Props) {
       {/* Summary Header */}
       <View style={styles.summary}>
         <View style={styles.summaryItem}>
-          <View style={[styles.summaryIcon, { backgroundColor: "#e8f5e9" }]}>
+          <View style={[styles.summaryIcon, { backgroundColor: "#E8F5E9" }]}>
             <Ionicons name="checkmark-circle" size={20} color={SUCCESS} />
           </View>
           <View>
@@ -257,7 +258,7 @@ export default function InventoryScreen({ navigation }: Props) {
         </View>
         <View style={styles.summaryDivider} />
         <View style={styles.summaryItem}>
-          <View style={[styles.summaryIcon, { backgroundColor: "#fafafa" }]}>
+          <View style={[styles.summaryIcon, { backgroundColor: "#F5F5F3" }]}>
             <Ionicons name="close-circle-outline" size={20} color={TEXT_LIGHT} />
           </View>
           <View>
@@ -344,6 +345,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     padding: 32,
+    backgroundColor: BG,
   },
   loadingText: {
     marginTop: 12,
@@ -358,7 +360,7 @@ const styles = StyleSheet.create({
     paddingVertical: 20,
     backgroundColor: CARD_BG,
     borderBottomWidth: 1,
-    borderBottomColor: "#eee",
+    borderBottomColor: BORDER,
   },
   summaryItem: {
     flexDirection: "row",
@@ -384,7 +386,7 @@ const styles = StyleSheet.create({
   summaryDivider: {
     width: 1,
     height: 40,
-    backgroundColor: "#eee",
+    backgroundColor: BORDER,
   },
   list: {
     padding: 16,
@@ -392,14 +394,14 @@ const styles = StyleSheet.create({
   },
   itemCard: {
     backgroundColor: CARD_BG,
-    borderRadius: 12,
+    borderRadius: 14,
     padding: 14,
     marginBottom: 10,
     flexDirection: "row",
     alignItems: "center",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
+    shadowOpacity: 0.06,
     shadowRadius: 8,
     elevation: 2,
   },
@@ -444,7 +446,7 @@ const styles = StyleSheet.create({
   qtyText: {
     fontSize: 20,
     fontWeight: "700",
-    color: PRIMARY,
+    color: TEXT_DARK,
   },
   qtyLow: {
     color: WARNING,
@@ -461,7 +463,7 @@ const styles = StyleSheet.create({
     width: 120,
     height: 120,
     borderRadius: 60,
-    backgroundColor: "#f5f5f5",
+    backgroundColor: "#F5F5F3",
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 24,
@@ -485,7 +487,7 @@ const styles = StyleSheet.create({
     backgroundColor: PRIMARY,
     paddingHorizontal: 24,
     paddingVertical: 14,
-    borderRadius: 12,
+    borderRadius: 14,
   },
   addButtonText: {
     color: "#fff",
@@ -500,7 +502,7 @@ const styles = StyleSheet.create({
     padding: 16,
     backgroundColor: BG,
     borderTopWidth: 1,
-    borderTopColor: "#eee",
+    borderTopColor: BORDER,
   },
   captureButton: {
     flexDirection: "row",
@@ -509,7 +511,7 @@ const styles = StyleSheet.create({
     gap: 8,
     backgroundColor: PRIMARY,
     paddingVertical: 16,
-    borderRadius: 12,
+    borderRadius: 14,
   },
   captureButtonText: {
     color: "#fff",
@@ -518,12 +520,12 @@ const styles = StyleSheet.create({
   },
   lastImageContainer: {
     backgroundColor: CARD_BG,
-    borderRadius: 12,
+    borderRadius: 14,
     marginBottom: 16,
     overflow: "hidden",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
+    shadowOpacity: 0.06,
     shadowRadius: 8,
     elevation: 2,
   },
@@ -533,7 +535,7 @@ const styles = StyleSheet.create({
     gap: 8,
     padding: 12,
     borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0",
+    borderBottomColor: BORDER,
   },
   lastImageTitle: {
     fontSize: 14,

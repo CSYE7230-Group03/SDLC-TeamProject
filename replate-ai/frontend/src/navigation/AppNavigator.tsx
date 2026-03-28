@@ -15,6 +15,7 @@ import SignupScreen from "../screens/SignupScreen";
 import ForgotPasswordScreen from "../screens/ForgotPasswordScreen";
 import { loadStoredSession } from "../services/api";
 import RecipeHistoryScreen from "../screens/RecipeHistoryScreen";
+import GroceryListScreen from "../screens/GroceryListScreen";
 
 export type RootStackParamList = {
   Login: undefined;
@@ -62,6 +63,10 @@ export type RootStackParamList = {
     };
     deducted: { name: string; previousQty: number; deductedAmount: number; newQty: number }[];
     skipped: { name: string; reason: string }[];
+  };
+  GroceryList: {
+    listId: string;
+    recipeTitle: string;
   };
 };
 
@@ -192,6 +197,11 @@ export default function AppNavigator() {
           headerLeft: () => null,
           headerBackVisible: false,
         }}
+      />
+      <Stack.Screen
+        name="GroceryList"
+        component={GroceryListScreen}
+        options={{ title: "Grocery List" }}
       />
     </Stack.Navigator>
   );
