@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { ActivityIndicator, View, Text, TouchableOpacity } from "react-native";
+import { ActivityIndicator, View } from "react-native";
+import { useAppTheme } from "../theme/ThemeProvider";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import CapturePhotoScreen from "../screens/CapturePhotoScreen";
 import IngredientReviewScreen from "../screens/IngredientReviewScreen";
 import RecipeGenerationScreen from "../screens/RecipeGenerationScreen";
@@ -15,14 +17,14 @@ import SignupScreen from "../screens/SignupScreen";
 import ForgotPasswordScreen from "../screens/ForgotPasswordScreen";
 import { loadStoredSession } from "../services/api";
 import RecipeHistoryScreen from "../screens/RecipeHistoryScreen";
+import GroceryListScreen from "../screens/GroceryListScreen";
+import BottomTabBar from "../components/BottomTabBar";
 
 export type RootStackParamList = {
   Login: undefined;
   Signup: undefined;
   ForgotPassword: undefined;
-  Home: undefined;
-  Capture: undefined;
-  Inventory: undefined;
+  MainTabs: undefined;
   IngredientReview: {
     detectedIngredients: { name: string; confidence: number; quantity?: number; unit?: string }[];
     imageUri?: string;
@@ -52,8 +54,6 @@ export type RootStackParamList = {
       funFact: string;
     };
   };
-  ProfilePreferences: undefined;
-  RecipeHistory: undefined;
   CookingComplete: {
     recipe: {
       title: string;
@@ -63,18 +63,46 @@ export type RootStackParamList = {
     deducted: { name: string; previousQty: number; deductedAmount: number; newQty: number }[];
     skipped: { name: string; reason: string }[];
   };
+  GroceryList: {
+    listId: string;
+    recipeTitle: string;
+  };
+};
+
+export type TabParamList = {
+  Home: undefined;
+  Inventory: undefined;
+  Capture: undefined;
+  History: undefined;
+  Profile: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
+const Tab = createBottomTabNavigator<TabParamList>();
+
+function TabNavigator() {
+  return (
+    <Tab.Navigator
+      tabBar={(props) => <BottomTabBar {...props} />}
+      screenOptions={{ headerShown: false }}
+    >
+      <Tab.Screen name="Home" component={HomeScreen} />
+      <Tab.Screen name="Inventory" component={InventoryScreen} />
+      <Tab.Screen name="Capture" component={CapturePhotoScreen} />
+      <Tab.Screen name="History" component={RecipeHistoryScreen} />
+      <Tab.Screen name="Profile" component={ProfilePreferencesScreen} />
+    </Tab.Navigator>
+  );
+}
 
 export default function AppNavigator() {
+  const { theme } = useAppTheme();
   const [initializing, setInitializing] = useState(true);
-  const [initialRoute, setInitialRoute] =
-    useState<keyof RootStackParamList>("Login");
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
     loadStoredSession().then((loggedIn) => {
-      setInitialRoute(loggedIn ? "Home" : "Login");
+      setIsLoggedIn(loggedIn);
       setInitializing(false);
     });
   }, []);
@@ -82,115 +110,68 @@ export default function AppNavigator() {
   if (initializing) {
     return (
       <View
-        style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#fff" }}
+        style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "transparent" }}
       >
-        <ActivityIndicator size="large" color="#2d6a4f" />
+        <ActivityIndicator size="large" color={theme.colors.primary} />
       </View>
     );
   }
 
   return (
     <Stack.Navigator
-      initialRouteName={initialRoute}
-      screenOptions={{ headerShown: true }}
+      initialRouteName={isLoggedIn ? "MainTabs" : "Login"}
+      screenOptions={{ headerShown: false }}
     >
-      <Stack.Screen
-        name="Login"
-        component={LoginScreen}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="Signup"
-        component={SignupScreen}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="ForgotPassword"
-        component={ForgotPasswordScreen}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="Home"
-        component={HomeScreen}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="Capture"
-        component={CapturePhotoScreen}
-        options={({ navigation }) => ({
-          title: "Capture Ingredients",
-          headerLeft: () => (
-            <TouchableOpacity
-              onPress={() => navigation.navigate("Home")}
-              style={{ marginLeft: 8, padding: 4, flexDirection: "row", alignItems: "center" }}
-            >
-              <Text style={{ fontSize: 16, color: "#2d6a4f" }}>‹ Home</Text>
-            </TouchableOpacity>
-          ),
-        })}
-      />
-      <Stack.Screen
-        name="Inventory"
-        component={InventoryScreen}
-        options={({ navigation }) => ({
-          title: "My Inventory",
-          headerLeft: () => (
-            <TouchableOpacity
-              onPress={() => navigation.navigate("Home")}
-              style={{ marginLeft: 8, padding: 4, flexDirection: "row", alignItems: "center" }}
-            >
-              <Text style={{ fontSize: 16, color: "#2d6a4f" }}>‹ Home</Text>
-            </TouchableOpacity>
-          ),
-        })}
-      />
+      <Stack.Screen name="Login" component={LoginScreen} />
+      <Stack.Screen name="Signup" component={SignupScreen} />
+      <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
+      <Stack.Screen name="MainTabs" component={TabNavigator} />
       <Stack.Screen
         name="IngredientReview"
         component={IngredientReviewScreen}
-        options={{ title: "Review Ingredients" }}
+        options={{
+          headerShown: true,
+          title: "Review Ingredients",
+          headerStyle: { backgroundColor: theme.colors.background },
+          headerTintColor: theme.colors.text,
+          headerShadowVisible: false,
+        }}
       />
       <Stack.Screen
         name="RecipeGeneration"
         component={RecipeGenerationScreen}
-        options={{ title: "Generated Recipes" }}
+        options={{
+          headerShown: true,
+          title: "Generated Recipes",
+          headerStyle: { backgroundColor: theme.colors.background },
+          headerTintColor: theme.colors.text,
+          headerShadowVisible: false,
+        }}
       />
       <Stack.Screen
         name="RecipeDetail"
         component={RecipeDetailScreen}
-        options={{ title: "Recipe Details" }}
+        options={{ headerShown: false }}
       />
       <Stack.Screen
         name="ProfileDetail"
         component={ProfileDetailScreen}
-        options={{ title: "Your Fridge Profile" }}
-      />
-      <Stack.Screen
-        name="ProfilePreferences"
-        component={ProfilePreferencesScreen}
-        options={{ title: "Profile & Preferences" }}
-      />
-      <Stack.Screen
-        name="RecipeHistory"
-        component={RecipeHistoryScreen}
-        options={({ navigation }) => ({
-          title: "Recipe History",
-          headerLeft: () => (
-            <TouchableOpacity
-              onPress={() => navigation.navigate("Home")}
-              style={{ marginLeft: 8, padding: 4, flexDirection: "row", alignItems: "center" }}
-            >
-              <Text style={{ fontSize: 16, color: "#2d6a4f" }}>‹ Home</Text>
-            </TouchableOpacity>
-          ),
-        })}
+        options={{ headerShown: false }}
       />
       <Stack.Screen
         name="CookingComplete"
         component={CookingCompleteScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="GroceryList"
+        component={GroceryListScreen}
         options={{
-          title: "Cooking Complete",
-          headerLeft: () => null,
-          headerBackVisible: false,
+          headerShown: true,
+          title: "Grocery List",
+          headerStyle: { backgroundColor: theme.colors.background },
+          headerTintColor: theme.colors.text,
+          headerShadowVisible: false,
         }}
       />
     </Stack.Navigator>

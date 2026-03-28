@@ -11,28 +11,27 @@ import {
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { NativeStackScreenProps } from "@react-navigation/native-stack";
+import { BottomTabScreenProps, useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
-import { RootStackParamList } from "../navigation/AppNavigator";
+import { TabParamList, RootStackParamList } from "../navigation/AppNavigator";
 import { detectIngredients } from "../services/api";
+import { useAppTheme } from "../theme/ThemeProvider";
+import { useNavigation } from "@react-navigation/native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
-type Props = NativeStackScreenProps<RootStackParamList, "Capture">;
+type Props = BottomTabScreenProps<TabParamList, "Capture">;
+type RootNavProp = NativeStackNavigationProp<RootStackParamList>;
 
 const LAST_INGREDIENT_IMAGE_KEY = "replate_last_ingredient_image";
 
-// Colors
-const PRIMARY = "#2d6a4f";
-const PRIMARY_LIGHT = "#40916c";
-const BG = "#f8faf9";
-const CARD_BG = "#ffffff";
-const TEXT_DARK = "#1a1a1a";
-const TEXT_MID = "#666666";
-const TEXT_LIGHT = "#999999";
-
 export default function CapturePhotoScreen({ navigation }: Props) {
+  const { theme } = useAppTheme();
+  const rootNavigation = useNavigation<RootNavProp>();
+  const tabBarHeight = useBottomTabBarHeight();
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  
+
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.95)).current;
 
@@ -104,8 +103,8 @@ export default function CapturePhotoScreen({ navigation }: Props) {
           uri: selectedImage,
           timestamp: Date.now(),
         }));
-        
-        navigation.navigate("IngredientReview", {
+
+        rootNavigation.navigate("IngredientReview", {
           detectedIngredients: response.ingredients,
           imageUri: selectedImage,
         });
@@ -120,11 +119,12 @@ export default function CapturePhotoScreen({ navigation }: Props) {
   }
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.colors.background }]} edges={["top"]}>
+    <View style={[styles.container, { backgroundColor: theme.colors.background, paddingBottom: tabBarHeight }]}>
       {/* Instructions */}
-      <Animated.View style={[styles.instructionCard, { opacity: fadeAnim }]}>
-        <Ionicons name="information-circle" size={20} color={PRIMARY} />
-        <Text style={styles.instructionText}>
+      <Animated.View style={[styles.instructionCard, { opacity: fadeAnim, backgroundColor: theme.colors.accentLight }]}>
+        <Ionicons name="information-circle" size={20} color={theme.colors.accent} />
+        <Text style={[styles.instructionText, { color: theme.colors.accent }]}>
           Take a clear photo of your ingredients for best results
         </Text>
       </Animated.View>
@@ -136,6 +136,8 @@ export default function CapturePhotoScreen({ navigation }: Props) {
           {
             opacity: fadeAnim,
             transform: [{ scale: scaleAnim }],
+            backgroundColor: theme.colors.card,
+            borderColor: theme.colors.border,
           },
         ]}
       >
@@ -143,16 +145,16 @@ export default function CapturePhotoScreen({ navigation }: Props) {
           <Image source={{ uri: selectedImage }} style={styles.image} resizeMode="cover" />
         ) : (
           <View style={styles.placeholder}>
-            <View style={styles.placeholderIcon}>
-              <Ionicons name="image-outline" size={48} color={TEXT_LIGHT} />
+            <View style={[styles.placeholderIcon, { backgroundColor: theme.colors.inputBg }]}>
+              <Ionicons name="image-outline" size={48} color={theme.colors.textMuted} />
             </View>
-            <Text style={styles.placeholderTitle}>No image selected</Text>
-            <Text style={styles.placeholderSubtitle}>
+            <Text style={[styles.placeholderTitle, { color: theme.colors.text }]}>No image selected</Text>
+            <Text style={[styles.placeholderSubtitle, { color: theme.colors.textMuted }]}>
               Take a photo or choose from gallery
             </Text>
           </View>
         )}
-        
+
         {selectedImage && (
           <TouchableOpacity
             style={styles.clearButton}
@@ -166,27 +168,27 @@ export default function CapturePhotoScreen({ navigation }: Props) {
       {/* Action Buttons */}
       <Animated.View style={[styles.buttonContainer, { opacity: fadeAnim }]}>
         <TouchableOpacity
-          style={styles.actionButton}
+          style={[styles.actionButton, { backgroundColor: theme.colors.card }]}
           onPress={openCamera}
           disabled={loading}
           activeOpacity={0.7}
         >
-          <View style={[styles.actionIconBg, { backgroundColor: "#e3f2fd" }]}>
-            <Ionicons name="camera" size={24} color="#1976d2" />
+          <View style={[styles.actionIconBg, { backgroundColor: theme.colors.accentLight }]}>
+            <Ionicons name="camera" size={24} color={theme.colors.accent} />
           </View>
-          <Text style={styles.actionButtonText}>Take Photo</Text>
+          <Text style={[styles.actionButtonText, { color: theme.colors.text }]}>Take Photo</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={styles.actionButton}
+          style={[styles.actionButton, { backgroundColor: theme.colors.card }]}
           onPress={pickImage}
           disabled={loading}
           activeOpacity={0.7}
         >
-          <View style={[styles.actionIconBg, { backgroundColor: "#f3e5f5" }]}>
-            <Ionicons name="images" size={24} color="#7b1fa2" />
+          <View style={[styles.actionIconBg, { backgroundColor: theme.colors.inputBg }]}>
+            <Ionicons name="images" size={24} color={theme.colors.textSecondary} />
           </View>
-          <Text style={styles.actionButtonText}>Gallery</Text>
+          <Text style={[styles.actionButtonText, { color: theme.colors.text }]}>Gallery</Text>
         </TouchableOpacity>
       </Animated.View>
 
@@ -195,7 +197,7 @@ export default function CapturePhotoScreen({ navigation }: Props) {
         <TouchableOpacity
           style={[
             styles.detectButton,
-            !selectedImage && styles.detectButtonDisabled,
+            { backgroundColor: !selectedImage ? theme.colors.border : theme.colors.buttonPrimary },
           ]}
           onPress={handleDetectIngredients}
           disabled={!selectedImage || loading}
@@ -216,13 +218,16 @@ export default function CapturePhotoScreen({ navigation }: Props) {
         </TouchableOpacity>
       </Animated.View>
     </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+  },
   container: {
     flex: 1,
-    backgroundColor: BG,
     paddingHorizontal: 20,
     paddingTop: 16,
   },
@@ -230,7 +235,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
-    backgroundColor: "#e8f5e9",
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderRadius: 10,
@@ -239,17 +243,14 @@ const styles = StyleSheet.create({
   instructionText: {
     flex: 1,
     fontSize: 13,
-    color: PRIMARY,
     lineHeight: 18,
   },
   photoArea: {
     flex: 1,
     borderRadius: 16,
-    backgroundColor: CARD_BG,
     marginBottom: 20,
     overflow: "hidden",
     borderWidth: 2,
-    borderColor: "#e8e8e8",
     borderStyle: "dashed",
   },
   image: {
@@ -266,7 +267,6 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: "#f5f5f5",
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 16,
@@ -274,12 +274,10 @@ const styles = StyleSheet.create({
   placeholderTitle: {
     fontSize: 16,
     fontWeight: "600",
-    color: TEXT_DARK,
     marginBottom: 6,
   },
   placeholderSubtitle: {
     fontSize: 13,
-    color: TEXT_LIGHT,
   },
   clearButton: {
     position: "absolute",
@@ -295,7 +293,6 @@ const styles = StyleSheet.create({
   },
   actionButton: {
     flex: 1,
-    backgroundColor: CARD_BG,
     paddingVertical: 16,
     borderRadius: 14,
     alignItems: "center",
@@ -316,22 +313,16 @@ const styles = StyleSheet.create({
   actionButtonText: {
     fontSize: 14,
     fontWeight: "600",
-    color: TEXT_DARK,
   },
   detectButton: {
-    backgroundColor: PRIMARY,
     paddingVertical: 18,
     borderRadius: 14,
     marginBottom: 20,
-    shadowColor: PRIMARY,
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
+    shadowOpacity: 0.06,
     shadowRadius: 8,
     elevation: 4,
-  },
-  detectButtonDisabled: {
-    backgroundColor: "#a5d6a7",
-    shadowOpacity: 0,
   },
   detectButtonContent: {
     flexDirection: "row",

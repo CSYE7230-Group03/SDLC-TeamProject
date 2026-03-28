@@ -12,12 +12,19 @@ import {
   SafeAreaView,
 } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { RootStackParamList } from "../navigation/AppNavigator";
 import { signUp, signIn, saveSession } from "../services/api";
 import { EMAIL_REGEX } from "../utils/validation";
 import { authStyles } from "../styles/authStyles";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Signup">;
+
+const BG = "#FAFAF8";
+const TEXT_DARK = "#1A1A1A";
+const TEXT_MUTED = "#999999";
+const BORDER = "#E0E0DE";
+const INPUT_BG = "#F5F5F3";
 
 export default function SignupScreen({ navigation }: Props) {
   const [displayName, setDisplayName] = useState("");
@@ -95,7 +102,7 @@ export default function SignupScreen({ navigation }: Props) {
         const loginResult = await signIn({ email: email.trim(), password });
         if (loginResult.success && loginResult.idToken && loginResult.refreshToken) {
           await saveSession(loginResult.idToken, loginResult.refreshToken, displayName.trim());
-          navigation.replace("Home");
+          navigation.replace("MainTabs");
         } else {
           // Account created but auto-login failed — send to Login
           navigation.replace("Login");
@@ -116,7 +123,10 @@ export default function SignupScreen({ navigation }: Props) {
   return (
     <SafeAreaView style={styles.safe}>
       <View style={styles.header}>
-        <Text style={styles.brand}>🌿 ReplateAI</Text>
+        <View style={styles.brandRow}>
+          <MaterialCommunityIcons name="leaf" size={18} color={TEXT_DARK} />
+          <Text style={styles.brand}>ReplateAI</Text>
+        </View>
       </View>
 
       <KeyboardAvoidingView
@@ -244,18 +254,23 @@ export default function SignupScreen({ navigation }: Props) {
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: "#fff",
+    backgroundColor: BG,
   },
   header: {
     alignItems: "center",
     paddingVertical: 14,
     borderBottomWidth: 1,
-    borderBottomColor: "#e8e8e8",
+    borderBottomColor: BORDER,
+  },
+  brandRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
   },
   brand: {
     fontSize: 20,
     fontWeight: "700",
-    color: "#2d6a4f",
+    color: TEXT_DARK,
     letterSpacing: 0.5,
   },
   flex: {
@@ -270,34 +285,34 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 26,
     fontWeight: "700",
-    color: "#1a1a1a",
+    color: TEXT_DARK,
     marginBottom: 6,
   },
   subtitle: {
     fontSize: 15,
-    color: "#888",
+    color: TEXT_MUTED,
     marginBottom: 32,
   },
   input: {
-    backgroundColor: "#f8f9fa",
+    backgroundColor: INPUT_BG,
     borderWidth: 1,
-    borderColor: "#e0e0e0",
-    borderRadius: 10,
+    borderColor: BORDER,
+    borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 14,
     fontSize: 15,
-    color: "#1a1a1a",
+    color: TEXT_DARK,
     marginBottom: 4,
   },
   button: {
-    backgroundColor: "#2196F3",
+    backgroundColor: TEXT_DARK,
     paddingVertical: 16,
-    borderRadius: 12,
+    borderRadius: 14,
     alignItems: "center",
     marginTop: 6,
   },
   buttonDisabled: {
-    backgroundColor: "#90CAF9",
+    backgroundColor: "#CCCCCC",
   },
   buttonText: {
     color: "#fff",
@@ -312,20 +327,20 @@ const styles = StyleSheet.create({
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: "#e0e0e0",
+    backgroundColor: BORDER,
   },
   dividerText: {
     marginHorizontal: 12,
     fontSize: 13,
-    color: "#aaa",
+    color: TEXT_MUTED,
   },
   link: {
     fontSize: 14,
-    color: "#888",
+    color: TEXT_MUTED,
     textAlign: "center",
   },
   linkBold: {
-    color: "#2196F3",
+    color: TEXT_DARK,
     fontWeight: "600",
   },
 });

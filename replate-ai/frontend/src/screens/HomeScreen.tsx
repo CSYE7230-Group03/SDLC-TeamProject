@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import {
   View,
   Text,
@@ -10,13 +10,14 @@ import {
   ActivityIndicator,
   FlatList,
   Animated,
+  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { NativeStackScreenProps } from "@react-navigation/native-stack";
+import { BottomTabScreenProps, useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { useFocusEffect } from "@react-navigation/native";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
-import { RootStackParamList } from "../navigation/AppNavigator";
+import { TabParamList } from "../navigation/AppNavigator";
 import {
   clearSession,
   getUserDisplayName,
@@ -27,81 +28,87 @@ import {
   ProfileAnalysis,
 } from "../services/api";
 import { useAppTheme } from "../theme/ThemeProvider";
+import { spacing, radii } from "../theme/theme";
+import { useNavigation } from "@react-navigation/native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { RootStackParamList } from "../navigation/AppNavigator";
 
-type Props = NativeStackScreenProps<RootStackParamList, "Home">;
+type Props = BottomTabScreenProps<TabParamList, "Home">;
+type RootNavProp = NativeStackNavigationProp<RootStackParamList>;
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
-const CARD_WIDTH = SCREEN_WIDTH - 64;
+
+// ─── Design tokens for the new green palette ────────────────────────────────
+const GREEN_BG = "#F0F8F0";
+const GREEN_DARK = "#2D5A27";
+const CARD_WHITE = "#FFFFFF";
+const TEXT_PRIMARY = "#1A1A1A";
+const TEXT_SECONDARY = "#666666";
+
+const REC_CARD_WIDTH = 260;
+const WEEK_CARD_WIDTH = 180;
+
+const PANTRY_STAPLES = [
+  "salt", "pepper", "water", "oil", "olive oil", "cooking oil",
+  "vegetable oil", "butter", "garlic", "onion", "soy sauce", "ketchup",
+  "mayonnaise", "mustard", "vinegar", "sugar", "honey", "lemon juice",
+  "flour", "rice", "pasta", "spaghetti",
+];
 
 const CACHE_KEY_RECOMMENDATIONS = "replate_cached_recommendations";
 const CACHE_KEY_INVENTORY_COUNT = "replate_cached_inventory_count";
 
-// Colors
-const PRIMARY = "#2d6a4f";
-const PRIMARY_LIGHT = "#40916c";
-const BG = "#f8faf9";
-const CARD_BG = "#ffffff";
-const TEXT_DARK = "#1a1a1a";
-const TEXT_MID = "#666666";
-const TEXT_LIGHT = "#999999";
-
 export default function HomeScreen({ navigation }: Props) {
   const { theme } = useAppTheme();
+  const rootNavigation = useNavigation<RootNavProp>();
+  const tabBarHeight = useBottomTabBarHeight();
+
+  // ─── Existing state ──────────────────────────────────────────────────────
   const [userName, setUserName] = useState<string>("");
   const [recommendations, setRecommendations] = useState<Recipe[]>([]);
   const [loadingRecs, setLoadingRecs] = useState(true);
   const [inventoryCount, setInventoryCount] = useState(0);
-  const [inventoryIngredients, setInventoryIngredients] = useState<string[]>([]);
-  const [profileAnalysis, setProfileAnalysis] = useState<ProfileAnalysis | null>(null);
+  const [inventoryIngredients, setInventoryIngredients] = useState<string[]>(
+    [],
+  );
+  const [profileAnalysis, setProfileAnalysis] =
+    useState<ProfileAnalysis | null>(null);
   const [loadingProfile, setLoadingProfile] = useState(false);
 
-  // Animations
+  // ─── Animations ──────────────────────────────────────────────────────────
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(30)).current;
 
-  // Pantry staples that are always considered available
-  const PANTRY_STAPLES = [
-    "salt", "pepper", "water", "oil", "olive oil", "cooking oil", "vegetable oil",
-    "butter", "garlic", "onion", "soy sauce", "ketchup", "mayonnaise", "mustard",
-    "vinegar", "sugar", "honey", "lemon juice", "flour", "rice", "pasta", "spaghetti"
-  ];
-
-  // Calculate matching rate for a recipe
-  function calculateMatchRate(recipe: Recipe): number {
-    if (!recipe.ingredients || recipe.ingredients.length === 0) return 0;
-    
-    const availableSet = new Set([
-      ...inventoryIngredients.map(i => i.toLowerCase()),
-      ...PANTRY_STAPLES
+  // ─── Existing logic (unchanged) ──────────────────────────────────────────
+  const availableSet = useMemo(() => {
+    return new Set([
+      ...inventoryIngredients.map((i) => i.toLowerCase()),
+      ...PANTRY_STAPLES,
     ]);
-    
-    let matched = 0;
-    for (const ing of recipe.ingredients) {
-      const ingName = ing.name.toLowerCase();
-      // Check if any available ingredient matches (partial match)
-      const isAvailable = Array.from(availableSet).some(avail => 
-        ingName.includes(avail) || avail.includes(ingName)
-      );
-      if (isAvailable) matched++;
+  }, [inventoryIngredients]);
+
+  const sortedRecs = useMemo(() => {
+    function calculateMatchRate(recipe: Recipe): number {
+      if (!recipe.ingredients || recipe.ingredients.length === 0) return 0;
+      let matched = 0;
+      for (const ing of recipe.ingredients) {
+        const ingName = ing.name.toLowerCase();
+        let found = false;
+        for (const avail of availableSet) {
+          if (ingName.includes(avail) || avail.includes(ingName)) { found = true; break; }
+        }
+        if (found) matched++;
+      }
+      return Math.round((matched / recipe.ingredients.length) * 100);
     }
-    
-    return Math.round((matched / recipe.ingredients.length) * 100);
-  }
-
-  // Sort recipes by match rate
-  function getSortedRecommendations(): (Recipe & { matchRate: number })[] {
     return recommendations
-      .map(recipe => ({
-        ...recipe,
-        matchRate: calculateMatchRate(recipe)
-      }))
+      .map((recipe) => ({ ...recipe, matchRate: calculateMatchRate(recipe) }))
       .sort((a, b) => b.matchRate - a.matchRate);
-  }
+  }, [recommendations, availableSet]);
 
-  // Load profile analysis
   async function loadProfileAnalysis() {
     if (inventoryCount === 0) return;
-    
+
     setLoadingProfile(true);
     try {
       const res = await getProfileAnalysis();
@@ -118,8 +125,7 @@ export default function HomeScreen({ navigation }: Props) {
   useEffect(() => {
     loadCachedData();
     loadUserData();
-    
-    // Start animations
+
     Animated.parallel([
       Animated.timing(fadeAnim, {
         toValue: 1,
@@ -135,18 +141,18 @@ export default function HomeScreen({ navigation }: Props) {
     ]).start();
   }, []);
 
-  // Auto-load profile when inventory is loaded
   useEffect(() => {
     if (inventoryCount > 0 && !profileAnalysis && !loadingProfile) {
       loadProfileAnalysis();
     }
   }, [inventoryCount]);
 
+  const mountedRef = useRef(false);
   useFocusEffect(
     useCallback(() => {
-      loadCachedData();
+      if (!mountedRef.current) { mountedRef.current = true; return; }
       loadInventoryCount();
-    }, [])
+    }, []),
   );
 
   async function loadCachedData() {
@@ -175,8 +181,11 @@ export default function HomeScreen({ navigation }: Props) {
       if (invRes.success) {
         const activeItems = invRes.items.filter((i) => i.quant > 0);
         setInventoryCount(activeItems.length);
-        setInventoryIngredients(activeItems.map(i => i.ingredientName));
-        await AsyncStorage.setItem(CACHE_KEY_INVENTORY_COUNT, activeItems.length.toString());
+        setInventoryIngredients(activeItems.map((i) => i.ingredientName));
+        await AsyncStorage.setItem(
+          CACHE_KEY_INVENTORY_COUNT,
+          activeItems.length.toString(),
+        );
       }
     } catch (err) {
       // ignore
@@ -192,17 +201,22 @@ export default function HomeScreen({ navigation }: Props) {
       if (invRes.success) {
         const activeItems = invRes.items.filter((i) => i.quant > 0);
         setInventoryCount(activeItems.length);
-        setInventoryIngredients(activeItems.map(i => i.ingredientName));
-        await AsyncStorage.setItem(CACHE_KEY_INVENTORY_COUNT, activeItems.length.toString());
+        setInventoryIngredients(activeItems.map((i) => i.ingredientName));
+        await AsyncStorage.setItem(
+          CACHE_KEY_INVENTORY_COUNT,
+          activeItems.length.toString(),
+        );
 
         const ingredientNames = activeItems.map((i) => i.ingredientName);
-        
+
         if (ingredientNames.length > 0) {
-          // Preferences are loaded server-side from the user's profile.
           const recRes = await generateRecipes(ingredientNames, undefined, 3);
           if (recRes.success && recRes.recipes.length > 0) {
             setRecommendations(recRes.recipes);
-            await AsyncStorage.setItem(CACHE_KEY_RECOMMENDATIONS, JSON.stringify(recRes.recipes));
+            await AsyncStorage.setItem(
+              CACHE_KEY_RECOMMENDATIONS,
+              JSON.stringify(recRes.recipes),
+            );
           }
         } else {
           setRecommendations([]);
@@ -216,508 +230,480 @@ export default function HomeScreen({ navigation }: Props) {
     }
   }
 
-  function renderRecipeCard({ item }: { item: Recipe & { matchRate: number } }) {
-    const matchColor = item.matchRate >= 80 ? "#4caf50" : item.matchRate >= 50 ? "#ff9800" : "#f44336";
-    
+  // ─── Helpers ─────────────────────────────────────────────────────────────
+  function getInitials(name: string): string {
+    return name
+      .split(" ")
+      .slice(0, 2)
+      .map((w) => w[0]?.toUpperCase() ?? "")
+      .join("");
+  }
+
+  function getGreeting(): string {
+    const hour = new Date().getHours();
+    if (hour < 12) return "Good Morning,";
+    if (hour < 17) return "Good Afternoon,";
+    return "Good Evening,";
+  }
+
+  // ─── Render helpers ──────────────────────────────────────────────────────
+  const renderRecommendationCard = useCallback(function ({
+    item,
+  }: {
+    item: Recipe & { matchRate: number };
+  }) {
+    const subtitle =
+      item.ingredients && item.ingredients.length > 0
+        ? `${item.ingredients.length} ingredients`
+        : item.servings
+          ? `Serves ${item.servings}`
+          : "Recipe";
+
     return (
       <TouchableOpacity
-        style={styles.recipeCard}
-        onPress={() => {
-          navigation.navigate("RecipeDetail", { recipe: item });
-        }}
-        activeOpacity={0.9}
+        style={styles.recCard}
+        onPress={() => rootNavigation.navigate("RecipeDetail", { recipe: item })}
+        activeOpacity={0.88}
       >
-        {item.image ? (
-          <Image source={{ uri: item.image }} style={styles.recipeImage} resizeMode="cover" />
-        ) : (
-          <View style={[styles.recipeImage, styles.recipeImagePlaceholder]}>
-            <Ionicons name="restaurant-outline" size={40} color={PRIMARY_LIGHT} />
-          </View>
-        )}
-        
-        {/* Match Rate Badge */}
-        <View style={[styles.matchBadge, { backgroundColor: matchColor }]}>
-          <Ionicons name="checkmark-circle" size={12} color="#fff" />
-          <Text style={styles.matchBadgeText}>{item.matchRate}%</Text>
-        </View>
-        
-        <View style={styles.recipeOverlay}>
-          <Text style={styles.recipeTitle} numberOfLines={2}>{item.title}</Text>
-          <View style={styles.recipeMetaRow}>
-            {item.readyInMinutes && (
-              <View style={styles.recipeTimeRow}>
-                <Ionicons name="time-outline" size={14} color="#ddd" />
-                <Text style={styles.recipeTime}>{item.readyInMinutes} min</Text>
-              </View>
-            )}
-            <View style={[styles.matchIndicator, { backgroundColor: matchColor }]}>
-              <Text style={styles.matchIndicatorText}>
-                {item.matchRate >= 80 ? "Great match" : item.matchRate >= 50 ? "Good match" : "Some missing"}
+        {/* Image fill */}
+        <View style={styles.recCardImageContainer}>
+          {item.image ? (
+            <Image
+              source={{ uri: item.image }}
+              style={styles.recCardImage}
+              resizeMode="cover"
+            />
+          ) : (
+            <View style={[styles.recCardImage, styles.recCardImagePlaceholder]}>
+              <MaterialCommunityIcons
+                name="silverware-fork-knife"
+                size={36}
+                color={CARD_WHITE}
+              />
+            </View>
+          )}
+          {/* Time badge */}
+          {item.readyInMinutes ? (
+            <View style={styles.timeBadge}>
+              <Ionicons name="time-outline" size={11} color={CARD_WHITE} />
+              <Text style={styles.timeBadgeText}>
+                {item.readyInMinutes} mins
               </Text>
             </View>
-          </View>
+          ) : null}
+        </View>
+
+        {/* Info below image */}
+        <View style={styles.recCardInfo}>
+          <Text style={styles.recCardTitle} numberOfLines={1}>
+            {item.title}
+          </Text>
+          <Text style={styles.recCardSubtitle} numberOfLines={1}>
+            {subtitle}
+          </Text>
         </View>
       </TouchableOpacity>
     );
-  }
+  }, [rootNavigation]);
 
-  return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.colors.background }]} edges={["top"]}>
-      {/* Header */}
-      <View style={[styles.header, { backgroundColor: theme.colors.card, borderBottomColor: theme.colors.border }]}>
-        <View style={styles.logoRow}>
-          <MaterialCommunityIcons name="leaf" size={24} color={theme.colors.primary} />
-          <Text style={[styles.logoText, { color: theme.colors.primary }]}>ReplateAI</Text>
+  const renderWeekCard = useCallback(function (item: Recipe & { matchRate: number }, index: number) {
+    return (
+      <TouchableOpacity
+        key={item.id.toString()}
+        style={styles.weekCard}
+        onPress={() => rootNavigation.navigate("RecipeDetail", { recipe: item })}
+        activeOpacity={0.88}
+      >
+        {item.image ? (
+          <Image
+            source={{ uri: item.image }}
+            style={styles.weekCardImage}
+            resizeMode="cover"
+          />
+        ) : (
+          <View style={[styles.weekCardImage, styles.weekCardImagePlaceholder]}>
+            <MaterialCommunityIcons
+              name="silverware-fork-knife"
+              size={28}
+              color={CARD_WHITE}
+            />
+          </View>
+        )}
+        <View style={styles.weekCardInfo}>
+          <Text style={styles.weekCardTitle} numberOfLines={2}>
+            {item.title}
+          </Text>
+          {item.readyInMinutes ? (
+            <Text style={styles.weekCardMeta}>{item.readyInMinutes} mins</Text>
+          ) : null}
         </View>
-        <TouchableOpacity
-          style={styles.logoutButton}
-          onPress={async () => {
-            await clearSession();
-            navigation.replace("Login");
-          }}
-        >
-          <Ionicons name="log-out-outline" size={20} color={theme.colors.textMuted} />
-        </TouchableOpacity>
-      </View>
+      </TouchableOpacity>
+    );
+  }, [rootNavigation]);
 
-      <ScrollView style={[styles.container, { backgroundColor: theme.colors.background }]} showsVerticalScrollIndicator={false}>
-        {/* Greeting with Profile Badge */}
+  const weekRecipes = useMemo(() => sortedRecs.slice(0, 4), [sortedRecs]);
+
+  // ─── Render ───────────────────────────────────────────────────────────────
+  return (
+    <SafeAreaView style={styles.safeArea} edges={["top"]}>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* ── Header row ─────────────────────────────────────────────────── */}
         <Animated.View
           style={[
-            styles.greetingSection,
+            styles.headerRow,
             { opacity: fadeAnim, transform: [{ translateY: slideAnim }] },
           ]}
         >
-          <View style={styles.greetingRow}>
-            <View style={styles.greetingText}>
-              <Text style={[styles.greeting, { color: theme.colors.textMuted }]}>Hello,</Text>
-              <Text style={[styles.userName, { color: theme.colors.text }]}>{userName}!</Text>
-            </View>
-            
-            {/* Compact Profile Badge */}
-            {profileAnalysis ? (
-              <TouchableOpacity
-                style={styles.profileBadgeContainer}
-                onPress={() => navigation.navigate("ProfileDetail", { analysis: profileAnalysis })}
-                activeOpacity={0.7}
-              >
-                <View style={styles.profileMini}>
-                  <Text style={styles.profileMiniEmoji}>{profileAnalysis.emoji}</Text>
-                  <View style={styles.profileMiniStats}>
-                    <View style={styles.miniStatRow}>
-                      <View style={[styles.miniDot, { backgroundColor: "#4caf50" }]} />
-                      <Text style={styles.miniStatText}>{profileAnalysis.healthScore}/10</Text>
-                    </View>
-                    <Text style={styles.miniStatLabel}>{profileAnalysis.dietType.split(" ")[0]}</Text>
-                  </View>
-                  <Ionicons name="chevron-forward" size={16} color="#ccc" />
-                </View>
-                <Text style={styles.profileCta}>Check your diet habits →</Text>
-              </TouchableOpacity>
-            ) : inventoryCount > 0 && !loadingProfile ? (
-              <TouchableOpacity
-                style={styles.profileMiniEmpty}
-                onPress={loadProfileAnalysis}
-                activeOpacity={0.7}
-              >
-                <Ionicons name="analytics-outline" size={20} color={PRIMARY} />
-              </TouchableOpacity>
-            ) : loadingProfile ? (
-              <View style={styles.profileMiniEmpty}>
-                <ActivityIndicator size="small" color={PRIMARY} />
-              </View>
-            ) : null}
+          {/* Avatar */}
+          <View style={styles.avatar}>
+            <Text style={styles.avatarText}>
+              {getInitials(userName || "C")}
+            </Text>
           </View>
+
+          {/* Greeting text */}
+          <View style={styles.headerGreeting}>
+            <Text style={styles.headerGreetingLabel}>{getGreeting()}</Text>
+            <Text style={styles.headerGreetingName} numberOfLines={1}>
+              {userName || "Chef"}
+            </Text>
+          </View>
+
+          {/* Hamburger / menu */}
+          <TouchableOpacity
+            style={styles.menuButton}
+            onPress={() => navigation.navigate("Profile")}
+            activeOpacity={0.7}
+          >
+            <View style={styles.hamburgerLine} />
+            <View style={[styles.hamburgerLine, { width: 16 }]} />
+            <View style={styles.hamburgerLine} />
+          </TouchableOpacity>
         </Animated.View>
 
-        {/* Recommended Recipes */}
-        <Animated.View style={[styles.section, { opacity: fadeAnim }]}>
-          <View style={styles.sectionHeader}>
-            <Ionicons name="sparkles" size={20} color={PRIMARY} />
-            <Text style={styles.sectionTitle}>Recommended for You</Text>
+        {/* ── Hero headline ──────────────────────────────────────────────── */}
+        <Animated.View
+          style={[
+            styles.heroSection,
+            { opacity: fadeAnim, transform: [{ translateY: slideAnim }] },
+          ]}
+        >
+          <Text style={styles.heroText}>{"Feeling hungry?"}</Text>
+          <Text style={styles.heroText}>{"What are we cookin' today?"}</Text>
+        </Animated.View>
+
+        {/* ── Recommendation section ─────────────────────────────────────── */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeaderRow}>
+            <Text style={styles.sectionTitle}>Recommendation</Text>
+            <TouchableOpacity
+              onPress={() => navigation.navigate("History")}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.seeAllText}>See All</Text>
+            </TouchableOpacity>
           </View>
-          
+
           {loadingRecs ? (
             <View style={styles.loadingContainer}>
-              <ActivityIndicator size="small" color={PRIMARY} />
+              <ActivityIndicator size="small" color={GREEN_DARK} />
               <Text style={styles.loadingText}>Finding recipes...</Text>
             </View>
-          ) : recommendations.length > 0 ? (
+          ) : sortedRecs.length > 0 ? (
             <FlatList
-              data={getSortedRecommendations()}
+              data={sortedRecs}
               keyExtractor={(item) => item.id.toString()}
-              renderItem={renderRecipeCard}
+              renderItem={renderRecommendationCard}
               horizontal
               showsHorizontalScrollIndicator={false}
-              snapToInterval={CARD_WIDTH + 16}
+              snapToInterval={REC_CARD_WIDTH + 16}
               decelerationRate="fast"
-              contentContainerStyle={styles.recipeList}
+              contentContainerStyle={styles.recList}
             />
           ) : (
-            <View style={styles.emptyRecs}>
-              <Ionicons name="leaf-outline" size={48} color={TEXT_LIGHT} />
-              <Text style={styles.emptyRecsText}>
+            <View style={styles.emptyContainer}>
+              <Ionicons name="leaf-outline" size={40} color={GREEN_DARK} />
+              <Text style={styles.emptyText}>
                 {inventoryCount > 0
-                  ? "No recipes found. Try adding more ingredients!"
-                  : "Add ingredients to get personalized recommendations"}
+                  ? "No matching recipes found. Try adding more ingredients."
+                  : "Photograph your ingredients to get personalized recipe ideas."}
               </Text>
               <TouchableOpacity
-                style={styles.addIngredientsBtn}
+                style={styles.scanButton}
                 onPress={() => navigation.navigate("Capture")}
+                activeOpacity={0.85}
               >
-                <Ionicons name="add" size={18} color="#fff" />
-                <Text style={styles.addIngredientsBtnText}>Add Ingredients</Text>
+                <Ionicons name="camera-outline" size={16} color={CARD_WHITE} />
+                <Text style={styles.scanButtonText}>Scan Ingredients</Text>
               </TouchableOpacity>
             </View>
           )}
-        </Animated.View>
+        </View>
 
-        {/* Quick Actions */}
-        <Animated.View style={[styles.section, { opacity: fadeAnim }]}>
-          <View style={styles.sectionHeader}>
-            <Ionicons name="flash" size={20} color={PRIMARY} />
-            <Text style={styles.sectionTitle}>Quick Actions</Text>
+        {/* ── Recipe of The Week section ─────────────────────────────────── */}
+        {weekRecipes.length > 0 && (
+          <View style={styles.section}>
+            <View style={styles.sectionHeaderRow}>
+              <Text style={styles.sectionTitle}>Recipe of The Week</Text>
+            </View>
+
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              snapToInterval={172}
+              decelerationRate="fast"
+              contentContainerStyle={styles.weekList}
+            >
+              {weekRecipes.map((item, index) => renderWeekCard(item, index))}
+            </ScrollView>
           </View>
-          
-          <View style={styles.menuGrid}>
-            <TouchableOpacity
-              style={styles.menuCard}
-              onPress={() => navigation.navigate("Capture")}
-              activeOpacity={0.7}
-            >
-              <View style={[styles.menuIconBg, { backgroundColor: "#e8f5e9" }]}>
-                <Ionicons name="camera" size={24} color={PRIMARY} />
-              </View>
-              <Text style={styles.menuTitle}>Capture</Text>
-              <Text style={styles.menuDesc}>Scan ingredients</Text>
-            </TouchableOpacity>
+        )}
 
-            <TouchableOpacity
-              style={styles.menuCard}
-              onPress={() => navigation.navigate("Inventory")}
-              activeOpacity={0.7}
-            >
-              <View style={[styles.menuIconBg, { backgroundColor: "#e3f2fd" }]}>
-                <MaterialCommunityIcons name="fridge-outline" size={24} color="#1976d2" />
-              </View>
-              <Text style={styles.menuTitle}>Inventory</Text>
-              <Text style={styles.menuDesc}>
-                {inventoryCount > 0 ? `${inventoryCount} items` : "View items"}
-              </Text>
-            </TouchableOpacity>
 
-            <TouchableOpacity
-              style={styles.menuCard}
-              onPress={() => navigation.navigate("RecipeHistory")}
-              activeOpacity={0.7}
-            >
-              <View style={[styles.menuIconBg, { backgroundColor: "#fff3e0" }]}>
-                <Ionicons name="time" size={24} color="#f57c00" />
-              </View>
-              <Text style={styles.menuTitle}>History</Text>
-              <Text style={styles.menuDesc}>Past recipes</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.menuCard}
-              onPress={() => navigation.navigate("ProfilePreferences")}
-              activeOpacity={0.7}
-            >
-              <View style={[styles.menuIconBg, { backgroundColor: "#f3e5f5" }]}>
-                <Ionicons name="settings-outline" size={24} color="#7b1fa2" />
-              </View>
-              <Text style={styles.menuTitle}>Preferences</Text>
-              <Text style={styles.menuDesc}>Diet & profile</Text>
-            </TouchableOpacity>
-          </View>
-        </Animated.View>
-
-        <View style={{ height: 40 }} />
+        {/* Bottom padding so content clears tab bar */}
+        <View style={{ height: tabBarHeight }} />
       </ScrollView>
     </SafeAreaView>
   );
 }
 
+// ─── Styles ──────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: BG,
+    backgroundColor: GREEN_BG,
   },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    backgroundColor: CARD_BG,
-    borderBottomWidth: 1,
-    borderBottomColor: "#eee",
-  },
-  logoRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  logoText: {
-    fontSize: 20,
-    fontWeight: "700",
-    color: PRIMARY,
-    letterSpacing: 0.3,
-  },
-  logoutButton: {
-    padding: 8,
-    borderRadius: 8,
-    backgroundColor: "#f5f5f5",
-  },
-  container: {
+  scrollView: {
     flex: 1,
+    backgroundColor: GREEN_BG,
   },
-  greetingSection: {
-    paddingHorizontal: 20,
-    paddingTop: 24,
-    paddingBottom: 8,
+  scrollContent: {
+    paddingTop: spacing.lg,
   },
-  greetingRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  greetingText: {
-    flex: 1,
-  },
-  greeting: {
-    fontSize: 16,
-    color: TEXT_MID,
-  },
-  userName: {
-    fontSize: 28,
-    fontWeight: "700",
-    color: TEXT_DARK,
-    marginTop: 2,
-  },
-  profileBadgeContainer: {
-    alignItems: "flex-end",
-  },
-  profileMini: {
+
+  // Header
+  headerRow: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: CARD_BG,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-    borderRadius: 12,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 1,
+    paddingHorizontal: spacing.xl,
+    marginBottom: spacing.md,
   },
-  profileCta: {
-    fontSize: 11,
-    color: PRIMARY_LIGHT,
-    marginTop: 4,
-    fontWeight: "500",
-  },
-  profileMiniEmoji: {
-    fontSize: 24,
-    marginRight: 8,
-  },
-  profileMiniStats: {
-    marginRight: 4,
-  },
-  miniStatRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-  },
-  miniDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-  },
-  miniStatText: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: TEXT_DARK,
-  },
-  miniStatLabel: {
-    fontSize: 10,
-    color: TEXT_LIGHT,
-    marginTop: 1,
-  },
-  profileMiniEmpty: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    backgroundColor: "#e8f5e9",
+  avatar: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: GREEN_DARK,
     justifyContent: "center",
     alignItems: "center",
+    marginRight: spacing.md,
   },
+  avatarText: {
+    color: CARD_WHITE,
+    fontSize: 16,
+    fontWeight: "700",
+  },
+  headerGreeting: {
+    flex: 1,
+  },
+  headerGreetingLabel: {
+    fontSize: 12,
+    color: TEXT_SECONDARY,
+    fontWeight: "400",
+  },
+  headerGreetingName: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: TEXT_PRIMARY,
+    marginTop: 1,
+  },
+  menuButton: {
+    width: 36,
+    height: 36,
+    justifyContent: "center",
+    alignItems: "flex-end",
+    gap: 4,
+  },
+  hamburgerLine: {
+    width: 22,
+    height: 2,
+    borderRadius: 1,
+    backgroundColor: TEXT_PRIMARY,
+    marginVertical: 2,
+  },
+
+  // Hero
+  heroSection: {
+    paddingHorizontal: spacing.xl,
+    marginBottom: spacing.xl,
+  },
+  heroText: {
+    fontSize: 30,
+    fontWeight: "700",
+    color: TEXT_PRIMARY,
+    lineHeight: 38,
+  },
+
+  // Section
   section: {
-    marginTop: 24,
+    marginBottom: spacing.xxxl,
   },
-  sectionHeader: {
+  sectionHeaderRow: {
     flexDirection: "row",
+    justifyContent: "space-between",
     alignItems: "center",
-    gap: 8,
-    paddingHorizontal: 20,
-    marginBottom: 14,
+    paddingHorizontal: spacing.xl,
+    marginBottom: spacing.sm,
   },
   sectionTitle: {
-    fontSize: 17,
+    fontSize: 18,
+    fontWeight: "700",
+    color: TEXT_PRIMARY,
+  },
+  seeAllText: {
+    fontSize: 13,
     fontWeight: "600",
-    color: TEXT_DARK,
+    color: GREEN_DARK,
   },
-  recipeList: {
-    paddingHorizontal: 20,
+
+  // Recommendation cards
+  recList: {
+    paddingHorizontal: spacing.xl,
   },
-  recipeCard: {
-    width: CARD_WIDTH,
-    height: 180,
+  recCard: {
+    width: REC_CARD_WIDTH,
+    marginRight: 16,
+    borderRadius: 16,
+    overflow: "visible",
+  },
+  recCardImageContainer: {
+    width: REC_CARD_WIDTH,
+    height: 160,
     borderRadius: 16,
     overflow: "hidden",
-    marginRight: 16,
-    backgroundColor: CARD_BG,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 5,
   },
-  recipeImage: {
+  recCardImage: {
     width: "100%",
     height: "100%",
   },
-  recipeImagePlaceholder: {
-    backgroundColor: "#f0f7f4",
+  recCardImagePlaceholder: {
+    backgroundColor: GREEN_DARK,
     justifyContent: "center",
     alignItems: "center",
   },
-  recipeOverlay: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: "rgba(0,0,0,0.55)",
-    padding: 14,
-  },
-  recipeTitle: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#fff",
-  },
-  recipeMetaRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginTop: 6,
-  },
-  recipeTimeRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-  },
-  recipeTime: {
-    fontSize: 12,
-    color: "#ddd",
-  },
-  matchBadge: {
+  timeBadge: {
     position: "absolute",
     top: 12,
-    right: 12,
+    left: 12,
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
+    backgroundColor: "rgba(0,0,0,0.55)",
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 50,
   },
-  matchBadgeText: {
-    fontSize: 12,
-    fontWeight: "700",
-    color: "#fff",
-  },
-  matchIndicator: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 8,
-  },
-  matchIndicatorText: {
-    fontSize: 10,
+  timeBadgeText: {
+    color: CARD_WHITE,
+    fontSize: 11,
     fontWeight: "600",
-    color: "#fff",
   },
+  recCardInfo: {
+    paddingTop: 10,
+    paddingHorizontal: 2,
+  },
+  recCardTitle: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: TEXT_PRIMARY,
+    marginBottom: 3,
+  },
+  recCardSubtitle: {
+    fontSize: 12,
+    color: TEXT_SECONDARY,
+  },
+
+  // Recipe of The Week horizontal scroll
+  weekList: {
+    paddingHorizontal: spacing.xl,
+    gap: 12,
+  },
+  weekCard: {
+    width: WEEK_CARD_WIDTH,
+    borderRadius: 12,
+    overflow: "hidden",
+    backgroundColor: CARD_WHITE,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  weekCardImage: {
+    width: WEEK_CARD_WIDTH,
+    height: 100,
+  },
+  weekCardImagePlaceholder: {
+    backgroundColor: GREEN_DARK,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  weekCardInfo: {
+    padding: 8,
+  },
+  weekCardTitle: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: TEXT_PRIMARY,
+    lineHeight: 17,
+  },
+  weekCardMeta: {
+    fontSize: 11,
+    color: TEXT_SECONDARY,
+    marginTop: 3,
+  },
+
+  // Loading / Empty states
   loadingContainer: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     paddingVertical: 40,
-    gap: 10,
+    gap: spacing.sm,
   },
   loadingText: {
     fontSize: 14,
-    color: TEXT_MID,
+    color: TEXT_SECONDARY,
   },
-  emptyRecs: {
+  emptyContainer: {
     alignItems: "center",
-    paddingVertical: 32,
-    paddingHorizontal: 20,
+    paddingVertical: spacing.xxxl,
+    paddingHorizontal: spacing.xl,
   },
-  emptyRecsText: {
+  emptyText: {
     fontSize: 14,
-    color: TEXT_LIGHT,
+    color: TEXT_SECONDARY,
     textAlign: "center",
-    marginTop: 12,
-    marginBottom: 20,
+    marginTop: spacing.md,
+    marginBottom: spacing.xl,
     lineHeight: 20,
   },
-  addIngredientsBtn: {
+  scanButton: {
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
-    backgroundColor: PRIMARY,
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderRadius: 10,
+    backgroundColor: GREEN_DARK,
+    paddingHorizontal: spacing.xl,
+    paddingVertical: spacing.md,
+    borderRadius: radii.full,
   },
-  addIngredientsBtnText: {
-    color: "#fff",
+  scanButtonText: {
+    color: CARD_WHITE,
     fontWeight: "600",
     fontSize: 14,
   },
-  menuGrid: {
-    flexDirection: "row",
-    paddingHorizontal: 20,
-    gap: 12,
-    flexWrap: "wrap",
-  },
-  menuCard: {
-    width: "48%",
-    backgroundColor: CARD_BG,
-    borderRadius: 14,
-    padding: 16,
-    alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  menuIconBg: {
-    width: 48,
-    height: 48,
-    borderRadius: 12,
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 10,
-  },
-  menuTitle: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: TEXT_DARK,
-  },
-  menuDesc: {
-    fontSize: 11,
-    color: TEXT_LIGHT,
-    marginTop: 3,
-  },
+
 });

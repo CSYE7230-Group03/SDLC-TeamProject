@@ -13,9 +13,8 @@ import {
   Dimensions,
   Alert,
 } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import * as WebBrowser from "expo-web-browser";
 import { RootStackParamList } from "../navigation/AppNavigator";
 import { signIn, saveSession } from "../services/api";
@@ -25,6 +24,15 @@ import { authStyles } from "../styles/authStyles";
 type Props = NativeStackScreenProps<RootStackParamList, "Login">;
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
+
+const BG = "#FAFAF8";
+const CARD_BG = "#FFFFFF";
+const TEXT_DARK = "#1A1A1A";
+const TEXT_SECONDARY = "#555555";
+const TEXT_MUTED = "#999999";
+const BORDER = "#E0E0DE";
+const INPUT_BG = "#F5F5F3";
+const ACCENT = "#D4A017";
 
 function mapSignInError(error: string): string {
   if (error.toLowerCase().includes("invalid email or password")) {
@@ -130,7 +138,7 @@ export default function LoginScreen({ navigation }: Props) {
       const result = await signIn({ email: email.trim(), password });
       if (result.success && result.idToken && result.refreshToken) {
         await saveSession(result.idToken, result.refreshToken, result.displayName || email.split("@")[0]);
-        navigation.replace("Home");
+        navigation.replace("MainTabs");
       } else {
         setFormError(mapSignInError(result.error || ""));
       }
@@ -143,45 +151,44 @@ export default function LoginScreen({ navigation }: Props) {
   }
 
   return (
-    <LinearGradient
-      colors={["#1a472a", "#2d6a4f", "#40916c", "#52b788"]}
-      style={styles.gradient}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
-    >
+    <View style={styles.screen}>
       <KeyboardAvoidingView
         style={styles.container}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
-        {/* Logo Section */}
-        <Animated.View
-          style={[
-            styles.logoContainer,
-            {
-              opacity: logoOpacity,
-              transform: [{ scale: logoScale }],
-            },
-          ]}
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
         >
-          <Text style={styles.logoEmoji}>🌿</Text>
-          <Text style={styles.logoText}>ReplateAI</Text>
-          <Text style={styles.tagline}>Smart recipes from your fridge</Text>
-        </Animated.View>
+          {/* Food Imagery Section */}
+          <Animated.View
+            style={[
+              styles.heroSection,
+              {
+                opacity: logoOpacity,
+                transform: [{ scale: logoScale }],
+              },
+            ]}
+          >
+            <View style={styles.brandMark}>
+              <View style={styles.brandIconRing}>
+                <MaterialCommunityIcons name="leaf" size={52} color={ACCENT} />
+              </View>
+            </View>
+            <Text style={styles.logoText}>ReplateAI</Text>
+            <Text style={styles.tagline}>Turn leftovers into delicious meals</Text>
+          </Animated.View>
 
-        {/* Form Section */}
-        <Animated.View
-          style={[
-            styles.formContainer,
-            {
-              opacity: formOpacity,
-              transform: [{ translateY: formTranslateY }],
-            },
-          ]}
-        >
-          <ScrollView
-            contentContainerStyle={styles.formContent}
-            keyboardShouldPersistTaps="handled"
-            showsVerticalScrollIndicator={false}
+          {/* Form Section */}
+          <Animated.View
+            style={[
+              styles.formCard,
+              {
+                opacity: formOpacity,
+                transform: [{ translateY: formTranslateY }],
+              },
+            ]}
           >
             <Text style={styles.title}>Welcome back</Text>
             <Text style={styles.subtitle}>Sign in to your account</Text>
@@ -195,7 +202,7 @@ export default function LoginScreen({ navigation }: Props) {
             <TextInput
               style={[styles.input, emailError ? authStyles.inputError : null]}
               placeholder="Email address"
-              placeholderTextColor="#999"
+              placeholderTextColor={TEXT_MUTED}
               value={email}
               onChangeText={(v) => {
                 setEmail(v);
@@ -212,7 +219,7 @@ export default function LoginScreen({ navigation }: Props) {
             <TextInput
               style={[styles.input, passwordError ? authStyles.inputError : null]}
               placeholder="Password"
-              placeholderTextColor="#999"
+              placeholderTextColor={TEXT_MUTED}
               value={password}
               onChangeText={(v) => {
                 setPassword(v);
@@ -233,20 +240,20 @@ export default function LoginScreen({ navigation }: Props) {
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={[styles.button, loading && styles.buttonDisabled]}
+              style={[styles.signInButton, loading && styles.signInButtonDisabled]}
               onPress={handleSignIn}
               disabled={loading}
             >
               {loading ? (
                 <ActivityIndicator size="small" color="#fff" />
               ) : (
-                <Text style={styles.buttonText}>Sign In</Text>
+                <Text style={styles.signInButtonText}>Sign In</Text>
               )}
             </TouchableOpacity>
 
             <View style={styles.dividerRow}>
               <View style={styles.dividerLine} />
-              <Text style={styles.dividerText}>or continue with</Text>
+              <Text style={styles.dividerText}>or</Text>
               <View style={styles.dividerLine} />
             </View>
 
@@ -257,7 +264,7 @@ export default function LoginScreen({ navigation }: Props) {
             >
               {(
                 <>
-                  <Ionicons name="logo-google" size={20} color="#DB4437" />
+                  <Ionicons name="logo-google" size={20} color={TEXT_DARK} />
                   <Text style={styles.googleButtonText}>Continue with Google</Text>
                 </>
               )}
@@ -269,80 +276,85 @@ export default function LoginScreen({ navigation }: Props) {
                 <Text style={styles.linkBold}>Sign Up</Text>
               </Text>
             </TouchableOpacity>
-          </ScrollView>
-        </Animated.View>
+          </Animated.View>
+        </ScrollView>
       </KeyboardAvoidingView>
-    </LinearGradient>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  gradient: {
+  screen: {
     flex: 1,
+    backgroundColor: BG,
   },
   container: {
     flex: 1,
   },
-  logoContainer: {
-    alignItems: "center",
-    justifyContent: "center",
-    paddingTop: 80,
-    paddingBottom: 30,
+  scrollContent: {
+    flexGrow: 1,
+    paddingBottom: 40,
   },
-  logoEmoji: {
-    fontSize: 64,
-    marginBottom: 12,
+  heroSection: {
+    alignItems: "center",
+    paddingTop: 70,
+    paddingBottom: 32,
+  },
+  brandMark: {
+    marginBottom: 24,
+    alignItems: "center",
+  },
+  brandIconRing: {
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    backgroundColor: "#FFF8E7",
+    justifyContent: "center",
+    alignItems: "center",
   },
   logoText: {
-    fontSize: 42,
+    fontSize: 36,
     fontWeight: "800",
-    color: "#fff",
-    letterSpacing: 1,
-    textShadowColor: "rgba(0,0,0,0.2)",
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 4,
+    color: TEXT_DARK,
+    letterSpacing: 0.5,
   },
   tagline: {
-    fontSize: 16,
-    color: "rgba(255,255,255,0.85)",
-    marginTop: 8,
+    fontSize: 15,
+    color: TEXT_SECONDARY,
+    marginTop: 6,
   },
-  formContainer: {
-    flex: 1,
-    backgroundColor: "#fff",
-    borderTopLeftRadius: 30,
-    borderTopRightRadius: 30,
-    overflow: "hidden",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: -4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 10,
-  },
-  formContent: {
+  formCard: {
+    backgroundColor: CARD_BG,
+    marginHorizontal: 20,
+    borderRadius: 16,
     padding: 28,
-    paddingTop: 32,
+    paddingTop: 28,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.06,
+    shadowRadius: 16,
+    elevation: 6,
   },
   title: {
-    fontSize: 26,
+    fontSize: 24,
     fontWeight: "700",
-    color: "#1a1a1a",
-    marginBottom: 6,
+    color: TEXT_DARK,
+    marginBottom: 4,
   },
   subtitle: {
-    fontSize: 15,
-    color: "#888",
-    marginBottom: 28,
+    fontSize: 14,
+    color: TEXT_MUTED,
+    marginBottom: 24,
   },
   input: {
-    backgroundColor: "#f8f9fa",
+    backgroundColor: INPUT_BG,
     borderWidth: 1,
-    borderColor: "#e0e0e0",
-    borderRadius: 12,
+    borderColor: BORDER,
+    borderRadius: 14,
     paddingHorizontal: 16,
     paddingVertical: 14,
     fontSize: 15,
-    color: "#1a1a1a",
+    color: TEXT_DARK,
     marginBottom: 4,
   },
   forgotPassword: {
@@ -352,18 +364,19 @@ const styles = StyleSheet.create({
   },
   forgotPasswordText: {
     fontSize: 13,
-    color: "#2d6a4f",
+    color: ACCENT,
+    fontWeight: "500",
   },
-  button: {
-    backgroundColor: "#2d6a4f",
+  signInButton: {
+    backgroundColor: TEXT_DARK,
     paddingVertical: 16,
-    borderRadius: 12,
+    borderRadius: 14,
     alignItems: "center",
   },
-  buttonDisabled: {
-    backgroundColor: "#74c69d",
+  signInButtonDisabled: {
+    backgroundColor: "#888888",
   },
-  buttonText: {
+  signInButtonText: {
     color: "#fff",
     fontSize: 16,
     fontWeight: "700",
@@ -371,42 +384,43 @@ const styles = StyleSheet.create({
   dividerRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginVertical: 24,
+    marginVertical: 22,
   },
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: "#e0e0e0",
+    backgroundColor: BORDER,
   },
   dividerText: {
-    marginHorizontal: 12,
+    marginHorizontal: 16,
     fontSize: 13,
-    color: "#aaa",
+    color: TEXT_MUTED,
+    fontWeight: "500",
   },
   googleButton: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     gap: 10,
-    backgroundColor: "#fff",
+    backgroundColor: CARD_BG,
     borderWidth: 1,
-    borderColor: "#e0e0e0",
+    borderColor: BORDER,
     paddingVertical: 14,
-    borderRadius: 12,
+    borderRadius: 14,
     marginBottom: 24,
   },
   googleButtonText: {
     fontSize: 15,
     fontWeight: "600",
-    color: "#333",
+    color: TEXT_DARK,
   },
   link: {
     fontSize: 14,
-    color: "#888",
+    color: TEXT_MUTED,
     textAlign: "center",
   },
   linkBold: {
-    color: "#2d6a4f",
-    fontWeight: "600",
+    color: TEXT_DARK,
+    fontWeight: "700",
   },
 });

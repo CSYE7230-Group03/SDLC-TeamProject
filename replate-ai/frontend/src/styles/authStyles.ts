@@ -6,7 +6,7 @@ export const authStyles = StyleSheet.create({
     backgroundColor: "#FFF0F0",
     borderWidth: 1,
     borderColor: "#FFCDD2",
-    borderRadius: 8,
+    borderRadius: 12,
     paddingHorizontal: 14,
     paddingVertical: 10,
     marginBottom: 16,
@@ -28,7 +28,7 @@ export const authStyles = StyleSheet.create({
   },
   fieldHint: {
     fontSize: 12,
-    color: "#aaa",
+    color: "#999",
     marginBottom: 10,
     marginLeft: 4,
   },

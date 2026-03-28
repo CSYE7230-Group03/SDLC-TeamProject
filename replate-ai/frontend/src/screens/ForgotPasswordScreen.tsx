@@ -12,6 +12,7 @@ import {
   SafeAreaView,
 } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
+import { MaterialCommunityIcons, Ionicons } from "@expo/vector-icons";
 import { RootStackParamList } from "../navigation/AppNavigator";
 import { forgotPassword } from "../services/api";
 import { EMAIL_REGEX } from "../utils/validation";
@@ -60,10 +61,15 @@ export default function ForgotPasswordScreen({ navigation }: Props) {
     return (
       <SafeAreaView style={styles.safe}>
         <View style={styles.header}>
-          <Text style={styles.brand}>🌿 ReplateAI</Text>
+          <View style={styles.brandRow}>
+          <MaterialCommunityIcons name="leaf" size={18} color="#1A1A1A" />
+          <Text style={styles.brand}>ReplateAI</Text>
+        </View>
         </View>
         <View style={styles.confirmContainer}>
-          <Text style={styles.confirmIcon}>✉️</Text>
+          <View style={styles.confirmIconContainer}>
+            <Ionicons name="mail-outline" size={52} color="#D4A017" />
+          </View>
           <Text style={styles.title}>Check your email</Text>
           <Text style={styles.subtitle}>
             If <Text style={styles.emailHighlight}>{email.trim()}</Text> is registered,{"\n"}
@@ -83,7 +89,10 @@ export default function ForgotPasswordScreen({ navigation }: Props) {
   return (
     <SafeAreaView style={styles.safe}>
       <View style={styles.header}>
-        <Text style={styles.brand}>🌿 ReplateAI</Text>
+        <View style={styles.brandRow}>
+          <MaterialCommunityIcons name="leaf" size={18} color="#1A1A1A" />
+          <Text style={styles.brand}>ReplateAI</Text>
+        </View>
       </View>
 
       <KeyboardAvoidingView
@@ -156,18 +165,23 @@ export default function ForgotPasswordScreen({ navigation }: Props) {
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: "#fff",
+    backgroundColor: "#FAFAF8",
   },
   header: {
     alignItems: "center",
     paddingVertical: 14,
     borderBottomWidth: 1,
-    borderBottomColor: "#e8e8e8",
+    borderBottomColor: "#E0E0DE",
+  },
+  brandRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
   },
   brand: {
     fontSize: 20,
     fontWeight: "700",
-    color: "#2d6a4f",
+    color: "#1A1A1A",
     letterSpacing: 0.5,
   },
   flex: {
@@ -178,6 +192,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingTop: 40,
     paddingBottom: 40,
+    backgroundColor: "#FAFAF8",
   },
   confirmContainer: {
     flex: 1,
@@ -185,14 +200,19 @@ const styles = StyleSheet.create({
     paddingTop: 60,
     alignItems: "center",
   },
-  confirmIcon: {
-    fontSize: 56,
+  confirmIconContainer: {
     marginBottom: 24,
+    width: 88,
+    height: 88,
+    borderRadius: 44,
+    backgroundColor: "#FFF8E7",
+    justifyContent: "center",
+    alignItems: "center",
   },
   title: {
     fontSize: 26,
     fontWeight: "700",
-    color: "#1a1a1a",
+    color: "#1A1A1A",
     marginBottom: 6,
     textAlign: "center",
   },
@@ -204,29 +224,29 @@ const styles = StyleSheet.create({
     lineHeight: 22,
   },
   emailHighlight: {
-    color: "#1a1a1a",
+    color: "#1A1A1A",
     fontWeight: "600",
   },
   input: {
-    backgroundColor: "#f8f9fa",
+    backgroundColor: "#F5F5F3",
     borderWidth: 1,
-    borderColor: "#e0e0e0",
-    borderRadius: 10,
+    borderColor: "#E0E0DE",
+    borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 14,
     fontSize: 15,
-    color: "#1a1a1a",
+    color: "#1A1A1A",
     marginBottom: 4,
   },
   button: {
-    backgroundColor: "#2196F3",
+    backgroundColor: "#1A1A1A",
     paddingVertical: 16,
     borderRadius: 12,
     alignItems: "center",
     alignSelf: "stretch",
   },
   buttonDisabled: {
-    backgroundColor: "#90CAF9",
+    backgroundColor: "#CCCCCC",
   },
   buttonText: {
     color: "#fff",
@@ -241,7 +261,7 @@ const styles = StyleSheet.create({
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: "#e0e0e0",
+    backgroundColor: "#E0E0DE",
   },
   dividerText: {
     marginHorizontal: 12,
@@ -254,7 +274,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   linkBold: {
-    color: "#2196F3",
+    color: "#1A1A1A",
     fontWeight: "600",
   },
 });

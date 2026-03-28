@@ -10,8 +10,9 @@ import {
   ScrollView,
   Switch,
 } from "react-native";
-import { NativeStackScreenProps } from "@react-navigation/native-stack";
-import { RootStackParamList } from "../navigation/AppNavigator";
+import { BottomTabScreenProps, useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { TabParamList, RootStackParamList } from "../navigation/AppNavigator";
 import {
   getUserProfile,
   updateUserProfile,
@@ -20,12 +21,18 @@ import {
   getAppSettings,
   updateAppSettings,
   getUserInventory,
+  clearSession,
+  getProfileAnalysis,
 } from "../services/api";
 import { useAppTheme } from "../theme/ThemeProvider";
-import { ThemeMode } from "../theme/theme";
+import { ThemeMode, spacing, radii } from "../theme/theme";
 import { cancelExpiryReminders, scheduleExpiryReminders } from "../services/expiryNotifications";
+import { useNavigation } from "@react-navigation/native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { Ionicons } from "@expo/vector-icons";
 
-type Props = NativeStackScreenProps<RootStackParamList, "ProfilePreferences">;
+type Props = BottomTabScreenProps<TabParamList, "Profile">;
+type RootNavProp = NativeStackNavigationProp<RootStackParamList>;
 
 function parseCsv(value: string): string[] {
   return value
@@ -36,8 +43,11 @@ function parseCsv(value: string): string[] {
 
 export default function ProfilePreferencesScreen({ navigation }: Props) {
   const { themeMode, setThemeMode, theme } = useAppTheme();
+  const rootNavigation = useNavigation<RootNavProp>();
+  const tabBarHeight = useBottomTabBarHeight();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [loadingProfile, setLoadingProfile] = useState(false);
 
   const [displayName, setDisplayName] = useState("");
   const [restrictionsCsv, setRestrictionsCsv] = useState("");
@@ -72,15 +82,49 @@ export default function ProfilePreferencesScreen({ navigation }: Props) {
         setExpiryRemindersEnabled(!!settingsRes.appSettings.notifications?.expiryRemindersEnabled);
       }
     } catch {
-      Alert.alert("Error", "Could not connect to the server");
+      Alert.alert("Connection error", "Couldn't reach the server. Check your connection and try again.");
     } finally {
       setLoading(false);
     }
   }
 
+  function handleLogout() {
+    Alert.alert(
+      "Log Out",
+      "Are you sure you want to log out?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Log Out",
+          style: "destructive",
+          onPress: async () => {
+            await clearSession();
+            navigation.getParent()?.reset({ index: 0, routes: [{ name: "Login" }] });
+          },
+        },
+      ]
+    );
+  }
+
+  async function viewFoodProfile() {
+    setLoadingProfile(true);
+    try {
+      const res = await getProfileAnalysis();
+      if (res.success && res.analysis) {
+        rootNavigation.navigate("ProfileDetail", { analysis: res.analysis });
+      } else {
+        Alert.alert("Not enough data", "Add ingredients to your inventory first to generate a food profile.");
+      }
+    } catch {
+      Alert.alert("Error", "Couldn't load your food profile. Check your connection and try again.");
+    } finally {
+      setLoadingProfile(false);
+    }
+  }
+
   async function save() {
     if (!displayName.trim()) {
-      Alert.alert("Invalid", "Display name is required");
+      Alert.alert("Name required", "Please enter your display name.");
       return;
     }
 
@@ -88,7 +132,7 @@ export default function ProfilePreferencesScreen({ navigation }: Props) {
       ? Number(maxCookingTime.trim())
       : null;
     if (maxCookingTime.trim() && (!Number.isFinite(max) || (max as number) <= 0)) {
-      Alert.alert("Invalid", "Max cooking time must be a positive number");
+      Alert.alert("Invalid time", "Cook time must be a positive number.");
       return;
     }
 
@@ -143,10 +187,10 @@ export default function ProfilePreferencesScreen({ navigation }: Props) {
         // Don't block saving on notification scheduling
       }
 
-      Alert.alert("Saved", "Preferences updated successfully");
+      Alert.alert("All saved!", "Your preferences are up to date.");
       navigation.goBack();
     } catch {
-      Alert.alert("Error", "Could not connect to the server");
+      Alert.alert("Connection error", "Couldn't reach the server. Check your connection and try again.");
     } finally {
       setSaving(false);
     }
@@ -154,19 +198,38 @@ export default function ProfilePreferencesScreen({ navigation }: Props) {
 
   if (loading) {
     return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" color={PRIMARY} />
-        <Text style={styles.loadingText}>Loading your profile...</Text>
+      <View style={[styles.centered, { backgroundColor: theme.colors.background }]}>
+        <ActivityIndicator size="large" color={theme.colors.text} />
+        <Text style={[styles.loadingText, { color: theme.colors.textSecondary }]}>Loading your profile...</Text>
       </View>
     );
   }
 
   return (
-    <ScrollView style={[styles.container, { backgroundColor: theme.colors.background }]} contentContainerStyle={styles.content}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]} edges={["top"]}>
+    <ScrollView style={{ flex: 1 }} contentContainerStyle={[styles.content, { paddingBottom: tabBarHeight }]}>
       <Text style={[styles.title, { color: theme.colors.text }]}>Profile & Preferences</Text>
-      <Text style={[styles.subtitle, { color: theme.colors.textMuted }]}>
-        Update your profile and dietary preferences. Recommendations will adapt automatically.
-      </Text>
+
+      <TouchableOpacity
+        style={[styles.foodProfileCard, { backgroundColor: theme.colors.card, borderColor: theme.colors.border }]}
+        onPress={viewFoodProfile}
+        activeOpacity={0.85}
+        disabled={loadingProfile}
+      >
+        <View style={styles.foodProfileCardContent}>
+          <View style={[styles.foodProfileIcon, { backgroundColor: theme.colors.accentLight }]}>
+            <Ionicons name="analytics-outline" size={22} color={theme.colors.accent} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={[styles.foodProfileTitle, { color: theme.colors.text }]}>My Food Profile</Text>
+            <Text style={[styles.foodProfileSubtitle, { color: theme.colors.textMuted }]}>See your cooking persona & health insights</Text>
+          </View>
+          {loadingProfile
+            ? <ActivityIndicator size="small" color={theme.colors.textMuted} />
+            : <Ionicons name="chevron-forward" size={18} color={theme.colors.textMuted} />
+          }
+        </View>
+      </TouchableOpacity>
 
       <View style={[styles.card, { backgroundColor: theme.colors.card, borderColor: theme.colors.border }]}>
         <Text style={[styles.label, { color: theme.colors.textMuted }]}>Display name</Text>
@@ -182,7 +245,7 @@ export default function ProfilePreferencesScreen({ navigation }: Props) {
       <View style={[styles.card, { backgroundColor: theme.colors.card, borderColor: theme.colors.border }]}>
         <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Dietary preferences</Text>
 
-        <Text style={[styles.label, { color: theme.colors.textMuted }]}>Restrictions (comma-separated)</Text>
+        <Text style={[styles.label, { color: theme.colors.textMuted }]}>Dietary restrictions</Text>
         <TextInput
           value={restrictionsCsv}
           onChangeText={setRestrictionsCsv}
@@ -191,7 +254,7 @@ export default function ProfilePreferencesScreen({ navigation }: Props) {
           style={[styles.input, { backgroundColor: theme.colors.inputBg, borderColor: theme.colors.border, color: theme.colors.text }]}
         />
 
-        <Text style={[styles.label, { marginTop: 12, color: theme.colors.textMuted }]}>Allergies (comma-separated)</Text>
+        <Text style={[styles.label, { marginTop: 12, color: theme.colors.textMuted }]}>Food allergies</Text>
         <TextInput
           value={allergiesCsv}
           onChangeText={setAllergiesCsv}
@@ -200,7 +263,7 @@ export default function ProfilePreferencesScreen({ navigation }: Props) {
           style={[styles.input, { backgroundColor: theme.colors.inputBg, borderColor: theme.colors.border, color: theme.colors.text }]}
         />
 
-        <Text style={[styles.label, { marginTop: 12, color: theme.colors.textMuted }]}>Skill level</Text>
+        <Text style={[styles.label, { marginTop: 12, color: theme.colors.textMuted }]}>Cooking skill level</Text>
         <TextInput
           value={skillLevel}
           onChangeText={setSkillLevel}
@@ -209,7 +272,7 @@ export default function ProfilePreferencesScreen({ navigation }: Props) {
           style={[styles.input, { backgroundColor: theme.colors.inputBg, borderColor: theme.colors.border, color: theme.colors.text }]}
         />
 
-        <Text style={[styles.label, { marginTop: 12, color: theme.colors.textMuted }]}>Max cooking time (minutes)</Text>
+        <Text style={[styles.label, { marginTop: 12, color: theme.colors.textMuted }]}>Max cook time (minutes)</Text>
         <TextInput
           value={maxCookingTime}
           onChangeText={setMaxCookingTime}
@@ -240,7 +303,7 @@ export default function ProfilePreferencesScreen({ navigation }: Props) {
             >
               <Text
                 style={{
-                  color: themeMode === m ? "#fff" : theme.colors.text,
+                  color: themeMode === m ? theme.colors.buttonPrimaryText : theme.colors.text,
                   fontWeight: "700",
                   fontSize: 12,
                   textTransform: "capitalize",
@@ -264,85 +327,114 @@ export default function ProfilePreferencesScreen({ navigation }: Props) {
           <Switch
             value={expiryRemindersEnabled}
             onValueChange={setExpiryRemindersEnabled}
+            trackColor={{ false: theme.colors.border, true: theme.colors.primary }}
+            thumbColor={expiryRemindersEnabled ? theme.colors.buttonPrimaryText : theme.colors.textMuted}
+            ios_backgroundColor={theme.colors.inputBg}
           />
         </View>
       </View>
 
       <TouchableOpacity
-        style={[styles.saveButton, saving && styles.saveButtonDisabled]}
+        style={[styles.saveButton, { backgroundColor: theme.colors.buttonPrimary }, saving && styles.saveButtonDisabled]}
         onPress={save}
         disabled={saving}
         activeOpacity={0.85}
       >
         {saving ? (
-          <ActivityIndicator color="#fff" />
+          <ActivityIndicator color={theme.colors.buttonPrimaryText} />
         ) : (
-          <Text style={styles.saveButtonText}>Save</Text>
+          <Text style={[styles.saveButtonText, { color: theme.colors.buttonPrimaryText }]}>Save Preferences</Text>
         )}
       </TouchableOpacity>
+
+      <TouchableOpacity
+        style={[styles.logoutButton, { borderColor: theme.colors.danger }]}
+        onPress={handleLogout}
+        activeOpacity={0.85}
+      >
+        <Text style={[styles.logoutButtonText, { color: theme.colors.danger }]}>Log Out</Text>
+      </TouchableOpacity>
     </ScrollView>
+    </SafeAreaView>
   );
 }
 
-const PRIMARY = "#2d6a4f";
-const BG = "#f8faf9";
-const CARD_BG = "#ffffff";
-const TEXT_DARK = "#1a1a1a";
-const TEXT_MID = "#666666";
-
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: BG },
-  content: { padding: 16, paddingBottom: 28 },
-  centered: { flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: BG },
-  loadingText: { marginTop: 12, color: TEXT_MID },
-  title: { fontSize: 22, fontWeight: "800", color: TEXT_DARK },
-  subtitle: { marginTop: 6, fontSize: 13, color: TEXT_MID, lineHeight: 18 },
+  container: { flex: 1 },
+  content: { padding: spacing.lg, paddingBottom: spacing.xxl + spacing.xs },
+  centered: { flex: 1, justifyContent: "center", alignItems: "center" },
+  loadingText: { marginTop: spacing.md },
+  title: { fontSize: 22, fontWeight: "800", marginBottom: spacing.xs },
   card: {
-    backgroundColor: CARD_BG,
-    borderRadius: 14,
-    padding: 16,
-    marginTop: 14,
+    borderRadius: radii.lg,
+    padding: spacing.lg,
+    marginTop: spacing.md + 2,
     borderWidth: 1,
-    borderColor: "#eee",
   },
-  sectionTitle: { fontSize: 14, fontWeight: "700", color: TEXT_DARK, marginBottom: 10 },
-  label: { fontSize: 12, fontWeight: "600", color: TEXT_MID, marginBottom: 6 },
+  sectionTitle: { fontSize: 14, fontWeight: "700", marginBottom: spacing.sm + 2 },
+  label: { fontSize: 12, fontWeight: "600", marginBottom: 6 },
   input: {
-    backgroundColor: "#f6f6f6",
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
+    borderRadius: radii.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm + 2,
     borderWidth: 1,
-    borderColor: "#e8e8e8",
     fontSize: 14,
-    color: TEXT_DARK,
   },
   themeRow: {
     flexDirection: "row",
-    gap: 10,
+    gap: spacing.sm + 2,
     marginTop: 6,
     marginBottom: 6,
   },
   themeChip: {
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    borderRadius: 999,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm + 2,
+    borderRadius: radii.full,
     borderWidth: 1,
   },
   switchRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
-    marginTop: 12,
+    gap: spacing.md,
+    marginTop: spacing.md,
   },
   saveButton: {
     marginTop: 18,
-    backgroundColor: PRIMARY,
-    borderRadius: 12,
-    paddingVertical: 14,
+    borderRadius: radii.lg,
+    paddingVertical: spacing.md + 2,
     alignItems: "center",
   },
   saveButtonDisabled: { opacity: 0.7 },
-  saveButtonText: { color: "#fff", fontWeight: "800", fontSize: 15 },
+  saveButtonText: { fontWeight: "800", fontSize: 15 },
+  foodProfileCard: {
+    borderRadius: radii.lg,
+    padding: spacing.md,
+    marginTop: spacing.md + 2,
+    borderWidth: 1,
+  },
+  foodProfileCardContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.md,
+  },
+  foodProfileIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: radii.md,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  foodProfileTitle: { fontSize: 14, fontWeight: "700" },
+  foodProfileSubtitle: { fontSize: 12, marginTop: 2 },
+  logoutButton: {
+    marginTop: 12,
+    marginBottom: spacing.xl,
+    borderRadius: radii.lg,
+    paddingVertical: spacing.md + 2,
+    alignItems: "center",
+    borderWidth: 1.5,
+    backgroundColor: "transparent",
+  },
+  logoutButtonText: { fontWeight: "700", fontSize: 15 },
 });
 
