@@ -10,6 +10,7 @@ import {
   ActivityIndicator,
   FlatList,
   Animated,
+  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -32,69 +33,110 @@ import { spacing, radii } from "../theme/theme";
 type Props = NativeStackScreenProps<RootStackParamList, "Home">;
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
-const CARD_WIDTH = SCREEN_WIDTH - 64;
+
+// ─── Design tokens for the new green palette ────────────────────────────────
+const GREEN_BG = "#F0F8F0";
+const GREEN_DARK = "#2D5A27";
+const GREEN_DARK_LIGHT = "rgba(45,90,39,0.08)";
+const CARD_WHITE = "#FFFFFF";
+const TEXT_PRIMARY = "#1A1A1A";
+const TEXT_SECONDARY = "#666666";
+const BORDER_GRAY = "#E0E0E0";
+
+const REC_CARD_WIDTH = 260;
+const WEEK_CARD_WIDTH = 180;
 
 const CACHE_KEY_RECOMMENDATIONS = "replate_cached_recommendations";
 const CACHE_KEY_INVENTORY_COUNT = "replate_cached_inventory_count";
 
+// Bottom tab definition
+const TABS = [
+  { key: "home", label: "Home", icon: "home" as const },
+  { key: "capture", label: "Capture", icon: "camera" as const },
+  { key: "history", label: "History", icon: "time" as const },
+  { key: "profile", label: "Profile", icon: "person" as const },
+] as const;
 
 export default function HomeScreen({ navigation }: Props) {
   const { theme } = useAppTheme();
+
+  // ─── Existing state ──────────────────────────────────────────────────────
   const [userName, setUserName] = useState<string>("");
   const [recommendations, setRecommendations] = useState<Recipe[]>([]);
   const [loadingRecs, setLoadingRecs] = useState(true);
   const [inventoryCount, setInventoryCount] = useState(0);
-  const [inventoryIngredients, setInventoryIngredients] = useState<string[]>([]);
-  const [profileAnalysis, setProfileAnalysis] = useState<ProfileAnalysis | null>(null);
+  const [inventoryIngredients, setInventoryIngredients] = useState<string[]>(
+    [],
+  );
+  const [profileAnalysis, setProfileAnalysis] =
+    useState<ProfileAnalysis | null>(null);
   const [loadingProfile, setLoadingProfile] = useState(false);
 
-  // Animations
+  // ─── New UI state ────────────────────────────────────────────────────────
+  const [activeTab, setActiveTab] = useState<
+    "home" | "capture" | "history" | "profile"
+  >("home");
+
+  // ─── Animations ──────────────────────────────────────────────────────────
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(30)).current;
 
-  // Pantry staples that are always considered available
+  // ─── Pantry staples ──────────────────────────────────────────────────────
   const PANTRY_STAPLES = [
-    "salt", "pepper", "water", "oil", "olive oil", "cooking oil", "vegetable oil",
-    "butter", "garlic", "onion", "soy sauce", "ketchup", "mayonnaise", "mustard",
-    "vinegar", "sugar", "honey", "lemon juice", "flour", "rice", "pasta", "spaghetti"
+    "salt",
+    "pepper",
+    "water",
+    "oil",
+    "olive oil",
+    "cooking oil",
+    "vegetable oil",
+    "butter",
+    "garlic",
+    "onion",
+    "soy sauce",
+    "ketchup",
+    "mayonnaise",
+    "mustard",
+    "vinegar",
+    "sugar",
+    "honey",
+    "lemon juice",
+    "flour",
+    "rice",
+    "pasta",
+    "spaghetti",
   ];
 
-  // Calculate matching rate for a recipe
+  // ─── Existing logic (unchanged) ──────────────────────────────────────────
   function calculateMatchRate(recipe: Recipe): number {
     if (!recipe.ingredients || recipe.ingredients.length === 0) return 0;
-    
+
     const availableSet = new Set([
-      ...inventoryIngredients.map(i => i.toLowerCase()),
-      ...PANTRY_STAPLES
+      ...inventoryIngredients.map((i) => i.toLowerCase()),
+      ...PANTRY_STAPLES,
     ]);
-    
+
     let matched = 0;
     for (const ing of recipe.ingredients) {
       const ingName = ing.name.toLowerCase();
-      // Check if any available ingredient matches (partial match)
-      const isAvailable = Array.from(availableSet).some(avail => 
-        ingName.includes(avail) || avail.includes(ingName)
+      const isAvailable = Array.from(availableSet).some(
+        (avail) => ingName.includes(avail) || avail.includes(ingName),
       );
       if (isAvailable) matched++;
     }
-    
+
     return Math.round((matched / recipe.ingredients.length) * 100);
   }
 
-  // Sort recipes by match rate
   function getSortedRecommendations(): (Recipe & { matchRate: number })[] {
     return recommendations
-      .map(recipe => ({
-        ...recipe,
-        matchRate: calculateMatchRate(recipe)
-      }))
+      .map((recipe) => ({ ...recipe, matchRate: calculateMatchRate(recipe) }))
       .sort((a, b) => b.matchRate - a.matchRate);
   }
 
-  // Load profile analysis
   async function loadProfileAnalysis() {
     if (inventoryCount === 0) return;
-    
+
     setLoadingProfile(true);
     try {
       const res = await getProfileAnalysis();
@@ -111,8 +153,7 @@ export default function HomeScreen({ navigation }: Props) {
   useEffect(() => {
     loadCachedData();
     loadUserData();
-    
-    // Start animations
+
     Animated.parallel([
       Animated.timing(fadeAnim, {
         toValue: 1,
@@ -128,7 +169,6 @@ export default function HomeScreen({ navigation }: Props) {
     ]).start();
   }, []);
 
-  // Auto-load profile when inventory is loaded
   useEffect(() => {
     if (inventoryCount > 0 && !profileAnalysis && !loadingProfile) {
       loadProfileAnalysis();
@@ -139,7 +179,7 @@ export default function HomeScreen({ navigation }: Props) {
     useCallback(() => {
       loadCachedData();
       loadInventoryCount();
-    }, [])
+    }, []),
   );
 
   async function loadCachedData() {
@@ -168,8 +208,11 @@ export default function HomeScreen({ navigation }: Props) {
       if (invRes.success) {
         const activeItems = invRes.items.filter((i) => i.quant > 0);
         setInventoryCount(activeItems.length);
-        setInventoryIngredients(activeItems.map(i => i.ingredientName));
-        await AsyncStorage.setItem(CACHE_KEY_INVENTORY_COUNT, activeItems.length.toString());
+        setInventoryIngredients(activeItems.map((i) => i.ingredientName));
+        await AsyncStorage.setItem(
+          CACHE_KEY_INVENTORY_COUNT,
+          activeItems.length.toString(),
+        );
       }
     } catch (err) {
       // ignore
@@ -185,17 +228,22 @@ export default function HomeScreen({ navigation }: Props) {
       if (invRes.success) {
         const activeItems = invRes.items.filter((i) => i.quant > 0);
         setInventoryCount(activeItems.length);
-        setInventoryIngredients(activeItems.map(i => i.ingredientName));
-        await AsyncStorage.setItem(CACHE_KEY_INVENTORY_COUNT, activeItems.length.toString());
+        setInventoryIngredients(activeItems.map((i) => i.ingredientName));
+        await AsyncStorage.setItem(
+          CACHE_KEY_INVENTORY_COUNT,
+          activeItems.length.toString(),
+        );
 
         const ingredientNames = activeItems.map((i) => i.ingredientName);
-        
+
         if (ingredientNames.length > 0) {
-          // Preferences are loaded server-side from the user's profile.
           const recRes = await generateRecipes(ingredientNames, undefined, 3);
           if (recRes.success && recRes.recipes.length > 0) {
             setRecommendations(recRes.recipes);
-            await AsyncStorage.setItem(CACHE_KEY_RECOMMENDATIONS, JSON.stringify(recRes.recipes));
+            await AsyncStorage.setItem(
+              CACHE_KEY_RECOMMENDATIONS,
+              JSON.stringify(recRes.recipes),
+            );
           }
         } else {
           setRecommendations([]);
@@ -209,414 +257,609 @@ export default function HomeScreen({ navigation }: Props) {
     }
   }
 
-  function renderRecipeCard({ item }: { item: Recipe & { matchRate: number } }) {
-    const matchColor = item.matchRate >= 80 ? theme.colors.success : item.matchRate >= 50 ? theme.colors.warning : theme.colors.danger;
+  // ─── Tab press handler ───────────────────────────────────────────────────
+  function handleTabPress(key: typeof activeTab) {
+    setActiveTab(key);
+    switch (key) {
+      case "capture":
+        navigation.navigate("Capture");
+        break;
+      case "history":
+        navigation.navigate("RecipeHistory");
+        break;
+      case "profile":
+        navigation.navigate("ProfilePreferences");
+        break;
+      default:
+        break;
+    }
+  }
+
+  // ─── Helpers ─────────────────────────────────────────────────────────────
+  function getInitials(name: string): string {
+    return name
+      .split(" ")
+      .slice(0, 2)
+      .map((w) => w[0]?.toUpperCase() ?? "")
+      .join("");
+  }
+
+  function getGreeting(): string {
+    const hour = new Date().getHours();
+    if (hour < 12) return "Good Morning,";
+    if (hour < 17) return "Good Afternoon,";
+    return "Good Evening,";
+  }
+
+  // ─── Render helpers ──────────────────────────────────────────────────────
+  function renderRecommendationCard({
+    item,
+  }: {
+    item: Recipe & { matchRate: number };
+  }) {
+    const subtitle =
+      item.ingredients && item.ingredients.length > 0
+        ? `${item.ingredients.length} ingredients`
+        : item.servings
+          ? `Serves ${item.servings}`
+          : "Recipe";
 
     return (
       <TouchableOpacity
-        style={[styles.recipeCard, { backgroundColor: theme.colors.card }]}
-        onPress={() => {
-          navigation.navigate("RecipeDetail", { recipe: item });
-        }}
-        activeOpacity={0.9}
+        style={styles.recCard}
+        onPress={() => navigation.navigate("RecipeDetail", { recipe: item })}
+        activeOpacity={0.88}
       >
-        {item.image ? (
-          <Image source={{ uri: item.image }} style={styles.recipeImage} resizeMode="cover" />
-        ) : (
-          <View style={[styles.recipeImage, styles.recipeImagePlaceholder, { backgroundColor: theme.colors.inputBg }]}>
-            <Ionicons name="restaurant-outline" size={40} color={theme.colors.textSecondary} />
-          </View>
-        )}
-
-        <View style={styles.recipeOverlay}>
-          <Text style={styles.recipeTitle} numberOfLines={2}>{item.title}</Text>
-          <View style={styles.recipeMetaRow}>
-            {item.readyInMinutes && (
-              <View style={styles.recipeTimeRow}>
-                <Ionicons name="time-outline" size={14} color="#ddd" />
-                <Text style={styles.recipeTime}>{item.readyInMinutes} min</Text>
-              </View>
-            )}
-            <View style={[styles.matchIndicator, { backgroundColor: matchColor }]}>
-              <Text style={styles.matchIndicatorText}>
-                {item.matchRate >= 80 ? "Great match" : item.matchRate >= 50 ? "Good match" : "Some missing"}
+        {/* Image fill */}
+        <View style={styles.recCardImageContainer}>
+          {item.image ? (
+            <Image
+              source={{ uri: item.image }}
+              style={styles.recCardImage}
+              resizeMode="cover"
+            />
+          ) : (
+            <View style={[styles.recCardImage, styles.recCardImagePlaceholder]}>
+              <MaterialCommunityIcons
+                name="silverware-fork-knife"
+                size={36}
+                color={CARD_WHITE}
+              />
+            </View>
+          )}
+          {/* Time badge */}
+          {item.readyInMinutes ? (
+            <View style={styles.timeBadge}>
+              <Ionicons name="time-outline" size={11} color={CARD_WHITE} />
+              <Text style={styles.timeBadgeText}>
+                {item.readyInMinutes} mins
               </Text>
             </View>
-          </View>
+          ) : null}
+        </View>
+
+        {/* Info below image */}
+        <View style={styles.recCardInfo}>
+          <Text style={styles.recCardTitle} numberOfLines={1}>
+            {item.title}
+          </Text>
+          <Text style={styles.recCardSubtitle} numberOfLines={1}>
+            {subtitle}
+          </Text>
         </View>
       </TouchableOpacity>
     );
   }
 
-  return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.colors.background }]} edges={["top"]}>
-      {/* Header */}
-      <View style={[styles.header, { backgroundColor: theme.colors.card, borderBottomColor: theme.colors.border }]}>
-        <View style={styles.logoRow}>
-          <MaterialCommunityIcons name="leaf" size={24} color={theme.colors.primary} />
-          <Text style={[styles.logoText, { color: theme.colors.primary }]}>ReplateAI</Text>
+  function renderWeekCard(item: Recipe & { matchRate: number }, index: number) {
+    return (
+      <TouchableOpacity
+        key={item.id.toString()}
+        style={styles.weekCard}
+        onPress={() => navigation.navigate("RecipeDetail", { recipe: item })}
+        activeOpacity={0.88}
+      >
+        {item.image ? (
+          <Image
+            source={{ uri: item.image }}
+            style={styles.weekCardImage}
+            resizeMode="cover"
+          />
+        ) : (
+          <View style={[styles.weekCardImage, styles.weekCardImagePlaceholder]}>
+            <MaterialCommunityIcons
+              name="silverware-fork-knife"
+              size={28}
+              color={CARD_WHITE}
+            />
+          </View>
+        )}
+        <View style={styles.weekCardInfo}>
+          <Text style={styles.weekCardTitle} numberOfLines={2}>
+            {item.title}
+          </Text>
+          {item.readyInMinutes ? (
+            <Text style={styles.weekCardMeta}>{item.readyInMinutes} mins</Text>
+          ) : null}
         </View>
-        <TouchableOpacity
-          style={[styles.logoutButton, { backgroundColor: theme.colors.inputBg }]}
-          onPress={async () => {
-            await clearSession();
-            navigation.replace("Login");
-          }}
-        >
-          <Ionicons name="log-out-outline" size={20} color={theme.colors.textMuted} />
-        </TouchableOpacity>
-      </View>
+      </TouchableOpacity>
+    );
+  }
 
-      <ScrollView style={[styles.container, { backgroundColor: theme.colors.background }]} showsVerticalScrollIndicator={false}>
-        {/* Greeting with Profile Badge */}
+  const sortedRecs = getSortedRecommendations();
+  const weekRecipes = sortedRecs.slice(0, 4);
+
+  // ─── Render ───────────────────────────────────────────────────────────────
+  return (
+    <SafeAreaView style={styles.safeArea} edges={["top"]}>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* ── Header row ─────────────────────────────────────────────────── */}
         <Animated.View
           style={[
-            styles.greetingSection,
+            styles.headerRow,
             { opacity: fadeAnim, transform: [{ translateY: slideAnim }] },
           ]}
         >
-          <View style={styles.greetingRow}>
-            <View style={styles.greetingText}>
-              <Text style={[styles.greeting, { color: theme.colors.textMuted }]}>Hello,</Text>
-              <Text style={[styles.userName, { color: theme.colors.text }]}>{userName}!</Text>
-            </View>
-            
-            {/* Compact Profile Badge */}
-            {profileAnalysis ? (
-              <TouchableOpacity
-                style={styles.profileBadgeContainer}
-                onPress={() => navigation.navigate("ProfileDetail", { analysis: profileAnalysis })}
-                activeOpacity={0.7}
-              >
-                <View style={[styles.profileMini, { backgroundColor: theme.colors.card }]}>
-                  <MaterialCommunityIcons name="chef-hat" size={22} color={theme.colors.accent} style={{ marginRight: spacing.sm }} />
-                  <View style={styles.profileMiniStats}>
-                    <View style={styles.miniStatRow}>
-                      <View style={[styles.miniDot, { backgroundColor: theme.colors.success }]} />
-                      <Text style={[styles.miniStatText, { color: theme.colors.text }]}>{profileAnalysis.healthScore}/10</Text>
-                    </View>
-                    <Text style={[styles.miniStatLabel, { color: theme.colors.textMuted }]}>{profileAnalysis.dietType.split(" ")[0]}</Text>
-                  </View>
-                  <Ionicons name="chevron-forward" size={16} color={theme.colors.textMuted} />
-                </View>
-                <Text style={[styles.profileCta, { color: theme.colors.textSecondary }]}>View your food profile →</Text>
-              </TouchableOpacity>
-            ) : inventoryCount > 0 && !loadingProfile ? (
-              <TouchableOpacity
-                style={[styles.profileMiniEmpty, { backgroundColor: theme.colors.accentLight }]}
-                onPress={loadProfileAnalysis}
-                activeOpacity={0.7}
-              >
-                <Ionicons name="analytics-outline" size={20} color={theme.colors.text} />
-              </TouchableOpacity>
-            ) : loadingProfile ? (
-              <View style={[styles.profileMiniEmpty, { backgroundColor: theme.colors.accentLight }]}>
-                <ActivityIndicator size="small" color={theme.colors.text} />
-              </View>
-            ) : null}
+          {/* Avatar */}
+          <View style={styles.avatar}>
+            <Text style={styles.avatarText}>
+              {getInitials(userName || "C")}
+            </Text>
           </View>
+
+          {/* Greeting text */}
+          <View style={styles.headerGreeting}>
+            <Text style={styles.headerGreetingLabel}>{getGreeting()}</Text>
+            <Text style={styles.headerGreetingName} numberOfLines={1}>
+              {userName || "Chef"}
+            </Text>
+          </View>
+
+          {/* Hamburger / menu */}
+          <TouchableOpacity
+            style={styles.menuButton}
+            onPress={() => navigation.navigate("ProfilePreferences")}
+            activeOpacity={0.7}
+          >
+            <View style={styles.hamburgerLine} />
+            <View style={[styles.hamburgerLine, { width: 16 }]} />
+            <View style={styles.hamburgerLine} />
+          </TouchableOpacity>
         </Animated.View>
 
-        {/* Recommended Recipes */}
-        <Animated.View style={[styles.section, { opacity: fadeAnim }]}>
-          <View style={styles.sectionHeader}>
-            <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Recommended for You</Text>
+        {/* ── Hero headline ──────────────────────────────────────────────── */}
+        <Animated.View
+          style={[
+            styles.heroSection,
+            { opacity: fadeAnim, transform: [{ translateY: slideAnim }] },
+          ]}
+        >
+          <Text style={styles.heroText}>{"Feeling hungry?"}</Text>
+          <Text style={styles.heroText}>{"What are we cookin' today?"}</Text>
+        </Animated.View>
+
+        {/* ── Recommendation section ─────────────────────────────────────── */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeaderRow}>
+            <Text style={styles.sectionTitle}>Recommendation</Text>
+            <TouchableOpacity
+              onPress={() => navigation.navigate("RecipeHistory")}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.seeAllText}>See All</Text>
+            </TouchableOpacity>
           </View>
 
           {loadingRecs ? (
             <View style={styles.loadingContainer}>
-              <ActivityIndicator size="small" color={theme.colors.text} />
-              <Text style={[styles.loadingText, { color: theme.colors.textSecondary }]}>Finding recipes...</Text>
+              <ActivityIndicator size="small" color={GREEN_DARK} />
+              <Text style={styles.loadingText}>Finding recipes...</Text>
             </View>
-          ) : recommendations.length > 0 ? (
+          ) : sortedRecs.length > 0 ? (
             <FlatList
-              data={getSortedRecommendations()}
+              data={sortedRecs}
               keyExtractor={(item) => item.id.toString()}
-              renderItem={renderRecipeCard}
+              renderItem={renderRecommendationCard}
               horizontal
               showsHorizontalScrollIndicator={false}
-              snapToInterval={CARD_WIDTH + 16}
+              snapToInterval={REC_CARD_WIDTH + 16}
               decelerationRate="fast"
-              contentContainerStyle={styles.recipeList}
+              contentContainerStyle={styles.recList}
             />
           ) : (
-            <View style={styles.emptyRecs}>
-              <Ionicons name="leaf-outline" size={48} color={theme.colors.textMuted} />
-              <Text style={[styles.emptyRecsText, { color: theme.colors.textMuted }]}>
+            <View style={styles.emptyContainer}>
+              <Ionicons name="leaf-outline" size={40} color={GREEN_DARK} />
+              <Text style={styles.emptyText}>
                 {inventoryCount > 0
                   ? "No matching recipes found. Try adding more ingredients."
                   : "Photograph your ingredients to get personalized recipe ideas."}
               </Text>
               <TouchableOpacity
-                style={[styles.addIngredientsBtn, { backgroundColor: theme.colors.buttonPrimary }]}
+                style={styles.scanButton}
                 onPress={() => navigation.navigate("Capture")}
+                activeOpacity={0.85}
               >
-                <Ionicons name="add" size={18} color={theme.colors.buttonPrimaryText} />
-                <Text style={[styles.addIngredientsBtnText, { color: theme.colors.buttonPrimaryText }]}>Scan Ingredients</Text>
+                <Ionicons name="camera-outline" size={16} color={CARD_WHITE} />
+                <Text style={styles.scanButtonText}>Scan Ingredients</Text>
               </TouchableOpacity>
             </View>
           )}
-        </Animated.View>
+        </View>
 
-        {/* Quick Actions */}
-        <Animated.View style={[styles.section, { opacity: fadeAnim }]}>
-          <View style={styles.sectionHeader}>
-            <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Quick Actions</Text>
+        {/* ── Recipe of The Week section ─────────────────────────────────── */}
+        {weekRecipes.length > 0 && (
+          <View style={styles.section}>
+            <View style={styles.sectionHeaderRow}>
+              <Text style={styles.sectionTitle}>Recipe of The Week</Text>
+            </View>
+
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              snapToInterval={172}
+              decelerationRate="fast"
+              contentContainerStyle={styles.weekList}
+            >
+              {weekRecipes.map((item, index) => renderWeekCard(item, index))}
+            </ScrollView>
           </View>
+        )}
 
+        {/* ── Quick Actions grid ─────────────────────────────────────────── */}
+        <View style={styles.section}>
           <View style={styles.menuGrid}>
             <TouchableOpacity
-              style={[styles.menuCard, { backgroundColor: theme.colors.card }]}
+              style={styles.menuCard}
               onPress={() => navigation.navigate("Capture")}
-              activeOpacity={0.7}
+              activeOpacity={0.8}
             >
-              <View style={[styles.menuIconBg, { backgroundColor: theme.mode === "dark" ? theme.colors.inputBg : "#F5F0E6" }]}>
-                <Ionicons name="camera" size={24} color={theme.colors.text} />
+              <View style={styles.menuCardRow}>
+                <View
+                  style={[
+                    styles.menuIconBg,
+                    { backgroundColor: GREEN_DARK_LIGHT },
+                  ]}
+                >
+                  <Ionicons name="camera" size={18} color={GREEN_DARK} />
+                </View>
+                <View style={styles.menuCardText}>
+                  <Text style={styles.menuTitle}>Capture</Text>
+                  <Text style={styles.menuDesc}>Identify ingredients</Text>
+                </View>
               </View>
-              <Text style={[styles.menuTitle, { color: theme.colors.text }]}>Capture</Text>
-              <Text style={[styles.menuDesc, { color: theme.colors.textMuted }]}>Identify ingredients</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={[styles.menuCard, { backgroundColor: theme.colors.card }]}
+              style={styles.menuCard}
               onPress={() => navigation.navigate("Inventory")}
-              activeOpacity={0.7}
+              activeOpacity={0.8}
             >
-              <View style={[styles.menuIconBg, { backgroundColor: theme.mode === "dark" ? theme.colors.inputBg : "#EAF0F5" }]}>
-                <MaterialCommunityIcons name="fridge-outline" size={24} color={theme.mode === "dark" ? "#90caf9" : "#1976d2"} />
+              <View style={styles.menuCardRow}>
+                <View
+                  style={[
+                    styles.menuIconBg,
+                    { backgroundColor: GREEN_DARK_LIGHT },
+                  ]}
+                >
+                  <MaterialCommunityIcons
+                    name="fridge-outline"
+                    size={18}
+                    color={GREEN_DARK}
+                  />
+                </View>
+                <View style={styles.menuCardText}>
+                  <Text style={styles.menuTitle}>Inventory</Text>
+                  <Text style={styles.menuDesc}>
+                    {inventoryCount > 0
+                      ? `${inventoryCount} items`
+                      : "View items"}
+                  </Text>
+                </View>
               </View>
-              <Text style={[styles.menuTitle, { color: theme.colors.text }]}>Inventory</Text>
-              <Text style={[styles.menuDesc, { color: theme.colors.textMuted }]}>
-                {inventoryCount > 0 ? `${inventoryCount} items` : "View items"}
-              </Text>
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={[styles.menuCard, { backgroundColor: theme.colors.card }]}
+              style={styles.menuCard}
               onPress={() => navigation.navigate("RecipeHistory")}
-              activeOpacity={0.7}
+              activeOpacity={0.8}
             >
-              <View style={[styles.menuIconBg, { backgroundColor: theme.mode === "dark" ? theme.colors.inputBg : "#FDF3E3" }]}>
-                <Ionicons name="time" size={24} color={theme.colors.accent} />
+              <View style={styles.menuCardRow}>
+                <View
+                  style={[
+                    styles.menuIconBg,
+                    { backgroundColor: GREEN_DARK_LIGHT },
+                  ]}
+                >
+                  <Ionicons name="time" size={18} color={GREEN_DARK} />
+                </View>
+                <View style={styles.menuCardText}>
+                  <Text style={styles.menuTitle}>History</Text>
+                  <Text style={styles.menuDesc}>What you've cooked</Text>
+                </View>
               </View>
-              <Text style={[styles.menuTitle, { color: theme.colors.text }]}>History</Text>
-              <Text style={[styles.menuDesc, { color: theme.colors.textMuted }]}>What you've cooked</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={[styles.menuCard, { backgroundColor: theme.colors.card }]}
+              style={styles.menuCard}
               onPress={() => navigation.navigate("ProfilePreferences")}
-              activeOpacity={0.7}
+              activeOpacity={0.8}
             >
-              <View style={[styles.menuIconBg, { backgroundColor: theme.mode === "dark" ? theme.colors.inputBg : "#F3EEF5" }]}>
-                <Ionicons name="settings-outline" size={24} color={theme.mode === "dark" ? "#ce93d8" : "#7b1fa2"} />
+              <View style={styles.menuCardRow}>
+                <View
+                  style={[
+                    styles.menuIconBg,
+                    { backgroundColor: GREEN_DARK_LIGHT },
+                  ]}
+                >
+                  <Ionicons
+                    name="settings-outline"
+                    size={18}
+                    color={GREEN_DARK}
+                  />
+                </View>
+                <View style={styles.menuCardText}>
+                  <Text style={styles.menuTitle}>Preferences</Text>
+                  <Text style={styles.menuDesc}>Diet &amp; profile</Text>
+                </View>
               </View>
-              <Text style={[styles.menuTitle, { color: theme.colors.text }]}>Preferences</Text>
-              <Text style={[styles.menuDesc, { color: theme.colors.textMuted }]}>Diet & profile</Text>
             </TouchableOpacity>
           </View>
-        </Animated.View>
+        </View>
 
-        <View style={{ height: 40 }} />
+        {/* Bottom padding so content clears tab bar */}
+        <View style={{ height: 100 }} />
       </ScrollView>
+
+      {/* ── Bottom tab bar (fixed) ────────────────────────────────────────── */}
+      <View style={styles.tabBar}>
+        {TABS.map((tab) => {
+          const isActive = activeTab === tab.key;
+          const isCapture = tab.key === "capture";
+
+          if (isCapture) {
+            return (
+              <TouchableOpacity
+                key={tab.key}
+                style={styles.tabItem}
+                onPress={() => handleTabPress(tab.key)}
+                activeOpacity={0.8}
+              >
+                <View style={styles.captureTabButton}>
+                  <Ionicons name="camera" size={24} color={CARD_WHITE} />
+                </View>
+                <Text style={[styles.tabLabel, { marginTop: 4 }]}>
+                  {tab.label}
+                </Text>
+              </TouchableOpacity>
+            );
+          }
+
+          return (
+            <TouchableOpacity
+              key={tab.key}
+              style={styles.tabItem}
+              onPress={() => handleTabPress(tab.key)}
+              activeOpacity={0.75}
+            >
+              <Ionicons
+                name={isActive ? tab.icon : (`${tab.icon}-outline` as any)}
+                size={22}
+                color={isActive ? GREEN_DARK : TEXT_SECONDARY}
+              />
+              <Text
+                style={[styles.tabLabel, isActive && styles.tabLabelActive]}
+              >
+                {tab.label}
+              </Text>
+              {isActive && <View style={styles.tabActiveDot} />}
+            </TouchableOpacity>
+          );
+        })}
+      </View>
     </SafeAreaView>
   );
 }
 
+// ─── Styles ──────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
+    backgroundColor: GREEN_BG,
   },
-  header: {
+  scrollView: {
+    flex: 1,
+    backgroundColor: GREEN_BG,
+  },
+  scrollContent: {
+    paddingTop: spacing.lg,
+  },
+
+  // Header
+  headerRow: {
     flexDirection: "row",
-    justifyContent: "space-between",
     alignItems: "center",
     paddingHorizontal: spacing.xl,
-    paddingVertical: spacing.md,
-    borderBottomWidth: 1,
+    marginBottom: spacing.md,
   },
-  logoRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.sm,
-  },
-  logoText: {
-    fontSize: 20,
-    fontWeight: "700",
-    letterSpacing: 0.3,
-  },
-  logoutButton: {
-    padding: spacing.sm,
-    borderRadius: radii.sm,
-  },
-  container: {
-    flex: 1,
-  },
-  greetingSection: {
-    paddingHorizontal: spacing.xl,
-    paddingTop: spacing.xxl,
-    paddingBottom: spacing.sm,
-  },
-  greetingRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  greetingText: {
-    flex: 1,
-  },
-  greeting: {
-    fontSize: 16,
-  },
-  userName: {
-    fontSize: 28,
-    fontWeight: "700",
-    marginTop: 2,
-  },
-  profileBadgeContainer: {
-    alignItems: "flex-end",
-  },
-  profileMini: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: spacing.sm + 2,
-    paddingVertical: spacing.sm,
-    borderRadius: radii.lg,
-  },
-  profileCta: {
-    fontSize: 11,
-    marginTop: spacing.xs,
-    fontWeight: "500",
-  },
-  profileMiniStats: {
-    marginRight: spacing.xs,
-  },
-  miniStatRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.xs,
-  },
-  miniDot: {
-    width: 6,
-    height: 6,
-    borderRadius: radii.full,
-  },
-  miniStatText: {
-    fontSize: 12,
-    fontWeight: "600",
-  },
-  miniStatLabel: {
-    fontSize: 10,
-    marginTop: 1,
-  },
-  profileMiniEmpty: {
-    width: 40,
-    height: 40,
-    borderRadius: radii.lg,
+  avatar: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: GREEN_DARK,
     justifyContent: "center",
     alignItems: "center",
+    marginRight: spacing.md,
   },
-  section: {
-    marginTop: spacing.xxl,
+  avatarText: {
+    color: CARD_WHITE,
+    fontSize: 16,
+    fontWeight: "700",
   },
-  sectionHeader: {
+  headerGreeting: {
+    flex: 1,
+  },
+  headerGreetingLabel: {
+    fontSize: 12,
+    color: TEXT_SECONDARY,
+    fontWeight: "400",
+  },
+  headerGreetingName: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: TEXT_PRIMARY,
+    marginTop: 1,
+  },
+  menuButton: {
+    width: 36,
+    height: 36,
+    justifyContent: "center",
+    alignItems: "flex-end",
+    gap: 4,
+  },
+  hamburgerLine: {
+    width: 22,
+    height: 2,
+    borderRadius: 1,
+    backgroundColor: TEXT_PRIMARY,
+    marginVertical: 2,
+  },
+
+  // Hero
+  heroSection: {
     paddingHorizontal: spacing.xl,
-    marginBottom: spacing.md + 2,
+    marginBottom: spacing.xl,
+  },
+  heroText: {
+    fontSize: 30,
+    fontWeight: "700",
+    color: TEXT_PRIMARY,
+    lineHeight: 38,
+  },
+
+  // Section
+  section: {
+    marginBottom: spacing.xxxl,
+  },
+  sectionHeaderRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: spacing.xl,
+    marginBottom: spacing.sm,
   },
   sectionTitle: {
-    fontSize: 17,
-    fontWeight: "600",
+    fontSize: 18,
+    fontWeight: "700",
+    color: TEXT_PRIMARY,
   },
-  recipeList: {
+  seeAllText: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: GREEN_DARK,
+  },
+
+  // Recommendation cards
+  recList: {
     paddingHorizontal: spacing.xl,
   },
-  recipeCard: {
-    width: CARD_WIDTH,
-    height: 180,
-    borderRadius: radii.lg,
-    overflow: "hidden",
-    marginRight: spacing.lg,
+  recCard: {
+    width: REC_CARD_WIDTH,
+    marginRight: 16,
+    borderRadius: 16,
+    overflow: "visible",
   },
-  recipeImage: {
+  recCardImageContainer: {
+    width: REC_CARD_WIDTH,
+    height: 160,
+    borderRadius: 16,
+    overflow: "hidden",
+  },
+  recCardImage: {
     width: "100%",
     height: "100%",
   },
-  recipeImagePlaceholder: {
+  recCardImagePlaceholder: {
+    backgroundColor: GREEN_DARK,
     justifyContent: "center",
     alignItems: "center",
   },
-  recipeOverlay: {
+  timeBadge: {
     position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
+    top: 12,
+    left: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
     backgroundColor: "rgba(0,0,0,0.55)",
-    padding: spacing.md + 2,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 50,
   },
-  recipeTitle: {
-    fontSize: 16,
+  timeBadgeText: {
+    color: CARD_WHITE,
+    fontSize: 11,
     fontWeight: "600",
-    color: "#fff",
   },
-  recipeMetaRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginTop: 6,
+  recCardInfo: {
+    paddingTop: 10,
+    paddingHorizontal: 2,
   },
-  recipeTimeRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.xs,
+  recCardTitle: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: TEXT_PRIMARY,
+    marginBottom: 3,
   },
-  recipeTime: {
+  recCardSubtitle: {
     fontSize: 12,
-    color: "#ddd",
+    color: TEXT_SECONDARY,
   },
-  matchIndicator: {
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 3,
-    borderRadius: radii.sm,
+
+  // Recipe of The Week horizontal scroll
+  weekList: {
+    paddingHorizontal: spacing.xl,
+    gap: 12,
   },
-  matchIndicatorText: {
-    fontSize: 10,
-    fontWeight: "600",
-    color: "#fff",
+  weekCard: {
+    width: WEEK_CARD_WIDTH,
+    borderRadius: 12,
+    overflow: "hidden",
+    backgroundColor: CARD_WHITE,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
+    elevation: 2,
   },
-  loadingContainer: {
-    flexDirection: "row",
-    alignItems: "center",
+  weekCardImage: {
+    width: WEEK_CARD_WIDTH,
+    height: 100,
+  },
+  weekCardImagePlaceholder: {
+    backgroundColor: GREEN_DARK,
     justifyContent: "center",
-    paddingVertical: 40,
-    gap: spacing.sm + 2,
-  },
-  loadingText: {
-    fontSize: 14,
-  },
-  emptyRecs: {
     alignItems: "center",
-    paddingVertical: spacing.xxxl,
-    paddingHorizontal: spacing.xl,
   },
-  emptyRecsText: {
-    fontSize: 14,
-    textAlign: "center",
-    marginTop: spacing.md,
-    marginBottom: spacing.xl,
-    lineHeight: 20,
+  weekCardInfo: {
+    padding: 8,
   },
-  addIngredientsBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    paddingHorizontal: spacing.xl,
-    paddingVertical: spacing.md,
-    borderRadius: radii.lg,
-  },
-  addIngredientsBtnText: {
+  weekCardTitle: {
+    fontSize: 12,
     fontWeight: "600",
-    fontSize: 14,
+    color: TEXT_PRIMARY,
+    lineHeight: 17,
   },
+  weekCardMeta: {
+    fontSize: 11,
+    color: TEXT_SECONDARY,
+    marginTop: 3,
+  },
+
+  // Quick actions grid
   menuGrid: {
     flexDirection: "row",
     paddingHorizontal: spacing.xl,
@@ -624,25 +867,131 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
   },
   menuCard: {
-    width: "48%",
+    width: "47%",
+    backgroundColor: CARD_WHITE,
     borderRadius: radii.lg,
-    padding: spacing.lg,
+    padding: spacing.md,
+    borderWidth: 1,
+    borderColor: BORDER_GRAY,
+  },
+  menuCardRow: {
+    flexDirection: "row",
     alignItems: "center",
+    gap: spacing.sm,
+  },
+  menuCardText: {
+    flex: 1,
   },
   menuIconBg: {
-    width: 48,
-    height: 48,
-    borderRadius: radii.lg,
+    width: 36,
+    height: 36,
+    borderRadius: radii.md,
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: spacing.sm + 2,
   },
   menuTitle: {
-    fontSize: 14,
-    fontWeight: "600",
+    fontSize: 13,
+    fontWeight: "700",
+    color: TEXT_PRIMARY,
   },
   menuDesc: {
     fontSize: 11,
-    marginTop: 3,
+    color: TEXT_SECONDARY,
+    marginTop: 2,
+  },
+
+  // Loading / Empty states
+  loadingContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 40,
+    gap: spacing.sm,
+  },
+  loadingText: {
+    fontSize: 14,
+    color: TEXT_SECONDARY,
+  },
+  emptyContainer: {
+    alignItems: "center",
+    paddingVertical: spacing.xxxl,
+    paddingHorizontal: spacing.xl,
+  },
+  emptyText: {
+    fontSize: 14,
+    color: TEXT_SECONDARY,
+    textAlign: "center",
+    marginTop: spacing.md,
+    marginBottom: spacing.xl,
+    lineHeight: 20,
+  },
+  scanButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    backgroundColor: GREEN_DARK,
+    paddingHorizontal: spacing.xl,
+    paddingVertical: spacing.md,
+    borderRadius: radii.full,
+  },
+  scanButtonText: {
+    color: CARD_WHITE,
+    fontWeight: "600",
+    fontSize: 14,
+  },
+
+  // Bottom tab bar
+  tabBar: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    flexDirection: "row",
+    backgroundColor: CARD_WHITE,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingTop: 12,
+    paddingBottom: 24,
+    paddingHorizontal: spacing.lg,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -3 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 12,
+  },
+  tabItem: {
+    flex: 1,
+    alignItems: "center",
+    gap: 4,
+  },
+  captureTabButton: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: GREEN_DARK,
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: -24,
+    shadowColor: GREEN_DARK,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.35,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  tabLabel: {
+    fontSize: 11,
+    fontWeight: "500",
+    color: TEXT_SECONDARY,
+  },
+  tabLabelActive: {
+    color: GREEN_DARK,
+    fontWeight: "700",
+  },
+  tabActiveDot: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: GREEN_DARK,
+    marginTop: 2,
   },
 });
