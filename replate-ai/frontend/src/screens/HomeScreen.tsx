@@ -289,7 +289,7 @@ export default function HomeScreen({ navigation }: Props) {
                 activeOpacity={0.7}
               >
                 <View style={[styles.profileMini, { backgroundColor: theme.colors.card }]}>
-                  <Text style={styles.profileMiniEmoji}>{profileAnalysis.emoji}</Text>
+                  <MaterialCommunityIcons name="chef-hat" size={22} color={theme.colors.accent} style={{ marginRight: spacing.sm }} />
                   <View style={styles.profileMiniStats}>
                     <View style={styles.miniStatRow}>
                       <View style={[styles.miniDot, { backgroundColor: theme.colors.success }]} />
@@ -487,10 +487,6 @@ const styles = StyleSheet.create({
     fontSize: 11,
     marginTop: spacing.xs,
     fontWeight: "500",
-  },
-  profileMiniEmoji: {
-    fontSize: 24,
-    marginRight: spacing.sm,
   },
   profileMiniStats: {
     marginRight: spacing.xs,

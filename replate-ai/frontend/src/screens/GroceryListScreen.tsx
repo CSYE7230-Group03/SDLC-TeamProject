@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
+import { Ionicons } from "@expo/vector-icons";
 import { RootStackParamList } from "../navigation/AppNavigator";
 import {
   getGroceryList,
@@ -132,7 +133,7 @@ export default function GroceryListScreen({ route, navigation }: Props) {
           accessibilityState={{ checked: available }}
           accessibilityLabel={`${item.name}, ${available ? "available at home" : "not available"}`}
         >
-          {available && <Text style={[styles.checkmark, { color: theme.colors.background }]}>✓</Text>}
+          {available && <Ionicons name="checkmark" size={14} color={theme.colors.background} />}
         </TouchableOpacity>
 
         <View style={styles.itemInfo}>
@@ -198,7 +199,7 @@ export default function GroceryListScreen({ route, navigation }: Props) {
           accessibilityLabel={allAvailable ? "You have everything" : `See ${neededCount} items to buy`}
         >
           <Text style={[styles.orderButtonText, { color: theme.colors.buttonPrimaryText }]}>
-            {allAvailable ? "You have everything! 🎉" : `See ${neededCount} Items to Buy`}
+            {allAvailable ? "You have everything!" : `See ${neededCount} Items to Buy`}
           </Text>
         </TouchableOpacity>
       </View>
@@ -264,11 +265,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     marginRight: spacing.md,
-  },
-  checkmark: {
-    fontSize: 14,
-    fontWeight: "bold",
-    lineHeight: 16,
   },
   itemInfo: {
     flex: 1,

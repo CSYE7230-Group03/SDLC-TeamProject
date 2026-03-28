@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { ActivityIndicator, View, Text, TouchableOpacity } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { useAppTheme } from "../theme/ThemeProvider";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import CapturePhotoScreen from "../screens/CapturePhotoScreen";
@@ -129,9 +130,10 @@ export default function AppNavigator() {
           headerLeft: () => (
             <TouchableOpacity
               onPress={() => navigation.navigate("Home")}
-              style={{ marginLeft: 8, padding: 4, flexDirection: "row", alignItems: "center" }}
+              style={{ marginLeft: 8, padding: 4, flexDirection: "row", alignItems: "center", gap: 2 }}
             >
-              <Text style={{ fontSize: 16, color: theme.colors.primary }}>‹ Home</Text>
+              <Ionicons name="chevron-back" size={20} color={theme.colors.primary} />
+              <Text style={{ fontSize: 15, fontWeight: "600", color: theme.colors.primary }}>Home</Text>
             </TouchableOpacity>
           ),
         })}
@@ -144,9 +146,10 @@ export default function AppNavigator() {
           headerLeft: () => (
             <TouchableOpacity
               onPress={() => navigation.navigate("Home")}
-              style={{ marginLeft: 8, padding: 4, flexDirection: "row", alignItems: "center" }}
+              style={{ marginLeft: 8, padding: 4, flexDirection: "row", alignItems: "center", gap: 2 }}
             >
-              <Text style={{ fontSize: 16, color: theme.colors.primary }}>‹ Home</Text>
+              <Ionicons name="chevron-back" size={20} color={theme.colors.primary} />
+              <Text style={{ fontSize: 15, fontWeight: "600", color: theme.colors.primary }}>Home</Text>
             </TouchableOpacity>
           ),
         })}
@@ -184,9 +187,10 @@ export default function AppNavigator() {
           headerLeft: () => (
             <TouchableOpacity
               onPress={() => navigation.navigate("Home")}
-              style={{ marginLeft: 8, padding: 4, flexDirection: "row", alignItems: "center" }}
+              style={{ marginLeft: 8, padding: 4, flexDirection: "row", alignItems: "center", gap: 2 }}
             >
-              <Text style={{ fontSize: 16, color: theme.colors.primary }}>‹ Home</Text>
+              <Ionicons name="chevron-back" size={20} color={theme.colors.primary} />
+              <Text style={{ fontSize: 15, fontWeight: "600", color: theme.colors.primary }}>Home</Text>
             </TouchableOpacity>
           ),
         })}

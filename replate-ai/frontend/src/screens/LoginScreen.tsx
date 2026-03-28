@@ -14,7 +14,7 @@ import {
   Alert,
 } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import * as WebBrowser from "expo-web-browser";
 import { RootStackParamList } from "../navigation/AppNavigator";
 import { signIn, saveSession } from "../services/api";
@@ -171,21 +171,9 @@ export default function LoginScreen({ navigation }: Props) {
               },
             ]}
           >
-            <View style={styles.foodGrid}>
-              <View style={styles.foodRow}>
-                <Text style={styles.foodEmoji}>🥗</Text>
-                <Text style={styles.foodEmoji}>🍲</Text>
-                <Text style={styles.foodEmoji}>🍝</Text>
-              </View>
-              <View style={styles.foodRow}>
-                <Text style={styles.foodEmoji}>🥘</Text>
-                <Text style={styles.foodEmoji}>🍛</Text>
-                <Text style={styles.foodEmoji}>🥙</Text>
-              </View>
-              <View style={styles.foodRow}>
-                <Text style={styles.foodEmoji}>🍜</Text>
-                <Text style={styles.foodEmoji}>🥑</Text>
-                <Text style={styles.foodEmoji}>🍅</Text>
+            <View style={styles.brandMark}>
+              <View style={styles.brandIconRing}>
+                <MaterialCommunityIcons name="leaf" size={52} color={ACCENT} />
               </View>
             </View>
             <Text style={styles.logoText}>ReplateAI</Text>
@@ -312,17 +300,17 @@ const styles = StyleSheet.create({
     paddingTop: 70,
     paddingBottom: 32,
   },
-  foodGrid: {
-    marginBottom: 20,
+  brandMark: {
+    marginBottom: 24,
+    alignItems: "center",
   },
-  foodRow: {
-    flexDirection: "row",
+  brandIconRing: {
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    backgroundColor: "#FFF8E7",
     justifyContent: "center",
-    gap: 12,
-    marginVertical: 4,
-  },
-  foodEmoji: {
-    fontSize: 40,
+    alignItems: "center",
   },
   logoText: {
     fontSize: 36,

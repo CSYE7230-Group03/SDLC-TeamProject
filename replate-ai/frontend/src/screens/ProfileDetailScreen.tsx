@@ -45,7 +45,9 @@ export default function ProfileDetailScreen({ route }: Props) {
         { backgroundColor: theme.mode === "dark" ? "#242424" : "#1A1A1A" },
         { opacity: fadeAnim, transform: [{ scale: scaleAnim }] },
       ]}>
-        <Text style={styles.emoji}>{analysis.emoji}</Text>
+        <View style={styles.personaIconWrap}>
+          <MaterialCommunityIcons name="chef-hat" size={52} color="#ffffff" />
+        </View>
         <Text style={styles.persona}>{analysis.persona}</Text>
         <Text style={styles.description}>{analysis.description}</Text>
       </Animated.View>
@@ -113,7 +115,15 @@ const styles = StyleSheet.create({
     padding: 24,
     alignItems: "center",
   },
-  emoji: { fontSize: 64, marginBottom: 12 },
+  personaIconWrap: {
+    width: 88,
+    height: 88,
+    borderRadius: 44,
+    backgroundColor: "rgba(255,255,255,0.15)",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 16,
+  },
   persona: { fontSize: 24, fontWeight: "700", color: "#fff", textAlign: "center" },
   description: { fontSize: 14, color: "rgba(255,255,255,0.85)", textAlign: "center", marginTop: 12, lineHeight: 20 },
   statsCard: { marginHorizontal: 16, borderRadius: 16, padding: 20 },

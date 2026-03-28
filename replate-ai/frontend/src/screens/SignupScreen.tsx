@@ -12,6 +12,7 @@ import {
   SafeAreaView,
 } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { RootStackParamList } from "../navigation/AppNavigator";
 import { signUp, signIn, saveSession } from "../services/api";
 import { EMAIL_REGEX } from "../utils/validation";
@@ -122,7 +123,10 @@ export default function SignupScreen({ navigation }: Props) {
   return (
     <SafeAreaView style={styles.safe}>
       <View style={styles.header}>
-        <Text style={styles.brand}>🌿 ReplateAI</Text>
+        <View style={styles.brandRow}>
+          <MaterialCommunityIcons name="leaf" size={18} color={TEXT_DARK} />
+          <Text style={styles.brand}>ReplateAI</Text>
+        </View>
       </View>
 
       <KeyboardAvoidingView
@@ -257,6 +261,11 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     borderBottomWidth: 1,
     borderBottomColor: BORDER,
+  },
+  brandRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
   },
   brand: {
     fontSize: 20,

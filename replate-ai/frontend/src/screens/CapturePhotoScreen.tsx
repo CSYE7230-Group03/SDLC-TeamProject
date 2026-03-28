@@ -166,8 +166,8 @@ export default function CapturePhotoScreen({ navigation }: Props) {
           disabled={loading}
           activeOpacity={0.7}
         >
-          <View style={[styles.actionIconBg, { backgroundColor: theme.mode === "dark" ? theme.colors.inputBg : "#E8F0FE" }]}>
-            <Ionicons name="camera" size={24} color="#1976d2" />
+          <View style={[styles.actionIconBg, { backgroundColor: theme.colors.accentLight }]}>
+            <Ionicons name="camera" size={24} color={theme.colors.accent} />
           </View>
           <Text style={[styles.actionButtonText, { color: theme.colors.text }]}>Take Photo</Text>
         </TouchableOpacity>
@@ -178,8 +178,8 @@ export default function CapturePhotoScreen({ navigation }: Props) {
           disabled={loading}
           activeOpacity={0.7}
         >
-          <View style={[styles.actionIconBg, { backgroundColor: theme.mode === "dark" ? theme.colors.inputBg : "#F3E8FF" }]}>
-            <Ionicons name="images" size={24} color="#7b1fa2" />
+          <View style={[styles.actionIconBg, { backgroundColor: theme.colors.inputBg }]}>
+            <Ionicons name="images" size={24} color={theme.colors.textSecondary} />
           </View>
           <Text style={[styles.actionButtonText, { color: theme.colors.text }]}>Gallery</Text>
         </TouchableOpacity>

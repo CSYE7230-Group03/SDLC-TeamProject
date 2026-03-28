@@ -12,6 +12,7 @@ import {
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
+import { Ionicons } from "@expo/vector-icons";
 import { RootStackParamList } from "../navigation/AppNavigator";
 import {
   generateRecipes,
@@ -142,7 +143,7 @@ export default function RecipeGenerationScreen({ route, navigation }: Props) {
           onPress={() => navigation.navigate("RecipeHistory")}
           style={{ marginRight: 16, flexDirection: "row", alignItems: "center", gap: 5 }}
         >
-          <Text style={{ fontSize: 16 }}>⏱</Text>
+          <Ionicons name="time-outline" size={16} color={theme.colors.text} />
           <Text style={{ fontSize: 14, fontWeight: "600", color: theme.colors.text }}>History</Text>
         </TouchableOpacity>
       ),
@@ -233,10 +234,16 @@ export default function RecipeGenerationScreen({ route, navigation }: Props) {
             {renderFeasibilityBadge(feasibility)}
             <View style={styles.recipeMetadata}>
               {item.readyInMinutes && (
-                <Text style={[styles.metadataText, { color: theme.colors.textSecondary }]}>⏱️ {item.readyInMinutes} min</Text>
+                <View style={styles.metaItem}>
+                  <Ionicons name="time-outline" size={12} color={theme.colors.textSecondary} />
+                  <Text style={[styles.metadataText, { color: theme.colors.textSecondary }]}>{item.readyInMinutes} min</Text>
+                </View>
               )}
               {item.servings && (
-                <Text style={[styles.metadataText, { color: theme.colors.textSecondary }]}>👥 {item.servings}</Text>
+                <View style={styles.metaItem}>
+                  <Ionicons name="people-outline" size={12} color={theme.colors.textSecondary} />
+                  <Text style={[styles.metadataText, { color: theme.colors.textSecondary }]}>{item.servings} servings</Text>
+                </View>
               )}
             </View>
           </View>
@@ -313,9 +320,11 @@ export default function RecipeGenerationScreen({ route, navigation }: Props) {
                   );
                   return (
                     <View key={idx} style={styles.ingredientRow}>
-                      <Text style={styles.ingredientIcon}>
-                        {isAvailable ? "✅" : "❌"}
-                      </Text>
+                      <Ionicons
+                        name={isAvailable ? "checkmark-circle" : "close-circle"}
+                        size={16}
+                        color={isAvailable ? theme.colors.success : theme.colors.danger}
+                      />
                       <Text
                         style={[
                           styles.ingredientItem,
@@ -379,7 +388,10 @@ export default function RecipeGenerationScreen({ route, navigation }: Props) {
                   {creatingList ? (
                     <ActivityIndicator size="small" color="#fff" />
                   ) : (
-                    <Text style={styles.groceryListButtonText}>📋 Create Grocery List</Text>
+                    <View style={styles.groceryBtnContent}>
+                      <Ionicons name="cart-outline" size={16} color="#fff" />
+                      <Text style={styles.groceryListButtonText}>Create Grocery List</Text>
+                    </View>
                   )}
                 </TouchableOpacity>
               </>
@@ -451,7 +463,7 @@ export default function RecipeGenerationScreen({ route, navigation }: Props) {
                 );
               }}
             >
-              <Text style={styles.selectButtonText}>✓ Select This Recipe</Text>
+              <Text style={styles.selectButtonText}>Select This Recipe</Text>
             </TouchableOpacity>
           </View>
         </ScrollView>
@@ -535,6 +547,7 @@ const styles = StyleSheet.create({
   recipeContent: { flex: 1 },
   recipeTitle: { fontSize: 15, fontWeight: "600", marginBottom: 6 },
   recipeMetadata: { flexDirection: "row", gap: 10, marginTop: 4 },
+  metaItem: { flexDirection: "row", alignItems: "center", gap: 3 },
   metadataText: { fontSize: 12 },
   chevron: { fontSize: 24, marginLeft: 8 },
 
@@ -588,7 +601,6 @@ const styles = StyleSheet.create({
 
   // Ingredient rows with availability
   ingredientRow: { flexDirection: "row", alignItems: "center", marginBottom: 6 },
-  ingredientIcon: { fontSize: 14, marginRight: 8 },
   ingredientItem: { fontSize: 13, lineHeight: 20, flex: 1 },
 
   // Missing ingredients summary box
@@ -606,6 +618,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginTop: 10,
   },
+  groceryBtnContent: { flexDirection: "row", alignItems: "center", gap: 6 },
   groceryListButtonText: { color: "#fff", fontWeight: "600", fontSize: 14 },
 
   instructionItem: { fontSize: 13, marginBottom: 10, lineHeight: 20 },

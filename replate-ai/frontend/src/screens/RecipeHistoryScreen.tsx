@@ -10,6 +10,7 @@ import {
   ScrollView,
 } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
+import { Ionicons } from "@expo/vector-icons";
 import { RootStackParamList } from "../navigation/AppNavigator";
 import { getRecipeHistory, RecipeHistoryItem } from "../services/api";
 import { useAppTheme } from "../theme/ThemeProvider";
@@ -65,7 +66,7 @@ export default function RecipeHistoryScreen({ navigation }: Props) {
           <Image source={{ uri: item.image }} style={styles.cardImage} resizeMode="cover" />
         ) : (
           <View style={[styles.cardImagePlaceholder, { backgroundColor: theme.colors.border }]}>
-            <Text style={styles.cardImagePlaceholderText}>🍽️</Text>
+            <Ionicons name="restaurant-outline" size={26} color={theme.colors.textMuted} />
           </View>
         )}
         <View style={styles.cardBody}>
@@ -73,12 +74,14 @@ export default function RecipeHistoryScreen({ navigation }: Props) {
           <View style={styles.cardBadges}>
             {item.readyInMinutes && (
               <View style={[styles.badge, { backgroundColor: theme.colors.inputBg }]}>
-                <Text style={[styles.badgeText, { color: theme.colors.text }]}>⏱ {item.readyInMinutes} min</Text>
+                <Ionicons name="time-outline" size={11} color={theme.colors.text} />
+                <Text style={[styles.badgeText, { color: theme.colors.text }]}>{item.readyInMinutes} min</Text>
               </View>
             )}
             {item.servings && (
               <View style={[styles.badge, { backgroundColor: theme.colors.inputBg }]}>
-                <Text style={[styles.badgeText, { color: theme.colors.text }]}>👤 {item.servings}</Text>
+                <Ionicons name="person-outline" size={11} color={theme.colors.text} />
+                <Text style={[styles.badgeText, { color: theme.colors.text }]}>{item.servings}</Text>
               </View>
             )}
           </View>
@@ -115,7 +118,7 @@ export default function RecipeHistoryScreen({ navigation }: Props) {
             />
           ) : (
             <View style={[styles.detailImagePlaceholder, { backgroundColor: theme.colors.border }]}>
-              <Text style={styles.detailImagePlaceholderText}>🍽️</Text>
+              <Ionicons name="restaurant-outline" size={52} color={theme.colors.textMuted} />
             </View>
           )}
 
@@ -125,7 +128,7 @@ export default function RecipeHistoryScreen({ navigation }: Props) {
             <View style={[styles.detailMetaRow, { borderBottomColor: theme.colors.border }]}>
               {selectedRecipe.readyInMinutes && (
                 <View style={[styles.detailMetaChip, { backgroundColor: theme.colors.inputBg }]}>
-                  <Text style={styles.detailMetaIcon}>⏱</Text>
+                  <Ionicons name="time-outline" size={18} color={theme.colors.text} />
                   <View>
                     <Text style={[styles.detailMetaValue, { color: theme.colors.text }]}>{selectedRecipe.readyInMinutes} min</Text>
                     <Text style={[styles.detailMetaSubLabel, { color: theme.colors.textSecondary }]}>Cook Time</Text>
@@ -134,7 +137,7 @@ export default function RecipeHistoryScreen({ navigation }: Props) {
               )}
               {selectedRecipe.servings && (
                 <View style={[styles.detailMetaChip, { backgroundColor: theme.colors.inputBg }]}>
-                  <Text style={styles.detailMetaIcon}>👤</Text>
+                  <Ionicons name="person-outline" size={18} color={theme.colors.text} />
                   <View>
                     <Text style={[styles.detailMetaValue, { color: theme.colors.text }]}>{selectedRecipe.servings} servings</Text>
                     <Text style={[styles.detailMetaSubLabel, { color: theme.colors.textSecondary }]}>Servings</Text>
@@ -189,7 +192,9 @@ export default function RecipeHistoryScreen({ navigation }: Props) {
   if (recipes.length === 0) {
     return (
       <View style={[styles.centered, { backgroundColor: theme.colors.background }]}>
-        <Text style={styles.emptyIcon}>📋</Text>
+        <View style={styles.emptyIconWrap}>
+          <Ionicons name="document-text-outline" size={52} color={theme.colors.textMuted} />
+        </View>
         <Text style={[styles.emptyTitle, { color: theme.colors.text }]}>No saved recipes yet</Text>
         <Text style={[styles.emptySubtitle, { color: theme.colors.textSecondary }]}>
           Recipes you view will appear here so you can easily find them again.
@@ -272,9 +277,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  cardImagePlaceholderText: {
-    fontSize: 26,
-  },
   cardBody: {
     flex: 1,
     paddingHorizontal: 12,
@@ -295,6 +297,9 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     paddingHorizontal: 8,
     paddingVertical: 3,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 3,
   },
   badgeText: {
     fontSize: 11,
@@ -310,8 +315,7 @@ const styles = StyleSheet.create({
   },
 
   // Empty state
-  emptyIcon: {
-    fontSize: 52,
+  emptyIconWrap: {
     marginBottom: 16,
   },
   emptyTitle: {
@@ -363,9 +367,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  detailImagePlaceholderText: {
-    fontSize: 52,
-  },
   detailContent: {
     paddingHorizontal: 20,
     paddingTop: 20,
@@ -393,9 +394,6 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 12,
     gap: 8,
-  },
-  detailMetaIcon: {
-    fontSize: 18,
   },
   detailMetaValue: {
     fontSize: 13,

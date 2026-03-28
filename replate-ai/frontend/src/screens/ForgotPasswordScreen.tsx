@@ -12,6 +12,7 @@ import {
   SafeAreaView,
 } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
+import { MaterialCommunityIcons, Ionicons } from "@expo/vector-icons";
 import { RootStackParamList } from "../navigation/AppNavigator";
 import { forgotPassword } from "../services/api";
 import { EMAIL_REGEX } from "../utils/validation";
@@ -60,10 +61,15 @@ export default function ForgotPasswordScreen({ navigation }: Props) {
     return (
       <SafeAreaView style={styles.safe}>
         <View style={styles.header}>
-          <Text style={styles.brand}>🌿 ReplateAI</Text>
+          <View style={styles.brandRow}>
+          <MaterialCommunityIcons name="leaf" size={18} color="#1A1A1A" />
+          <Text style={styles.brand}>ReplateAI</Text>
+        </View>
         </View>
         <View style={styles.confirmContainer}>
-          <Text style={styles.confirmIcon}>✉️</Text>
+          <View style={styles.confirmIconContainer}>
+            <Ionicons name="mail-outline" size={52} color="#D4A017" />
+          </View>
           <Text style={styles.title}>Check your email</Text>
           <Text style={styles.subtitle}>
             If <Text style={styles.emailHighlight}>{email.trim()}</Text> is registered,{"\n"}
@@ -83,7 +89,10 @@ export default function ForgotPasswordScreen({ navigation }: Props) {
   return (
     <SafeAreaView style={styles.safe}>
       <View style={styles.header}>
-        <Text style={styles.brand}>🌿 ReplateAI</Text>
+        <View style={styles.brandRow}>
+          <MaterialCommunityIcons name="leaf" size={18} color="#1A1A1A" />
+          <Text style={styles.brand}>ReplateAI</Text>
+        </View>
       </View>
 
       <KeyboardAvoidingView
@@ -164,6 +173,11 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: "#E0E0DE",
   },
+  brandRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
   brand: {
     fontSize: 20,
     fontWeight: "700",
@@ -186,9 +200,14 @@ const styles = StyleSheet.create({
     paddingTop: 60,
     alignItems: "center",
   },
-  confirmIcon: {
-    fontSize: 56,
+  confirmIconContainer: {
     marginBottom: 24,
+    width: 88,
+    height: 88,
+    borderRadius: 44,
+    backgroundColor: "#FFF8E7",
+    justifyContent: "center",
+    alignItems: "center",
   },
   title: {
     fontSize: 26,

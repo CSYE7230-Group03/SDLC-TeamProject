@@ -13,6 +13,7 @@ import {
   Platform,
 } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
+import { Ionicons } from "@expo/vector-icons";
 import { RootStackParamList } from "../navigation/AppNavigator";
 import {
   createReviewSession,
@@ -259,7 +260,7 @@ export default function IngredientReviewScreen({ route, navigation }: Props) {
               style={[styles.removeButton, { backgroundColor: theme.colors.dangerLight }]}
               onPress={() => handleRemove(item.id, item.name)}
             >
-              <Text style={styles.removeButtonText}>✕</Text>
+              <Ionicons name="trash-outline" size={16} color={theme.colors.danger} />
             </TouchableOpacity>
           </View>
         </View>
@@ -288,7 +289,7 @@ export default function IngredientReviewScreen({ route, navigation }: Props) {
             <Image source={{ uri: imageUri }} style={styles.previewImage} resizeMode="cover" />
             <View style={styles.imageOverlay}>
               <Text style={styles.imageOverlayText}>
-                📸 {ingredients.length} ingredients detected
+                {ingredients.length} ingredient{ingredients.length !== 1 ? "s" : ""} detected
               </Text>
             </View>
           </View>
@@ -351,7 +352,7 @@ export default function IngredientReviewScreen({ route, navigation }: Props) {
             <ActivityIndicator color="#fff" />
           ) : (
             <Text style={styles.confirmButtonText}>
-              ✓ Confirm & Generate Recipes ({ingredients.length})
+              Confirm & Generate Recipes ({ingredients.length})
             </Text>
           )}
         </TouchableOpacity>
@@ -503,11 +504,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 12,
-  },
-  removeButtonText: {
-    color: "#D32F2F",
-    fontWeight: "600",
-    fontSize: 14,
   },
 
   // Edit mode
