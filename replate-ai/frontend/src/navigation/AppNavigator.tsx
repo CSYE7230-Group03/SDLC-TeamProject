@@ -156,13 +156,7 @@ export default function AppNavigator() {
       <Stack.Screen
         name="ProfileDetail"
         component={ProfileDetailScreen}
-        options={{
-          headerShown: true,
-          title: "Your Fridge Profile",
-          headerStyle: { backgroundColor: theme.colors.background },
-          headerTintColor: theme.colors.text,
-          headerShadowVisible: false,
-        }}
+        options={{ headerShown: false }}
       />
       <Stack.Screen
         name="CookingComplete"
