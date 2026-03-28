@@ -12,7 +12,7 @@ import {
 } from "react-native";
 import { BottomTabScreenProps, useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { TabParamList } from "../navigation/AppNavigator";
+import { TabParamList, RootStackParamList } from "../navigation/AppNavigator";
 import {
   getUserProfile,
   updateUserProfile,
@@ -21,12 +21,18 @@ import {
   getAppSettings,
   updateAppSettings,
   getUserInventory,
+  clearSession,
+  getProfileAnalysis,
 } from "../services/api";
 import { useAppTheme } from "../theme/ThemeProvider";
 import { ThemeMode, spacing, radii } from "../theme/theme";
 import { cancelExpiryReminders, scheduleExpiryReminders } from "../services/expiryNotifications";
+import { useNavigation } from "@react-navigation/native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { Ionicons } from "@expo/vector-icons";
 
 type Props = BottomTabScreenProps<TabParamList, "Profile">;
+type RootNavProp = NativeStackNavigationProp<RootStackParamList>;
 
 function parseCsv(value: string): string[] {
   return value
@@ -37,9 +43,11 @@ function parseCsv(value: string): string[] {
 
 export default function ProfilePreferencesScreen({ navigation }: Props) {
   const { themeMode, setThemeMode, theme } = useAppTheme();
+  const rootNavigation = useNavigation<RootNavProp>();
   const tabBarHeight = useBottomTabBarHeight();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [loadingProfile, setLoadingProfile] = useState(false);
 
   const [displayName, setDisplayName] = useState("");
   const [restrictionsCsv, setRestrictionsCsv] = useState("");
@@ -77,6 +85,40 @@ export default function ProfilePreferencesScreen({ navigation }: Props) {
       Alert.alert("Connection error", "Couldn't reach the server. Check your connection and try again.");
     } finally {
       setLoading(false);
+    }
+  }
+
+  function handleLogout() {
+    Alert.alert(
+      "Log Out",
+      "Are you sure you want to log out?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Log Out",
+          style: "destructive",
+          onPress: async () => {
+            await clearSession();
+            navigation.getParent()?.reset({ index: 0, routes: [{ name: "Login" }] });
+          },
+        },
+      ]
+    );
+  }
+
+  async function viewFoodProfile() {
+    setLoadingProfile(true);
+    try {
+      const res = await getProfileAnalysis();
+      if (res.success && res.analysis) {
+        rootNavigation.navigate("ProfileDetail", { analysis: res.analysis });
+      } else {
+        Alert.alert("Not enough data", "Add ingredients to your inventory first to generate a food profile.");
+      }
+    } catch {
+      Alert.alert("Error", "Couldn't load your food profile. Check your connection and try again.");
+    } finally {
+      setLoadingProfile(false);
     }
   }
 
@@ -167,6 +209,27 @@ export default function ProfilePreferencesScreen({ navigation }: Props) {
     <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]} edges={["top"]}>
     <ScrollView style={{ flex: 1 }} contentContainerStyle={[styles.content, { paddingBottom: tabBarHeight }]}>
       <Text style={[styles.title, { color: theme.colors.text }]}>Profile & Preferences</Text>
+
+      <TouchableOpacity
+        style={[styles.foodProfileCard, { backgroundColor: theme.colors.card, borderColor: theme.colors.border }]}
+        onPress={viewFoodProfile}
+        activeOpacity={0.85}
+        disabled={loadingProfile}
+      >
+        <View style={styles.foodProfileCardContent}>
+          <View style={[styles.foodProfileIcon, { backgroundColor: theme.colors.accentLight }]}>
+            <Ionicons name="analytics-outline" size={22} color={theme.colors.accent} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={[styles.foodProfileTitle, { color: theme.colors.text }]}>My Food Profile</Text>
+            <Text style={[styles.foodProfileSubtitle, { color: theme.colors.textMuted }]}>See your cooking persona & health insights</Text>
+          </View>
+          {loadingProfile
+            ? <ActivityIndicator size="small" color={theme.colors.textMuted} />
+            : <Ionicons name="chevron-forward" size={18} color={theme.colors.textMuted} />
+          }
+        </View>
+      </TouchableOpacity>
 
       <View style={[styles.card, { backgroundColor: theme.colors.card, borderColor: theme.colors.border }]}>
         <Text style={[styles.label, { color: theme.colors.textMuted }]}>Display name</Text>
@@ -283,6 +346,14 @@ export default function ProfilePreferencesScreen({ navigation }: Props) {
           <Text style={[styles.saveButtonText, { color: theme.colors.buttonPrimaryText }]}>Save Preferences</Text>
         )}
       </TouchableOpacity>
+
+      <TouchableOpacity
+        style={[styles.logoutButton, { borderColor: theme.colors.danger }]}
+        onPress={handleLogout}
+        activeOpacity={0.85}
+      >
+        <Text style={[styles.logoutButtonText, { color: theme.colors.danger }]}>Log Out</Text>
+      </TouchableOpacity>
     </ScrollView>
     </SafeAreaView>
   );
@@ -335,5 +406,35 @@ const styles = StyleSheet.create({
   },
   saveButtonDisabled: { opacity: 0.7 },
   saveButtonText: { fontWeight: "800", fontSize: 15 },
+  foodProfileCard: {
+    borderRadius: radii.lg,
+    padding: spacing.md,
+    marginTop: spacing.md + 2,
+    borderWidth: 1,
+  },
+  foodProfileCardContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.md,
+  },
+  foodProfileIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: radii.md,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  foodProfileTitle: { fontSize: 14, fontWeight: "700" },
+  foodProfileSubtitle: { fontSize: 12, marginTop: 2 },
+  logoutButton: {
+    marginTop: 12,
+    marginBottom: spacing.xl,
+    borderRadius: radii.lg,
+    paddingVertical: spacing.md + 2,
+    alignItems: "center",
+    borderWidth: 1.5,
+    backgroundColor: "transparent",
+  },
+  logoutButtonText: { fontWeight: "700", fontSize: 15 },
 });
 
