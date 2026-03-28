@@ -9,37 +9,42 @@ import {
   ActivityIndicator,
   Animated,
 } from "react-native";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
-import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { Ionicons } from "@expo/vector-icons";
 import { RootStackParamList } from "../navigation/AppNavigator";
 import { getUserInventory, InventoryItem } from "../services/api";
 import { useAppTheme } from "../theme/ThemeProvider";
 
 type Props = NativeStackScreenProps<RootStackParamList, "CookingComplete">;
 
+const CTA_COLOR = "#2D4A3E";
+
 export default function CookingCompleteScreen({ route, navigation }: Props) {
   const { theme } = useAppTheme();
   const { recipe, deducted, skipped } = route.params;
+  const insets = useSafeAreaInsets();
+
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [inventoryExpanded, setInventoryExpanded] = useState(false);
 
   const scaleAnim = useRef(new Animated.Value(0)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
+  const invChevron = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     loadInventory();
-
-    // Celebration animation
     Animated.sequence([
       Animated.spring(scaleAnim, {
         toValue: 1,
         tension: 50,
-        friction: 5,
+        friction: 6,
         useNativeDriver: true,
       }),
       Animated.timing(fadeAnim, {
         toValue: 1,
-        duration: 400,
+        duration: 350,
         useNativeDriver: true,
       }),
     ]).start();
@@ -48,139 +53,236 @@ export default function CookingCompleteScreen({ route, navigation }: Props) {
   async function loadInventory() {
     try {
       const res = await getUserInventory();
-      if (res.success) {
-        setInventory(res.items);
-      }
-    } catch (err) {
-      console.error("Failed to load inventory");
+      if (res.success) setInventory(res.items);
+    } catch {
+      // silent — inventory is non-critical here
     } finally {
       setLoading(false);
     }
   }
 
+  function toggleInventory() {
+    const next = !inventoryExpanded;
+    setInventoryExpanded(next);
+    Animated.timing(invChevron, {
+      toValue: next ? 1 : 0,
+      duration: 200,
+      useNativeDriver: true,
+    }).start();
+  }
+
+  const invRotate = invChevron.interpolate({
+    inputRange: [0, 1],
+    outputRange: ["0deg", "180deg"],
+  });
+
+  const remaining = inventory.filter((item) => item.quant > 0);
+
   return (
-    <ScrollView style={[styles.container, { backgroundColor: theme.colors.background }]} showsVerticalScrollIndicator={false}>
-      {/* Recipe Image */}
-      {recipe.image ? (
-        <Image source={{ uri: recipe.image }} style={[styles.recipeImage, { backgroundColor: theme.colors.border }]} resizeMode="cover" />
-      ) : (
-        <View style={[styles.recipeImage, styles.imagePlaceholder, { backgroundColor: theme.colors.border }]}>
-          <Ionicons name="restaurant" size={48} color={theme.colors.textMuted} />
-        </View>
-      )}
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.colors.background }]}>
+      {/* Header */}
+      <View style={styles.header}>
+        <View style={styles.headerSpacer} />
+        <Text style={[styles.headerTitle, { color: theme.colors.text }]}>Cooking Complete</Text>
+        <TouchableOpacity
+          style={[styles.closeButton, { backgroundColor: theme.colors.inputBg }]}
+          onPress={() => navigation.navigate("MainTabs")}
+          activeOpacity={0.7}
+        >
+          <Ionicons name="close" size={20} color={theme.colors.text} />
+        </TouchableOpacity>
+      </View>
 
-      {/* Success Message */}
-      <Animated.View
-        style={[
-          styles.successBox,
-          { backgroundColor: theme.colors.successLight },
-          { transform: [{ scale: scaleAnim }] },
-        ]}
-      >
-        <View style={styles.successIconContainer}>
-          <Ionicons name="checkmark-circle" size={56} color={theme.colors.success} />
-        </View>
-        <Text style={[styles.successTitle, { color: theme.colors.success }]}>Enjoy Your Meal!</Text>
-        <Text style={[styles.recipeName, { color: theme.colors.text }]}>{recipe.title}</Text>
-      </Animated.View>
-
-      <Animated.View style={{ opacity: fadeAnim }}>
-        {/* Deducted Ingredients */}
-        {deducted.length > 0 && (
-          <View style={[styles.section, { backgroundColor: theme.colors.card }]}>
-            <View style={styles.sectionHeader}>
-              <Ionicons name="checkmark-done" size={20} color={theme.colors.success} />
-              <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Ingredients Used</Text>
-            </View>
-            {deducted.map((item, idx) => (
-              <View key={idx} style={[styles.deductedItem, { borderBottomColor: theme.colors.divider }]}>
-                <View style={styles.itemLeft}>
-                  <MaterialCommunityIcons name="food-apple-outline" size={18} color={theme.colors.primary} />
-                  <Text style={[styles.itemName, { color: theme.colors.text }]}>{item.name}</Text>
-                </View>
-                <View style={styles.itemRight}>
-                  <Text style={[styles.itemPrev, { color: theme.colors.textMuted }]}>{item.previousQty}</Text>
-                  <Ionicons name="arrow-forward" size={14} color={theme.colors.textMuted} />
-                  <Text style={[styles.itemNew, { color: theme.colors.text }]}>{item.newQty}</Text>
-                </View>
-              </View>
-            ))}
-          </View>
-        )}
-
-        {/* Skipped Items */}
-        {skipped.length > 0 && (
-          <View style={[styles.section, { backgroundColor: theme.colors.card }]}>
-            <View style={styles.sectionHeader}>
-              <Ionicons name="information-circle-outline" size={20} color={theme.colors.textMuted} />
-              <Text style={[styles.sectionTitleMuted, { color: theme.colors.textMuted }]}>Skipped ({skipped.length})</Text>
-            </View>
-            <Text style={[styles.skippedText, { color: theme.colors.textMuted }]}>
-              {skipped.map((s) => s.name).join(", ")}
-            </Text>
-          </View>
-        )}
-
-        {/* Remaining Inventory */}
-        <View style={[styles.section, { backgroundColor: theme.colors.card }]}>
-          <View style={styles.sectionHeader}>
-            <MaterialCommunityIcons name="fridge-outline" size={20} color={theme.colors.primary} />
-            <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Remaining Inventory</Text>
-          </View>
-          {loading ? (
-            <View style={styles.loadingContainer}>
-              <ActivityIndicator color={theme.colors.primary} />
-            </View>
-          ) : inventory.filter((item) => item.quant > 0).length === 0 ? (
-            <View style={styles.emptyContainer}>
-              <Ionicons name="cube-outline" size={32} color={theme.colors.textMuted} />
-              <Text style={[styles.emptyText, { color: theme.colors.textMuted }]}>No items remaining</Text>
-            </View>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+        {/* Recipe Image */}
+        <View style={[styles.imageWrapper, { backgroundColor: theme.colors.border }]}>
+          {recipe.image ? (
+            <Image source={{ uri: recipe.image }} style={styles.image} resizeMode="cover" />
           ) : (
-            inventory
-              .filter((item) => item.quant > 0)
-              .map((item) => (
-                <View key={item.id} style={[styles.inventoryItem, { borderBottomColor: theme.colors.divider }]}>
-                  <Text style={[styles.inventoryName, { color: theme.colors.text }]}>{item.ingredientName}</Text>
-                  <View style={styles.inventoryQtyContainer}>
-                    <Text style={[styles.inventoryQty, { color: theme.colors.text }]}>{item.quant}</Text>
-                    <Text style={[styles.inventoryUnit, { color: theme.colors.textMuted }]}>{item.unit}</Text>
-                  </View>
-                </View>
-              ))
+            <View style={[styles.image, styles.imagePlaceholder]}>
+              <Ionicons name="restaurant" size={48} color={theme.colors.textMuted} />
+            </View>
           )}
         </View>
 
-        {/* Action Buttons */}
-        <View style={styles.buttonContainer}>
-          <TouchableOpacity
-            style={[styles.primaryButton, { backgroundColor: theme.colors.buttonPrimary, shadowColor: theme.colors.buttonPrimary }]}
-            onPress={() => navigation.navigate("MainTabs")}
-            activeOpacity={0.8}
-          >
-            <Ionicons name="camera" size={20} color="#fff" />
-            <Text style={styles.primaryButtonText}>Add More Ingredients</Text>
-          </TouchableOpacity>
+        {/* Success Hero */}
+        <Animated.View style={[styles.heroSection, { transform: [{ scale: scaleAnim }] }]}>
+          <View style={[styles.checkCircle, { backgroundColor: theme.colors.successLight }]}>
+            <Ionicons name="checkmark" size={32} color={theme.colors.success} />
+          </View>
+          <Text style={[styles.heroTitle, { color: theme.colors.text }]}>Enjoy your meal!</Text>
+          <Text style={[styles.heroSubtitle, { color: theme.colors.textSecondary }]} numberOfLines={2}>
+            {recipe.title}
+          </Text>
+        </Animated.View>
 
-          <TouchableOpacity
-            style={[styles.secondaryButton, { backgroundColor: theme.colors.card, borderColor: theme.colors.buttonSecondaryBorder }]}
-            onPress={() => navigation.navigate("MainTabs")}
-            activeOpacity={0.8}
-          >
-            <Ionicons name="home-outline" size={20} color={theme.colors.textSecondary} />
-            <Text style={[styles.secondaryButtonText, { color: theme.colors.textSecondary }]}>Back to Home</Text>
-          </TouchableOpacity>
-        </View>
-      </Animated.View>
-    </ScrollView>
+        <Animated.View style={{ opacity: fadeAnim }}>
+          {/* Ingredients Used */}
+          {deducted.length > 0 && (
+            <View style={[styles.section, { borderTopColor: theme.colors.divider }]}>
+              <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Ingredients Used</Text>
+              {deducted.map((item, idx) => (
+                <View
+                  key={idx}
+                  style={[
+                    styles.row,
+                    { borderBottomColor: theme.colors.divider },
+                    idx === deducted.length - 1 && styles.rowLast,
+                  ]}
+                >
+                  <View style={[styles.dot, { backgroundColor: theme.colors.success }]} />
+                  <Text style={[styles.rowLabel, { color: theme.colors.text }]}>{item.name}</Text>
+                  <View style={styles.qtyChange}>
+                    <Text style={[styles.qtyPrev, { color: theme.colors.textMuted }]}>
+                      {item.previousQty}
+                    </Text>
+                    <Ionicons name="arrow-forward" size={13} color={theme.colors.textMuted} />
+                    <Text style={[styles.qtyNew, { color: theme.colors.text }]}>{item.newQty}</Text>
+                  </View>
+                </View>
+              ))}
+            </View>
+          )}
+
+          {/* Skipped */}
+          {skipped.length > 0 && (
+            <View style={[styles.section, { borderTopColor: theme.colors.divider }]}>
+              <Text style={[styles.sectionTitle, { color: theme.colors.textMuted }]}>
+                Skipped ({skipped.length})
+              </Text>
+              <Text style={[styles.skippedText, { color: theme.colors.textMuted }]}>
+                {skipped.map((s) => s.name).join(", ")}
+              </Text>
+            </View>
+          )}
+
+          {/* Remaining Inventory — collapsible */}
+          <View style={[styles.section, { borderTopColor: theme.colors.divider }]}>
+            <TouchableOpacity
+              style={styles.accordionRow}
+              onPress={toggleInventory}
+              activeOpacity={0.7}
+            >
+              <Text style={[styles.sectionTitle, { color: theme.colors.text, marginBottom: 0 }]}>
+                Remaining Inventory
+                {!loading && (
+                  <Text style={[styles.sectionCount, { color: theme.colors.textMuted }]}>
+                    {"  "}{remaining.length} items
+                  </Text>
+                )}
+              </Text>
+              <Animated.View style={{ transform: [{ rotate: invRotate }] }}>
+                <Ionicons name="chevron-down" size={22} color={theme.colors.textMuted} />
+              </Animated.View>
+            </TouchableOpacity>
+
+            {inventoryExpanded && (
+              <View style={styles.accordionContent}>
+                {loading ? (
+                  <View style={styles.centeredPad}>
+                    <ActivityIndicator color={theme.colors.primary} />
+                  </View>
+                ) : remaining.length === 0 ? (
+                  <View style={styles.centeredPad}>
+                    <Ionicons name="cube-outline" size={28} color={theme.colors.textMuted} />
+                    <Text style={[styles.emptyText, { color: theme.colors.textMuted }]}>
+                      No items remaining
+                    </Text>
+                  </View>
+                ) : (
+                  remaining.map((item) => (
+                    <View
+                      key={item.id}
+                      style={[styles.row, { borderBottomColor: theme.colors.divider }]}
+                    >
+                      <View style={[styles.dot, { backgroundColor: theme.colors.accent }]} />
+                      <Text style={[styles.rowLabel, { color: theme.colors.text, flex: 1 }]}>
+                        {item.ingredientName}
+                      </Text>
+                      <Text style={[styles.qtyNew, { color: theme.colors.text }]}>
+                        {item.quant}
+                        <Text style={[styles.unit, { color: theme.colors.textMuted }]}>
+                          {" "}{item.unit}
+                        </Text>
+                      </Text>
+                    </View>
+                  ))
+                )}
+              </View>
+            )}
+          </View>
+        </Animated.View>
+
+        <View style={{ height: 150 }} />
+      </ScrollView>
+
+      {/* Floating CTAs */}
+      <View style={[styles.ctaWrapper, { backgroundColor: theme.colors.background, paddingBottom: Math.max(insets.bottom, 20) }]}>
+        <TouchableOpacity
+          style={styles.primaryBtn}
+          onPress={() => (navigation as any).navigate("MainTabs", { screen: "Capture" })}
+          activeOpacity={0.85}
+        >
+          <Ionicons name="camera-outline" size={20} color="#fff" />
+          <Text style={styles.primaryBtnText}>Add More Ingredients</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.secondaryBtn, { borderColor: theme.colors.buttonSecondaryBorder }]}
+          onPress={() => navigation.navigate("MainTabs")}
+          activeOpacity={0.8}
+        >
+          <Ionicons name="home-outline" size={20} color={theme.colors.textSecondary} />
+          <Text style={[styles.secondaryBtnText, { color: theme.colors.textSecondary }]}>
+            Back to Home
+          </Text>
+        </TouchableOpacity>
+      </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  safeArea: {
     flex: 1,
   },
-  recipeImage: {
+
+  // ── Header ───────────────────────────────────────────────────────────────
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+  },
+  headerSpacer: {
+    width: 40,
+  },
+  headerTitle: {
+    fontSize: 17,
+    fontWeight: "600",
+  },
+  closeButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+
+  // ── Scroll ────────────────────────────────────────────────────────────────
+  scrollContent: {
+    paddingHorizontal: 20,
+    paddingTop: 4,
+  },
+
+  // ── Image ─────────────────────────────────────────────────────────────────
+  imageWrapper: {
+    borderRadius: 14,
+    overflow: "hidden",
+    marginBottom: 22,
+  },
+  image: {
     width: "100%",
     height: 220,
   },
@@ -188,152 +290,145 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  successBox: {
-    paddingVertical: 28,
-    paddingHorizontal: 24,
+
+  // ── Success hero ──────────────────────────────────────────────────────────
+  heroSection: {
     alignItems: "center",
-    marginHorizontal: 16,
-    marginTop: -40,
-    borderRadius: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 5,
+    marginBottom: 8,
   },
-  successIconContainer: {
-    marginBottom: 12,
+  checkCircle: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 14,
   },
-  successTitle: {
-    fontSize: 24,
+  heroTitle: {
+    fontSize: 26,
     fontWeight: "700",
     marginBottom: 6,
   },
-  recipeName: {
+  heroSubtitle: {
     fontSize: 15,
+    lineHeight: 22,
     textAlign: "center",
   },
+
+  // ── Sections ──────────────────────────────────────────────────────────────
   section: {
-    marginTop: 16,
-    marginHorizontal: 16,
-    padding: 16,
-    borderRadius: 14,
-  },
-  sectionHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    marginBottom: 14,
+    paddingVertical: 18,
+    borderTopWidth: 1,
   },
   sectionTitle: {
-    fontSize: 15,
-    fontWeight: "600",
+    fontSize: 18,
+    fontWeight: "700",
+    marginBottom: 14,
   },
-  sectionTitleMuted: {
+  sectionCount: {
     fontSize: 14,
-    fontWeight: "600",
+    fontWeight: "500",
   },
-  deductedItem: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-  },
-  itemLeft: {
+
+  // ── Rows ──────────────────────────────────────────────────────────────────
+  row: {
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
-    flex: 1,
-  },
-  itemName: {
-    fontSize: 14,
-    textTransform: "capitalize",
-  },
-  itemRight: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-  },
-  itemPrev: {
-    fontSize: 14,
-  },
-  itemNew: {
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  skippedText: {
-    fontSize: 13,
-    lineHeight: 20,
-  },
-  loadingContainer: {
-    paddingVertical: 24,
-    alignItems: "center",
-  },
-  emptyContainer: {
-    alignItems: "center",
-    paddingVertical: 24,
-  },
-  emptyText: {
-    fontSize: 14,
-    marginTop: 8,
-  },
-  inventoryItem: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
     paddingVertical: 10,
     borderBottomWidth: 1,
   },
-  inventoryName: {
-    fontSize: 14,
-    textTransform: "capitalize",
+  rowLast: {
+    borderBottomWidth: 0,
+  },
+  dot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
+  rowLabel: {
     flex: 1,
+    fontSize: 15,
+    textTransform: "capitalize",
   },
-  inventoryQtyContainer: {
+  qtyChange: {
     flexDirection: "row",
-    alignItems: "baseline",
-    gap: 4,
+    alignItems: "center",
+    gap: 5,
   },
-  inventoryQty: {
+  qtyPrev: {
+    fontSize: 14,
+  },
+  qtyNew: {
+    fontSize: 15,
+    fontWeight: "600",
+  },
+  unit: {
+    fontSize: 13,
+    fontWeight: "400",
+  },
+  skippedText: {
+    fontSize: 15,
+    lineHeight: 23,
+  },
+
+  // ── Accordion ─────────────────────────────────────────────────────────────
+  accordionRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  accordionContent: {
+    marginTop: 14,
+  },
+  centeredPad: {
+    alignItems: "center",
+    paddingVertical: 20,
+    gap: 8,
+  },
+  emptyText: {
+    fontSize: 14,
+  },
+
+  // ── CTAs ──────────────────────────────────────────────────────────────────
+  ctaWrapper: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    paddingHorizontal: 20,
+    paddingTop: 12,
+    gap: 10,
+  },
+  primaryBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    backgroundColor: CTA_COLOR,
+    paddingVertical: 17,
+    borderRadius: 999,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.18,
+    shadowRadius: 12,
+    elevation: 6,
+  },
+  primaryBtnText: {
+    color: "#fff",
     fontSize: 16,
     fontWeight: "700",
   },
-  inventoryUnit: {
-    fontSize: 12,
-  },
-  buttonContainer: {
-    padding: 16,
-    gap: 12,
-    marginBottom: 32,
-  },
-  primaryButton: {
+  secondaryBtn: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
-    paddingVertical: 16,
-    borderRadius: 14,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  primaryButtonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  secondaryButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-    paddingVertical: 16,
-    borderRadius: 14,
+    paddingVertical: 17,
+    borderRadius: 999,
     borderWidth: 1,
   },
-  secondaryButtonText: {
+  secondaryBtnText: {
     fontSize: 16,
     fontWeight: "600",
   },

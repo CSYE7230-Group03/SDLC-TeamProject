@@ -129,37 +129,56 @@ export default function AppNavigator() {
       <Stack.Screen
         name="IngredientReview"
         component={IngredientReviewScreen}
-        options={{ headerShown: true, title: "Review Ingredients" }}
+        options={{
+          headerShown: true,
+          title: "Review Ingredients",
+          headerStyle: { backgroundColor: theme.colors.background },
+          headerTintColor: theme.colors.text,
+          headerShadowVisible: false,
+        }}
       />
       <Stack.Screen
         name="RecipeGeneration"
         component={RecipeGenerationScreen}
-        options={{ headerShown: true, title: "Generated Recipes" }}
+        options={{
+          headerShown: true,
+          title: "Generated Recipes",
+          headerStyle: { backgroundColor: theme.colors.background },
+          headerTintColor: theme.colors.text,
+          headerShadowVisible: false,
+        }}
       />
       <Stack.Screen
         name="RecipeDetail"
         component={RecipeDetailScreen}
-        options={{ headerShown: true, title: "Recipe Details" }}
+        options={{ headerShown: false }}
       />
       <Stack.Screen
         name="ProfileDetail"
         component={ProfileDetailScreen}
-        options={{ headerShown: true, title: "Your Fridge Profile" }}
+        options={{
+          headerShown: true,
+          title: "Your Fridge Profile",
+          headerStyle: { backgroundColor: theme.colors.background },
+          headerTintColor: theme.colors.text,
+          headerShadowVisible: false,
+        }}
       />
       <Stack.Screen
         name="CookingComplete"
         component={CookingCompleteScreen}
-        options={{
-          headerShown: true,
-          title: "Cooking Complete",
-          headerLeft: () => null,
-          headerBackVisible: false,
-        }}
+        options={{ headerShown: false }}
       />
       <Stack.Screen
         name="GroceryList"
         component={GroceryListScreen}
-        options={{ headerShown: true, title: "Grocery List" }}
+        options={{
+          headerShown: true,
+          title: "Grocery List",
+          headerStyle: { backgroundColor: theme.colors.background },
+          headerTintColor: theme.colors.text,
+          headerShadowVisible: false,
+        }}
       />
     </Stack.Navigator>
   );

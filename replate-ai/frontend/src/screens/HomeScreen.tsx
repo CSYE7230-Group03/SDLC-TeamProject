@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import {
   View,
   Text,
@@ -48,6 +48,13 @@ const TEXT_SECONDARY = "#666666";
 const REC_CARD_WIDTH = 260;
 const WEEK_CARD_WIDTH = 180;
 
+const PANTRY_STAPLES = [
+  "salt", "pepper", "water", "oil", "olive oil", "cooking oil",
+  "vegetable oil", "butter", "garlic", "onion", "soy sauce", "ketchup",
+  "mayonnaise", "mustard", "vinegar", "sugar", "honey", "lemon juice",
+  "flour", "rice", "pasta", "spaghetti",
+];
+
 const CACHE_KEY_RECOMMENDATIONS = "replate_cached_recommendations";
 const CACHE_KEY_INVENTORY_COUNT = "replate_cached_inventory_count";
 
@@ -72,58 +79,32 @@ export default function HomeScreen({ navigation }: Props) {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(30)).current;
 
-  // ─── Pantry staples ──────────────────────────────────────────────────────
-  const PANTRY_STAPLES = [
-    "salt",
-    "pepper",
-    "water",
-    "oil",
-    "olive oil",
-    "cooking oil",
-    "vegetable oil",
-    "butter",
-    "garlic",
-    "onion",
-    "soy sauce",
-    "ketchup",
-    "mayonnaise",
-    "mustard",
-    "vinegar",
-    "sugar",
-    "honey",
-    "lemon juice",
-    "flour",
-    "rice",
-    "pasta",
-    "spaghetti",
-  ];
-
   // ─── Existing logic (unchanged) ──────────────────────────────────────────
-  function calculateMatchRate(recipe: Recipe): number {
-    if (!recipe.ingredients || recipe.ingredients.length === 0) return 0;
-
-    const availableSet = new Set([
+  const availableSet = useMemo(() => {
+    return new Set([
       ...inventoryIngredients.map((i) => i.toLowerCase()),
       ...PANTRY_STAPLES,
     ]);
+  }, [inventoryIngredients]);
 
-    let matched = 0;
-    for (const ing of recipe.ingredients) {
-      const ingName = ing.name.toLowerCase();
-      const isAvailable = Array.from(availableSet).some(
-        (avail) => ingName.includes(avail) || avail.includes(ingName),
-      );
-      if (isAvailable) matched++;
+  const sortedRecs = useMemo(() => {
+    function calculateMatchRate(recipe: Recipe): number {
+      if (!recipe.ingredients || recipe.ingredients.length === 0) return 0;
+      let matched = 0;
+      for (const ing of recipe.ingredients) {
+        const ingName = ing.name.toLowerCase();
+        let found = false;
+        for (const avail of availableSet) {
+          if (ingName.includes(avail) || avail.includes(ingName)) { found = true; break; }
+        }
+        if (found) matched++;
+      }
+      return Math.round((matched / recipe.ingredients.length) * 100);
     }
-
-    return Math.round((matched / recipe.ingredients.length) * 100);
-  }
-
-  function getSortedRecommendations(): (Recipe & { matchRate: number })[] {
     return recommendations
       .map((recipe) => ({ ...recipe, matchRate: calculateMatchRate(recipe) }))
       .sort((a, b) => b.matchRate - a.matchRate);
-  }
+  }, [recommendations, availableSet]);
 
   async function loadProfileAnalysis() {
     if (inventoryCount === 0) return;
@@ -166,9 +147,10 @@ export default function HomeScreen({ navigation }: Props) {
     }
   }, [inventoryCount]);
 
+  const mountedRef = useRef(false);
   useFocusEffect(
     useCallback(() => {
-      loadCachedData();
+      if (!mountedRef.current) { mountedRef.current = true; return; }
       loadInventoryCount();
     }, []),
   );
@@ -265,7 +247,7 @@ export default function HomeScreen({ navigation }: Props) {
   }
 
   // ─── Render helpers ──────────────────────────────────────────────────────
-  function renderRecommendationCard({
+  const renderRecommendationCard = useCallback(function ({
     item,
   }: {
     item: Recipe & { matchRate: number };
@@ -322,9 +304,9 @@ export default function HomeScreen({ navigation }: Props) {
         </View>
       </TouchableOpacity>
     );
-  }
+  }, [rootNavigation]);
 
-  function renderWeekCard(item: Recipe & { matchRate: number }, index: number) {
+  const renderWeekCard = useCallback(function (item: Recipe & { matchRate: number }, index: number) {
     return (
       <TouchableOpacity
         key={item.id.toString()}
@@ -357,10 +339,9 @@ export default function HomeScreen({ navigation }: Props) {
         </View>
       </TouchableOpacity>
     );
-  }
+  }, [rootNavigation]);
 
-  const sortedRecs = getSortedRecommendations();
-  const weekRecipes = sortedRecs.slice(0, 4);
+  const weekRecipes = useMemo(() => sortedRecs.slice(0, 4), [sortedRecs]);
 
   // ─── Render ───────────────────────────────────────────────────────────────
   return (
@@ -456,7 +437,6 @@ export default function HomeScreen({ navigation }: Props) {
                 onPress={() => navigation.navigate("Capture")}
                 activeOpacity={0.85}
               >
-
                 <Ionicons name="camera-outline" size={16} color={CARD_WHITE} />
                 <Text style={styles.scanButtonText}>Scan Ingredients</Text>
               </TouchableOpacity>
@@ -684,47 +664,6 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: TEXT_SECONDARY,
     marginTop: 3,
-  },
-
-  // Quick actions grid
-  menuGrid: {
-    flexDirection: "row",
-    paddingHorizontal: spacing.xl,
-    gap: spacing.md,
-    flexWrap: "wrap",
-  },
-  menuCard: {
-    width: "47%",
-    backgroundColor: CARD_WHITE,
-    borderRadius: radii.lg,
-    padding: spacing.md,
-    borderWidth: 1,
-    borderColor: "#E0E0E0",
-  },
-  menuCardRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.sm,
-  },
-  menuCardText: {
-    flex: 1,
-  },
-  menuIconBg: {
-    width: 36,
-    height: 36,
-    borderRadius: radii.md,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  menuTitle: {
-    fontSize: 13,
-    fontWeight: "700",
-    color: TEXT_PRIMARY,
-  },
-  menuDesc: {
-    fontSize: 11,
-    color: TEXT_SECONDARY,
-    marginTop: 2,
   },
 
   // Loading / Empty states

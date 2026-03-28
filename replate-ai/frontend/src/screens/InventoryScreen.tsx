@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import {
   View,
   Text,
@@ -20,6 +20,7 @@ import { useAppTheme } from "../theme/ThemeProvider";
 import { spacing, radii } from "../theme/theme";
 
 const LAST_INGREDIENT_IMAGE_KEY = "replate_last_ingredient_image";
+const CTA_COLOR = "#2D4A3E";
 
 function formatTimeAgo(timestamp: number): string {
   const diff = Date.now() - timestamp;
@@ -121,7 +122,7 @@ export default function InventoryScreen({ navigation }: Props) {
     loadInventory();
   }, []);
 
-  function renderItem({ item }: { item: InventoryItem }) {
+  const renderItem = useCallback(function ({ item }: { item: InventoryItem }) {
     const isLow = item.quant <= 1 && item.quant > 0;
     const isEmpty = item.quant === 0;
     const iconInfo = getIngredientIcon(item.ingredientName);
@@ -173,7 +174,10 @@ export default function InventoryScreen({ navigation }: Props) {
         </View>
       </Animated.View>
     );
-  }
+  }, [theme, fadeAnim]);
+
+  const activeItems = useMemo(() => items.filter((i) => i.quant > 0), [items]);
+  const emptyItems = useMemo(() => items.filter((i) => i.quant === 0), [items]);
 
   if (loading) {
     return (
@@ -185,9 +189,6 @@ export default function InventoryScreen({ navigation }: Props) {
       </SafeAreaView>
     );
   }
-
-  const activeItems = items.filter((i) => i.quant > 0);
-  const emptyItems = items.filter((i) => i.quant === 0);
 
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.colors.background }]} edges={["top"]}>
@@ -215,11 +216,11 @@ export default function InventoryScreen({ navigation }: Props) {
               Photograph your ingredients to start tracking what you have.
             </Text>
             <TouchableOpacity
-              style={[styles.addButton, { backgroundColor: theme.colors.buttonPrimary }]}
+              style={styles.addButton}
               onPress={() => navigation.navigate("Capture")}
             >
-              <Ionicons name="camera" size={20} color={theme.colors.buttonPrimaryText} />
-              <Text style={[styles.addButtonText, { color: theme.colors.buttonPrimaryText }]}>Scan Ingredients</Text>
+              <Ionicons name="camera" size={20} color="#fff" />
+              <Text style={styles.addButtonText}>Scan Ingredients</Text>
             </TouchableOpacity>
           </View>
         ) : (
@@ -227,7 +228,7 @@ export default function InventoryScreen({ navigation }: Props) {
             data={[...activeItems, ...emptyItems]}
             keyExtractor={(item) => item.id}
             renderItem={renderItem}
-            contentContainerStyle={[styles.list, { paddingBottom: 16 }]}
+            contentContainerStyle={styles.list}
             showsVerticalScrollIndicator={false}
             ListHeaderComponent={
               lastImage ? (
@@ -260,12 +261,12 @@ export default function InventoryScreen({ navigation }: Props) {
         {/* Bottom Action — sits above the tab bar */}
         <View style={[styles.bottomAction, { backgroundColor: theme.colors.background, borderTopColor: theme.colors.border, paddingBottom: tabBarHeight }]}>
           <TouchableOpacity
-            style={[styles.captureButton, { backgroundColor: theme.colors.buttonPrimary }]}
+            style={styles.captureButton}
             onPress={() => navigation.navigate("Capture")}
-            activeOpacity={0.8}
+            activeOpacity={0.85}
           >
-            <Ionicons name="camera" size={20} color={theme.colors.buttonPrimaryText} />
-            <Text style={[styles.captureButtonText, { color: theme.colors.buttonPrimaryText }]}>Scan More Ingredients</Text>
+            <Ionicons name="camera" size={20} color="#fff" />
+            <Text style={styles.captureButtonText}>Scan More Ingredients</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -388,11 +389,13 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     paddingHorizontal: spacing.xxl,
     paddingVertical: spacing.md + 2,
-    borderRadius: radii.lg,
+    borderRadius: 999,
+    backgroundColor: CTA_COLOR,
   },
   addButtonText: {
     fontSize: 15,
-    fontWeight: "600",
+    fontWeight: "700",
+    color: "#fff",
   },
   bottomAction: {
     padding: spacing.lg,
@@ -404,11 +407,18 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: spacing.sm,
     paddingVertical: spacing.lg,
-    borderRadius: radii.lg,
+    borderRadius: 999,
+    backgroundColor: CTA_COLOR,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 10,
+    elevation: 5,
   },
   captureButtonText: {
     fontSize: 16,
-    fontWeight: "600",
+    fontWeight: "700",
+    color: "#fff",
   },
   lastImageContainer: {
     borderRadius: radii.lg,
