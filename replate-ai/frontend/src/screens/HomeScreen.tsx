@@ -37,8 +37,6 @@ const CARD_WIDTH = SCREEN_WIDTH - 64;
 const CACHE_KEY_RECOMMENDATIONS = "replate_cached_recommendations";
 const CACHE_KEY_INVENTORY_COUNT = "replate_cached_inventory_count";
 
-// Colors — static values only; dynamic theme colors are applied inline via useAppTheme()
-const ACCENT = "#D4A017";
 
 export default function HomeScreen({ navigation }: Props) {
   const { theme } = useAppTheme();
@@ -230,12 +228,6 @@ export default function HomeScreen({ navigation }: Props) {
           </View>
         )}
 
-        {/* Match Rate Badge */}
-        <View style={[styles.matchBadge, { backgroundColor: matchColor }]}>
-          <Ionicons name="checkmark-circle" size={12} color="#fff" />
-          <Text style={styles.matchBadgeText}>{item.matchRate}%</Text>
-        </View>
-        
         <View style={styles.recipeOverlay}>
           <Text style={styles.recipeTitle} numberOfLines={2}>{item.title}</Text>
           <View style={styles.recipeMetaRow}>
@@ -328,7 +320,6 @@ export default function HomeScreen({ navigation }: Props) {
         {/* Recommended Recipes */}
         <Animated.View style={[styles.section, { opacity: fadeAnim }]}>
           <View style={styles.sectionHeader}>
-            <Ionicons name="sparkles" size={20} color={theme.colors.text} />
             <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Recommended for You</Text>
           </View>
 
@@ -370,7 +361,6 @@ export default function HomeScreen({ navigation }: Props) {
         {/* Quick Actions */}
         <Animated.View style={[styles.section, { opacity: fadeAnim }]}>
           <View style={styles.sectionHeader}>
-            <Ionicons name="flash" size={20} color={theme.colors.text} />
             <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Quick Actions</Text>
           </View>
 
@@ -534,9 +524,6 @@ const styles = StyleSheet.create({
     marginTop: spacing.xxl,
   },
   sectionHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.sm,
     paddingHorizontal: spacing.xl,
     marginBottom: spacing.md + 2,
   },
@@ -589,22 +576,6 @@ const styles = StyleSheet.create({
   recipeTime: {
     fontSize: 12,
     color: "#ddd",
-  },
-  matchBadge: {
-    position: "absolute",
-    top: spacing.md,
-    right: spacing.md,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.xs,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-    borderRadius: radii.md,
-  },
-  matchBadgeText: {
-    fontSize: 12,
-    fontWeight: "700",
-    color: "#fff",
   },
   matchIndicator: {
     paddingHorizontal: spacing.sm,

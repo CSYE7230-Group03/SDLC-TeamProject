@@ -4,5 +4,9 @@
     "jsx": "react-jsx",
     "strict": true,
     "skipLibCheck": true
-  }
+  },
+  "exclude": [
+    "node_modules",
+    "__tests__"
+  ]
 }

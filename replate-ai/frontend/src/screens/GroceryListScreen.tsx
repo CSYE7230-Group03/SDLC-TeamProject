@@ -132,7 +132,7 @@ export default function GroceryListScreen({ route, navigation }: Props) {
           accessibilityState={{ checked: available }}
           accessibilityLabel={`${item.name}, ${available ? "available at home" : "not available"}`}
         >
-          {available && <Text style={styles.checkmark}>✓</Text>}
+          {available && <Text style={[styles.checkmark, { color: theme.colors.background }]}>✓</Text>}
         </TouchableOpacity>
 
         <View style={styles.itemInfo}>
@@ -143,12 +143,6 @@ export default function GroceryListScreen({ route, navigation }: Props) {
             {item.amount} {item.unit}
           </Text>
         </View>
-
-        {available && (
-          <View style={[styles.atHomeBadge, { backgroundColor: theme.colors.successLight }]}>
-            <Text style={[styles.atHomeBadgeText, { color: theme.colors.success }]}>At home</Text>
-          </View>
-        )}
       </View>
     );
   }
@@ -189,7 +183,6 @@ export default function GroceryListScreen({ route, navigation }: Props) {
         keyExtractor={(item) => item.id}
         renderItem={renderItem}
         contentContainerStyle={styles.listContent}
-        ItemSeparatorComponent={() => <View style={styles.separator} />}
       />
 
       <View style={[styles.footer, { backgroundColor: theme.colors.card, borderTopColor: theme.colors.border }]}>
@@ -263,9 +256,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     marginTop: spacing.sm,
   },
-  separator: {
-    height: 0,
-  },
   checkbox: {
     width: 26,
     height: 26,
@@ -276,7 +266,6 @@ const styles = StyleSheet.create({
     marginRight: spacing.md,
   },
   checkmark: {
-    color: "#fff",
     fontSize: 14,
     fontWeight: "bold",
     lineHeight: 16,
@@ -291,16 +280,6 @@ const styles = StyleSheet.create({
   },
   itemAmount: {
     fontSize: 13,
-  },
-  atHomeBadge: {
-    borderRadius: radii.sm,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 3,
-    marginLeft: spacing.sm,
-  },
-  atHomeBadgeText: {
-    fontSize: 12,
-    fontWeight: "600",
   },
   footer: {
     padding: spacing.lg,

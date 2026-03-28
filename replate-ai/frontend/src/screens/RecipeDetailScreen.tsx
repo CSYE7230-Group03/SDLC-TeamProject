@@ -13,22 +13,14 @@ import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { RootStackParamList } from "../navigation/AppNavigator";
 import { markRecipeAsCooked } from "../services/api";
+import { useAppTheme } from "../theme/ThemeProvider";
 
 type Props = NativeStackScreenProps<RootStackParamList, "RecipeDetail">;
 
-// Colors
-const PRIMARY = "#1A1A1A";
-const BG = "#FAFAF8";
-const CARD_BG = "#FFFFFF";
-const TEXT_DARK = "#1A1A1A";
-const TEXT_MID = "#555555";
-const TEXT_LIGHT = "#999999";
-const ACCENT = "#D4A017";
-const BORDER = "#F0EFED";
-
 export default function RecipeDetailScreen({ route, navigation }: Props) {
+  const { theme } = useAppTheme();
   const { recipe } = route.params;
-  
+
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(30)).current;
 
@@ -70,20 +62,21 @@ export default function RecipeDetailScreen({ route, navigation }: Props) {
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Recipe Image */}
         {recipe.image ? (
-          <Image source={{ uri: recipe.image }} style={styles.image} resizeMode="cover" />
+          <Image source={{ uri: recipe.image }} style={[styles.image, { backgroundColor: theme.colors.border }]} resizeMode="cover" />
         ) : (
-          <View style={[styles.image, styles.imagePlaceholder]}>
-            <Ionicons name="restaurant" size={48} color={TEXT_LIGHT} />
+          <View style={[styles.image, styles.imagePlaceholder, { backgroundColor: theme.colors.border }]}>
+            <Ionicons name="restaurant" size={48} color={theme.colors.textMuted} />
           </View>
         )}
 
         <Animated.View
           style={[
             styles.content,
+            { backgroundColor: theme.colors.card },
             {
               opacity: fadeAnim,
               transform: [{ translateY: slideAnim }],
@@ -91,20 +84,20 @@ export default function RecipeDetailScreen({ route, navigation }: Props) {
           ]}
         >
           {/* Title */}
-          <Text style={styles.title}>{recipe.title}</Text>
+          <Text style={[styles.title, { color: theme.colors.text }]}>{recipe.title}</Text>
 
           {/* Meta Info */}
           <View style={styles.metaRow}>
             {recipe.readyInMinutes && (
-              <View style={styles.metaChip}>
-                <Ionicons name="time-outline" size={18} color={PRIMARY} />
-                <Text style={styles.metaText}>{recipe.readyInMinutes} min</Text>
+              <View style={[styles.metaChip, { backgroundColor: theme.colors.inputBg }]}>
+                <Ionicons name="time-outline" size={18} color={theme.colors.primary} />
+                <Text style={[styles.metaText, { color: theme.colors.text }]}>{recipe.readyInMinutes} min</Text>
               </View>
             )}
             {recipe.servings && (
-              <View style={styles.metaChip}>
-                <Ionicons name="people-outline" size={18} color={PRIMARY} />
-                <Text style={styles.metaText}>{recipe.servings} servings</Text>
+              <View style={[styles.metaChip, { backgroundColor: theme.colors.inputBg }]}>
+                <Ionicons name="people-outline" size={18} color={theme.colors.primary} />
+                <Text style={[styles.metaText, { color: theme.colors.text }]}>{recipe.servings} servings</Text>
               </View>
             )}
           </View>
@@ -113,13 +106,13 @@ export default function RecipeDetailScreen({ route, navigation }: Props) {
           {recipe.ingredients && recipe.ingredients.length > 0 && (
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
-                <MaterialCommunityIcons name="food-apple-outline" size={20} color={PRIMARY} />
-                <Text style={styles.sectionTitle}>Ingredients</Text>
+                <MaterialCommunityIcons name="food-apple-outline" size={20} color={theme.colors.primary} />
+                <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Ingredients</Text>
               </View>
               {recipe.ingredients.map((ing, idx) => (
-                <View key={idx} style={styles.ingredientRow}>
-                  <View style={styles.ingredientDot} />
-                  <Text style={styles.ingredientText}>
+                <View key={idx} style={[styles.ingredientRow, { borderBottomColor: theme.colors.border }]}>
+                  <View style={[styles.ingredientDot, { backgroundColor: theme.colors.accent }]} />
+                  <Text style={[styles.ingredientText, { color: theme.colors.textSecondary }]}>
                     {ing.name}
                     {ing.amount ? ` — ${ing.amount}${ing.unit ? " " + ing.unit : ""}` : ""}
                   </Text>
@@ -132,15 +125,15 @@ export default function RecipeDetailScreen({ route, navigation }: Props) {
           {recipe.instructions && recipe.instructions.length > 0 && (
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
-                <Ionicons name="list" size={20} color={PRIMARY} />
-                <Text style={styles.sectionTitle}>Instructions</Text>
+                <Ionicons name="list" size={20} color={theme.colors.primary} />
+                <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Instructions</Text>
               </View>
               {recipe.instructions.map((step, idx) => (
                 <View key={idx} style={styles.stepRow}>
-                  <View style={styles.stepNumber}>
+                  <View style={[styles.stepNumber, { backgroundColor: theme.colors.buttonPrimary }]}>
                     <Text style={styles.stepNumberText}>{idx + 1}</Text>
                   </View>
-                  <Text style={styles.stepText}>{step}</Text>
+                  <Text style={[styles.stepText, { color: theme.colors.textSecondary }]}>{step}</Text>
                 </View>
               ))}
             </View>
@@ -151,9 +144,9 @@ export default function RecipeDetailScreen({ route, navigation }: Props) {
       </ScrollView>
 
       {/* Bottom Action */}
-      <View style={styles.bottomAction}>
+      <View style={[styles.bottomAction, { backgroundColor: theme.colors.card, borderTopColor: theme.colors.border }]}>
         <TouchableOpacity
-          style={styles.cookButton}
+          style={[styles.cookButton, { backgroundColor: theme.colors.buttonPrimary, shadowColor: theme.colors.buttonPrimary }]}
           onPress={handleStartCooking}
           activeOpacity={0.8}
         >
@@ -168,12 +161,10 @@ export default function RecipeDetailScreen({ route, navigation }: Props) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: BG,
   },
   image: {
     width: "100%",
     height: 280,
-    backgroundColor: "#e8e8e8",
     borderBottomLeftRadius: 24,
     borderBottomRightRadius: 24,
   },
@@ -182,7 +173,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   content: {
-    backgroundColor: CARD_BG,
     marginTop: -24,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
@@ -193,7 +183,6 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: "700",
-    color: TEXT_DARK,
     marginBottom: 16,
     lineHeight: 30,
   },
@@ -206,14 +195,12 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
-    backgroundColor: "#F5F5F3",
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 8,
   },
   metaText: {
     fontSize: 14,
-    color: TEXT_DARK,
     fontWeight: "500",
   },
   section: {
@@ -228,7 +215,6 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 17,
     fontWeight: "600",
-    color: TEXT_DARK,
   },
   ingredientRow: {
     flexDirection: "row",
@@ -236,17 +222,14 @@ const styles = StyleSheet.create({
     gap: 12,
     paddingVertical: 8,
     borderBottomWidth: 1,
-    borderBottomColor: BORDER,
   },
   ingredientDot: {
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: ACCENT,
   },
   ingredientText: {
     fontSize: 15,
-    color: TEXT_MID,
     flex: 1,
   },
   stepRow: {
@@ -258,7 +241,6 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: PRIMARY,
     justifyContent: "center",
     alignItems: "center",
   },
@@ -270,7 +252,6 @@ const styles = StyleSheet.create({
   stepText: {
     flex: 1,
     fontSize: 15,
-    color: TEXT_MID,
     lineHeight: 22,
   },
   bottomAction: {
@@ -279,19 +260,15 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     padding: 16,
-    backgroundColor: CARD_BG,
     borderTopWidth: 1,
-    borderTopColor: BORDER,
   },
   cookButton: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     gap: 10,
-    backgroundColor: PRIMARY,
     paddingVertical: 16,
     borderRadius: 14,
-    shadowColor: PRIMARY,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,

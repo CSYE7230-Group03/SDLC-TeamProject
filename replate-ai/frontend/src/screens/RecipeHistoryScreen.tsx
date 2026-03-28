@@ -12,6 +12,7 @@ import {
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../navigation/AppNavigator";
 import { getRecipeHistory, RecipeHistoryItem } from "../services/api";
+import { useAppTheme } from "../theme/ThemeProvider";
 
 // PLACEHOLDER: Replace with `await getAuth().currentUser?.getIdToken()` from "firebase/auth"
 // once auth (#33) is merged.
@@ -30,6 +31,7 @@ function formatDate(iso: string): string {
 type Props = NativeStackScreenProps<RootStackParamList, "RecipeHistory">;
 
 export default function RecipeHistoryScreen({ navigation }: Props) {
+  const { theme } = useAppTheme();
   const [recipes, setRecipes] = useState<RecipeHistoryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedRecipe, setSelectedRecipe] = useState<RecipeHistoryItem | null>(null);
@@ -55,87 +57,87 @@ export default function RecipeHistoryScreen({ navigation }: Props) {
   function renderRecipeCard({ item }: { item: RecipeHistoryItem }) {
     return (
       <TouchableOpacity
-        style={styles.card}
+        style={[styles.card, { backgroundColor: theme.colors.card }]}
         onPress={() => setSelectedRecipe(item)}
         activeOpacity={0.85}
       >
         {item.image ? (
           <Image source={{ uri: item.image }} style={styles.cardImage} resizeMode="cover" />
         ) : (
-          <View style={styles.cardImagePlaceholder}>
+          <View style={[styles.cardImagePlaceholder, { backgroundColor: theme.colors.border }]}>
             <Text style={styles.cardImagePlaceholderText}>🍽️</Text>
           </View>
         )}
         <View style={styles.cardBody}>
-          <Text style={styles.cardTitle} numberOfLines={2}>{item.title}</Text>
+          <Text style={[styles.cardTitle, { color: theme.colors.text }]} numberOfLines={2}>{item.title}</Text>
           <View style={styles.cardBadges}>
             {item.readyInMinutes && (
-              <View style={styles.badge}>
-                <Text style={styles.badgeText}>⏱ {item.readyInMinutes} min</Text>
+              <View style={[styles.badge, { backgroundColor: theme.colors.inputBg }]}>
+                <Text style={[styles.badgeText, { color: theme.colors.text }]}>⏱ {item.readyInMinutes} min</Text>
               </View>
             )}
             {item.servings && (
-              <View style={styles.badge}>
-                <Text style={styles.badgeText}>👤 {item.servings}</Text>
+              <View style={[styles.badge, { backgroundColor: theme.colors.inputBg }]}>
+                <Text style={[styles.badgeText, { color: theme.colors.text }]}>👤 {item.servings}</Text>
               </View>
             )}
           </View>
-          <Text style={styles.cardDate}>{formatDate(item.savedAt)}</Text>
+          <Text style={[styles.cardDate, { color: theme.colors.textMuted }]}>{formatDate(item.savedAt)}</Text>
         </View>
-        <Text style={styles.cardChevron}>›</Text>
+        <Text style={[styles.cardChevron, { color: theme.colors.textMuted }]}>›</Text>
       </TouchableOpacity>
     );
   }
 
   if (loading) {
     return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" color={PRIMARY} />
-        <Text style={styles.loadingText}>Loading history...</Text>
+      <View style={[styles.centered, { backgroundColor: theme.colors.background }]}>
+        <ActivityIndicator size="large" color={theme.colors.primary} />
+        <Text style={[styles.loadingText, { color: theme.colors.textSecondary }]}>Loading history...</Text>
       </View>
     );
   }
 
   if (selectedRecipe) {
     return (
-      <View style={styles.container}>
+      <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
         <ScrollView showsVerticalScrollIndicator={false}>
           <TouchableOpacity style={styles.backRow} onPress={() => setSelectedRecipe(null)}>
-            <Text style={styles.backArrow}>‹</Text>
-            <Text style={styles.backText}>Back</Text>
+            <Text style={[styles.backArrow, { color: theme.colors.text }]}>‹</Text>
+            <Text style={[styles.backText, { color: theme.colors.text }]}>Back</Text>
           </TouchableOpacity>
 
           {selectedRecipe.image ? (
             <Image
               source={{ uri: selectedRecipe.image }}
-              style={styles.detailImage}
+              style={[styles.detailImage, { backgroundColor: theme.colors.border }]}
               resizeMode="cover"
             />
           ) : (
-            <View style={styles.detailImagePlaceholder}>
+            <View style={[styles.detailImagePlaceholder, { backgroundColor: theme.colors.border }]}>
               <Text style={styles.detailImagePlaceholderText}>🍽️</Text>
             </View>
           )}
 
-          <View style={styles.detailContent}>
-            <Text style={styles.detailTitle}>{selectedRecipe.title}</Text>
+          <View style={[styles.detailContent, { backgroundColor: theme.colors.card }]}>
+            <Text style={[styles.detailTitle, { color: theme.colors.text }]}>{selectedRecipe.title}</Text>
 
-            <View style={styles.detailMetaRow}>
+            <View style={[styles.detailMetaRow, { borderBottomColor: theme.colors.border }]}>
               {selectedRecipe.readyInMinutes && (
-                <View style={styles.detailMetaChip}>
+                <View style={[styles.detailMetaChip, { backgroundColor: theme.colors.inputBg }]}>
                   <Text style={styles.detailMetaIcon}>⏱</Text>
                   <View>
-                    <Text style={styles.detailMetaValue}>{selectedRecipe.readyInMinutes} min</Text>
-                    <Text style={styles.detailMetaSubLabel}>Cook Time</Text>
+                    <Text style={[styles.detailMetaValue, { color: theme.colors.text }]}>{selectedRecipe.readyInMinutes} min</Text>
+                    <Text style={[styles.detailMetaSubLabel, { color: theme.colors.textSecondary }]}>Cook Time</Text>
                   </View>
                 </View>
               )}
               {selectedRecipe.servings && (
-                <View style={styles.detailMetaChip}>
+                <View style={[styles.detailMetaChip, { backgroundColor: theme.colors.inputBg }]}>
                   <Text style={styles.detailMetaIcon}>👤</Text>
                   <View>
-                    <Text style={styles.detailMetaValue}>{selectedRecipe.servings} servings</Text>
-                    <Text style={styles.detailMetaSubLabel}>Servings</Text>
+                    <Text style={[styles.detailMetaValue, { color: theme.colors.text }]}>{selectedRecipe.servings} servings</Text>
+                    <Text style={[styles.detailMetaSubLabel, { color: theme.colors.textSecondary }]}>Servings</Text>
                   </View>
                 </View>
               )}
@@ -143,8 +145,8 @@ export default function RecipeHistoryScreen({ navigation }: Props) {
 
             {selectedRecipe.summary && (
               <View style={styles.section}>
-                <Text style={styles.sectionTitle}>About</Text>
-                <Text style={styles.sectionText}>
+                <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>About</Text>
+                <Text style={[styles.sectionText, { color: theme.colors.textSecondary }]}>
                   {selectedRecipe.summary.replace(/<[^>]*>/g, "")}
                 </Text>
               </View>
@@ -152,11 +154,11 @@ export default function RecipeHistoryScreen({ navigation }: Props) {
 
             {selectedRecipe.ingredients && selectedRecipe.ingredients.length > 0 && (
               <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Ingredients</Text>
+                <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Ingredients</Text>
                 {selectedRecipe.ingredients.map((ing, idx) => (
                   <View key={idx} style={styles.ingredientRow}>
-                    <View style={styles.ingredientDot} />
-                    <Text style={styles.ingredientText}>
+                    <View style={[styles.ingredientDot, { backgroundColor: theme.colors.accent }]} />
+                    <Text style={[styles.ingredientText, { color: theme.colors.textSecondary }]}>
                       {ing.name}
                       {ing.amount ? ` — ${ing.amount}${ing.unit ? " " + ing.unit : ""}` : ""}
                     </Text>
@@ -167,13 +169,13 @@ export default function RecipeHistoryScreen({ navigation }: Props) {
 
             {selectedRecipe.instructions && selectedRecipe.instructions.length > 0 && (
               <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Instructions</Text>
+                <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Instructions</Text>
                 {selectedRecipe.instructions.map((step, idx) => (
                   <View key={idx} style={styles.stepRow}>
-                    <View style={styles.stepNumber}>
+                    <View style={[styles.stepNumber, { backgroundColor: theme.colors.buttonPrimary }]}>
                       <Text style={styles.stepNumberText}>{idx + 1}</Text>
                     </View>
-                    <Text style={styles.stepText}>{step}</Text>
+                    <Text style={[styles.stepText, { color: theme.colors.textSecondary }]}>{step}</Text>
                   </View>
                 ))}
               </View>
@@ -186,14 +188,14 @@ export default function RecipeHistoryScreen({ navigation }: Props) {
 
   if (recipes.length === 0) {
     return (
-      <View style={styles.centered}>
+      <View style={[styles.centered, { backgroundColor: theme.colors.background }]}>
         <Text style={styles.emptyIcon}>📋</Text>
-        <Text style={styles.emptyTitle}>No saved recipes yet</Text>
-        <Text style={styles.emptySubtitle}>
+        <Text style={[styles.emptyTitle, { color: theme.colors.text }]}>No saved recipes yet</Text>
+        <Text style={[styles.emptySubtitle, { color: theme.colors.textSecondary }]}>
           Recipes you view will appear here so you can easily find them again.
         </Text>
         <TouchableOpacity
-          style={styles.emptyButton}
+          style={[styles.emptyButton, { backgroundColor: theme.colors.buttonPrimary }]}
           onPress={() => navigation.navigate("Capture")}
         >
           <Text style={styles.emptyButtonText}>Generate Recipes</Text>
@@ -203,7 +205,7 @@ export default function RecipeHistoryScreen({ navigation }: Props) {
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <FlatList
         data={recipes}
         keyExtractor={(item) => item.historyId || item.id.toString()}
@@ -211,7 +213,7 @@ export default function RecipeHistoryScreen({ navigation }: Props) {
         contentContainerStyle={styles.list}
         showsVerticalScrollIndicator={false}
         ListHeaderComponent={
-          <Text style={styles.listCount}>
+          <Text style={[styles.listCount, { color: theme.colors.textMuted }]}>
             {recipes.length} saved recipe{recipes.length !== 1 ? "s" : ""}
           </Text>
         }
@@ -220,23 +222,12 @@ export default function RecipeHistoryScreen({ navigation }: Props) {
   );
 }
 
-const PRIMARY = "#1A1A1A";
-const BG = "#FAFAF8";
-const CARD_BG = "#FFFFFF";
-const TEXT_DARK = "#1A1A1A";
-const TEXT_MID = "#555555";
-const TEXT_LIGHT = "#999999";
-const ACCENT = "#D4A017";
-const BORDER = "#F0EFED";
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: BG,
   },
   centered: {
     flex: 1,
-    backgroundColor: BG,
     justifyContent: "center",
     alignItems: "center",
     paddingHorizontal: 32,
@@ -244,7 +235,6 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 12,
     fontSize: 15,
-    color: TEXT_MID,
   },
 
   // List
@@ -256,14 +246,12 @@ const styles = StyleSheet.create({
   },
   listCount: {
     fontSize: 13,
-    color: TEXT_LIGHT,
     marginBottom: 4,
     fontWeight: "500",
   },
 
   // Card
   card: {
-    backgroundColor: CARD_BG,
     borderRadius: 14,
     flexDirection: "row",
     alignItems: "center",
@@ -281,7 +269,6 @@ const styles = StyleSheet.create({
   cardImagePlaceholder: {
     width: 88,
     height: 88,
-    backgroundColor: BORDER,
     justifyContent: "center",
     alignItems: "center",
   },
@@ -296,7 +283,6 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 15,
     fontWeight: "600",
-    color: TEXT_DARK,
     marginBottom: 6,
     lineHeight: 20,
   },
@@ -306,23 +292,19 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
   badge: {
-    backgroundColor: "#F5F5F3",
     borderRadius: 20,
     paddingHorizontal: 8,
     paddingVertical: 3,
   },
   badgeText: {
     fontSize: 11,
-    color: TEXT_DARK,
     fontWeight: "500",
   },
   cardDate: {
     fontSize: 11,
-    color: TEXT_LIGHT,
   },
   cardChevron: {
     fontSize: 24,
-    color: TEXT_LIGHT,
     paddingRight: 14,
     fontWeight: "300",
   },
@@ -335,19 +317,16 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 20,
     fontWeight: "700",
-    color: TEXT_DARK,
     marginBottom: 8,
     textAlign: "center",
   },
   emptySubtitle: {
     fontSize: 14,
-    color: TEXT_MID,
     textAlign: "center",
     lineHeight: 21,
     marginBottom: 28,
   },
   emptyButton: {
-    backgroundColor: PRIMARY,
     paddingVertical: 14,
     paddingHorizontal: 32,
     borderRadius: 12,
@@ -368,23 +347,19 @@ const styles = StyleSheet.create({
   },
   backArrow: {
     fontSize: 26,
-    color: PRIMARY,
     lineHeight: 26,
   },
   backText: {
     fontSize: 15,
-    color: PRIMARY,
     fontWeight: "600",
   },
   detailImage: {
     width: "100%",
     height: 230,
-    backgroundColor: BORDER,
   },
   detailImagePlaceholder: {
     width: "100%",
     height: 180,
-    backgroundColor: BORDER,
     justifyContent: "center",
     alignItems: "center",
   },
@@ -392,7 +367,6 @@ const styles = StyleSheet.create({
     fontSize: 52,
   },
   detailContent: {
-    backgroundColor: CARD_BG,
     paddingHorizontal: 20,
     paddingTop: 20,
     paddingBottom: 40,
@@ -400,7 +374,6 @@ const styles = StyleSheet.create({
   detailTitle: {
     fontSize: 22,
     fontWeight: "700",
-    color: TEXT_DARK,
     letterSpacing: -0.3,
     marginBottom: 14,
     lineHeight: 28,
@@ -411,13 +384,11 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     paddingBottom: 20,
     borderBottomWidth: 1,
-    borderBottomColor: BORDER,
   },
   detailMetaChip: {
     flex: 1,
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#F5F5F3",
     borderRadius: 12,
     paddingVertical: 10,
     paddingHorizontal: 12,
@@ -429,11 +400,9 @@ const styles = StyleSheet.create({
   detailMetaValue: {
     fontSize: 13,
     fontWeight: "600",
-    color: TEXT_DARK,
   },
   detailMetaSubLabel: {
     fontSize: 11,
-    color: TEXT_MID,
     marginTop: 1,
   },
   section: {
@@ -442,12 +411,10 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 15,
     fontWeight: "700",
-    color: TEXT_DARK,
     marginBottom: 10,
   },
   sectionText: {
     fontSize: 14,
-    color: TEXT_MID,
     lineHeight: 22,
   },
   ingredientRow: {
@@ -460,12 +427,10 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: ACCENT,
     flexShrink: 0,
   },
   ingredientText: {
     fontSize: 14,
-    color: TEXT_MID,
     flex: 1,
     lineHeight: 20,
   },
@@ -479,7 +444,6 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: PRIMARY,
     justifyContent: "center",
     alignItems: "center",
     flexShrink: 0,
@@ -493,7 +457,6 @@ const styles = StyleSheet.create({
   stepText: {
     flex: 1,
     fontSize: 14,
-    color: TEXT_MID,
     lineHeight: 22,
   },
 });

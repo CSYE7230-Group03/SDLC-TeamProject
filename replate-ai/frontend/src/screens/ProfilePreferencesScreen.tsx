@@ -164,9 +164,6 @@ export default function ProfilePreferencesScreen({ navigation }: Props) {
   return (
     <ScrollView style={[styles.container, { backgroundColor: theme.colors.background }]} contentContainerStyle={styles.content}>
       <Text style={[styles.title, { color: theme.colors.text }]}>Profile & Preferences</Text>
-      <Text style={[styles.subtitle, { color: theme.colors.textMuted }]}>
-        Update your profile and dietary preferences. Recommendations will adapt automatically.
-      </Text>
 
       <View style={[styles.card, { backgroundColor: theme.colors.card, borderColor: theme.colors.border }]}>
         <Text style={[styles.label, { color: theme.colors.textMuted }]}>Display name</Text>
@@ -240,7 +237,7 @@ export default function ProfilePreferencesScreen({ navigation }: Props) {
             >
               <Text
                 style={{
-                  color: themeMode === m ? "#fff" : theme.colors.text,
+                  color: themeMode === m ? theme.colors.buttonPrimaryText : theme.colors.text,
                   fontWeight: "700",
                   fontSize: 12,
                   textTransform: "capitalize",
@@ -264,6 +261,9 @@ export default function ProfilePreferencesScreen({ navigation }: Props) {
           <Switch
             value={expiryRemindersEnabled}
             onValueChange={setExpiryRemindersEnabled}
+            trackColor={{ false: theme.colors.border, true: theme.colors.primary }}
+            thumbColor={expiryRemindersEnabled ? theme.colors.buttonPrimaryText : theme.colors.textMuted}
+            ios_backgroundColor={theme.colors.inputBg}
           />
         </View>
       </View>
@@ -289,8 +289,7 @@ const styles = StyleSheet.create({
   content: { padding: spacing.lg, paddingBottom: spacing.xxl + spacing.xs },
   centered: { flex: 1, justifyContent: "center", alignItems: "center" },
   loadingText: { marginTop: spacing.md },
-  title: { fontSize: 22, fontWeight: "800" },
-  subtitle: { marginTop: 6, fontSize: 13, lineHeight: 18 },
+  title: { fontSize: 22, fontWeight: "800", marginBottom: spacing.xs },
   card: {
     borderRadius: radii.lg,
     padding: spacing.lg,

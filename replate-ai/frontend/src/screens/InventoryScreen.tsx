@@ -40,76 +40,28 @@ type IconInfo = {
 };
 
 function getIngredientIcon(ingredientName: string): IconInfo {
-  const name = ingredientName.toLowerCase();
+  const n = ingredientName.toLowerCase();
 
-  // Fruits
-  if (name.includes("apple")) return { name: "food-apple", color: "#e53935", bg: "#ffebee" };
-  if (name.includes("banana")) return { name: "fruit-watermelon", color: "#fdd835", bg: "#fffde7" };
-  if (name.includes("orange") || name.includes("citrus")) return { name: "fruit-citrus", color: "#ff9800", bg: "#fff3e0" };
-  if (name.includes("grape")) return { name: "fruit-grapes", color: "#7b1fa2", bg: "#f3e5f5" };
-  if (name.includes("cherry") || name.includes("berr")) return { name: "fruit-cherries", color: "#c62828", bg: "#ffebee" };
-  if (name.includes("pineapple")) return { name: "fruit-pineapple", color: "#f9a825", bg: "#fffde7" };
-  if (name.includes("lemon") || name.includes("lime")) return { name: "fruit-citrus", color: "#cddc39", bg: "#f9fbe7" };
-  if (name.includes("avocado")) return { name: "food-apple", color: "#558b2f", bg: "#f1f8e9" };
-  if (name.includes("tomato")) return { name: "food-apple", color: "#e53935", bg: "#ffebee" };
-
-  // Vegetables
-  if (name.includes("carrot")) return { name: "carrot", color: "#ff7043", bg: "#fbe9e7" };
-  if (name.includes("corn")) return { name: "corn", color: "#fbc02d", bg: "#fffde7" };
-  if (name.includes("broccoli") || name.includes("lettuce") || name.includes("spinach") || name.includes("kale"))
-    return { name: "leaf", color: "#43a047", bg: "#e8f5e9" };
-  if (name.includes("mushroom")) return { name: "mushroom", color: "#8d6e63", bg: "#efebe9" };
-  if (name.includes("pepper") || name.includes("chili")) return { name: "chili-mild", color: "#f44336", bg: "#ffebee" };
-  if (name.includes("onion") || name.includes("garlic")) return { name: "garlic", color: "#ffb74d", bg: "#fff8e1" };
-  if (name.includes("potato")) return { name: "food-steak", color: "#a1887f", bg: "#efebe9" };
-  if (name.includes("cucumber") || name.includes("zucchini")) return { name: "leaf", color: "#66bb6a", bg: "#e8f5e9" };
-  if (name.includes("eggplant")) return { name: "food-drumstick", color: "#7e57c2", bg: "#ede7f6" };
-  if (name.includes("cabbage")) return { name: "leaf", color: "#81c784", bg: "#e8f5e9" };
-
-  // Proteins
-  if (name.includes("chicken")) return { name: "food-drumstick", color: "#ffb74d", bg: "#fff8e1" };
-  if (name.includes("beef") || name.includes("steak")) return { name: "food-steak", color: "#d32f2f", bg: "#ffebee" };
-  if (name.includes("pork") || name.includes("bacon") || name.includes("ham")) return { name: "pig", color: "#f48fb1", bg: "#fce4ec" };
-  if (name.includes("fish") || name.includes("salmon") || name.includes("tuna")) return { name: "fish", color: "#29b6f6", bg: "#e1f5fe" };
-  if (name.includes("shrimp") || name.includes("prawn") || name.includes("seafood")) return { name: "fish", color: "#ff7043", bg: "#fbe9e7" };
-  if (name.includes("egg")) return { name: "egg", color: "#ffc107", bg: "#fff8e1" };
-  if (name.includes("tofu") || name.includes("soy")) return { name: "cube-outline", color: "#fff9c4", bg: "#fffde7" };
-
-  // Dairy
-  if (name.includes("milk")) return { name: "cup", color: "#e3f2fd", bg: "#e3f2fd" };
-  if (name.includes("cheese")) return { name: "cheese", color: "#ffc107", bg: "#fff8e1" };
-  if (name.includes("butter")) return { name: "cube", color: "#ffe082", bg: "#fff8e1" };
-  if (name.includes("yogurt") || name.includes("cream")) return { name: "cup", color: "#f5f5f5", bg: "#fafafa" };
-
-  // Grains & Carbs
-  if (name.includes("bread") || name.includes("toast")) return { name: "bread-slice", color: "#d7a86e", bg: "#fff8e1" };
-  if (name.includes("rice")) return { name: "rice", color: "#f5f5f5", bg: "#fafafa" };
-  if (name.includes("pasta") || name.includes("noodle") || name.includes("spaghetti")) return { name: "pasta", color: "#ffcc80", bg: "#fff3e0" };
-  if (name.includes("cereal") || name.includes("oat")) return { name: "barley", color: "#bcaaa4", bg: "#efebe9" };
-
-  // Beverages & Liquids
-  if (name.includes("coffee")) return { name: "coffee", color: "#6d4c41", bg: "#efebe9" };
-  if (name.includes("tea")) return { name: "tea", color: "#a5d6a7", bg: "#e8f5e9" };
-  if (name.includes("juice") || name.includes("water")) return { name: "cup-water", color: "#4fc3f7", bg: "#e1f5fe" };
-  if (name.includes("wine")) return { name: "glass-wine", color: "#c62828", bg: "#ffebee" };
-  if (name.includes("beer")) return { name: "beer", color: "#ffb74d", bg: "#fff8e1" };
-
-  // Condiments & Sauces
-  if (name.includes("sauce") || name.includes("ketchup")) return { name: "bottle-soda", color: "#e53935", bg: "#ffebee" };
-  if (name.includes("oil") || name.includes("olive")) return { name: "bottle-tonic", color: "#c0ca33", bg: "#f9fbe7" };
-  if (name.includes("honey")) return { name: "beehive-outline", color: "#ffb300", bg: "#fff8e1" };
-  if (name.includes("sugar")) return { name: "cube-outline", color: "#f5f5f5", bg: "#fafafa" };
-  if (name.includes("salt") || name.includes("spice") || name.includes("herb")) return { name: "shaker", color: "#90a4ae", bg: "#eceff1" };
-
-  // Nuts & Seeds
-  if (name.includes("nut") || name.includes("almond") || name.includes("walnut") || name.includes("peanut"))
+  if (/apple|banana|orange|grape|berr|cherry|pineapple|lemon|lime|avocado|mango|melon|peach|pear|citrus/.test(n))
+    return { name: "fruit-watermelon", color: "#e53935", bg: "#ffebee" };
+  if (/tomato|carrot|broccoli|spinach|lettuce|kale|cabbage|cucumber|zucchini|pepper|chili|onion|garlic|mushroom|eggplant|corn|potato/.test(n))
+    return { name: "carrot", color: "#43a047", bg: "#e8f5e9" };
+  if (/chicken|beef|pork|bacon|ham|steak|lamb|turkey|meat/.test(n))
+    return { name: "food-steak", color: "#d32f2f", bg: "#ffebee" };
+  if (/fish|salmon|tuna|shrimp|prawn|seafood|cod|tilapia/.test(n))
+    return { name: "fish", color: "#29b6f6", bg: "#e1f5fe" };
+  if (/egg|milk|cheese|butter|yogurt|cream/.test(n))
+    return { name: "egg", color: "#ffc107", bg: "#fff8e1" };
+  if (/bread|rice|pasta|noodle|spaghetti|flour|cereal|oat|grain/.test(n))
+    return { name: "bread-slice", color: "#d7a86e", bg: "#fff8e1" };
+  if (/oil|olive|sauce|ketchup|honey|vinegar|soy|mustard|sugar|salt|spice|herb/.test(n))
+    return { name: "bottle-tonic", color: "#c0ca33", bg: "#f9fbe7" };
+  if (/coffee|tea|juice|water|wine|beer/.test(n))
+    return { name: "cup-water", color: "#4fc3f7", bg: "#e1f5fe" };
+  if (/nut|almond|walnut|peanut|cashew|pistachio|bean|lentil/.test(n))
     return { name: "peanut", color: "#8d6e63", bg: "#efebe9" };
 
-  // Canned & Packaged
-  if (name.includes("can") || name.includes("bean")) return { name: "food-variant", color: "#78909c", bg: "#eceff1" };
-
-  // Default
-  return { name: "food-apple-outline", color: "#1A1A1A", bg: "#F5F5F3" };
+  return { name: "food-apple-outline", color: "#888888", bg: "#F5F5F3" };
 }
 
 type Props = NativeStackScreenProps<RootStackParamList, "Inventory">;
@@ -188,7 +140,7 @@ export default function InventoryScreen({ navigation }: Props) {
           },
         ]}
       >
-        <View style={[styles.itemIcon, { backgroundColor: isEmpty ? theme.colors.inputBg : iconInfo.bg }]}>
+        <View style={[styles.itemIcon, { backgroundColor: isEmpty ? theme.colors.inputBg : (theme.mode === "dark" ? theme.colors.inputBg : iconInfo.bg) }]}>
           <MaterialCommunityIcons
             name={iconInfo.name}
             size={22}
@@ -238,23 +190,13 @@ export default function InventoryScreen({ navigation }: Props) {
       {/* Summary Header */}
       <View style={[styles.summary, { backgroundColor: theme.colors.card, borderBottomColor: theme.colors.border }]}>
         <View style={styles.summaryItem}>
-          <View style={[styles.summaryIcon, { backgroundColor: theme.colors.successLight }]}>
-            <Ionicons name="checkmark-circle" size={20} color={theme.colors.success} />
-          </View>
-          <View>
-            <Text style={[styles.summaryNumber, { color: theme.colors.text }]}>{activeItems.length}</Text>
-            <Text style={[styles.summaryLabel, { color: theme.colors.textMuted }]}>Available</Text>
-          </View>
+          <Text style={[styles.summaryNumber, { color: theme.colors.text }]}>{activeItems.length}</Text>
+          <Text style={[styles.summaryLabel, { color: theme.colors.textMuted }]}>Available</Text>
         </View>
         <View style={[styles.summaryDivider, { backgroundColor: theme.colors.border }]} />
         <View style={styles.summaryItem}>
-          <View style={[styles.summaryIcon, { backgroundColor: theme.colors.inputBg }]}>
-            <Ionicons name="close-circle-outline" size={20} color={theme.colors.textMuted} />
-          </View>
-          <View>
-            <Text style={[styles.summaryNumber, { color: theme.colors.text }]}>{emptyItems.length}</Text>
-            <Text style={[styles.summaryLabel, { color: theme.colors.textMuted }]}>Out of stock</Text>
-          </View>
+          <Text style={[styles.summaryNumber, { color: theme.colors.textMuted }]}>{emptyItems.length}</Text>
+          <Text style={[styles.summaryLabel, { color: theme.colors.textMuted }]}>Out of stock</Text>
         </View>
       </View>
 
@@ -348,16 +290,8 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
   },
   summaryItem: {
-    flexDirection: "row",
     alignItems: "center",
-    gap: spacing.md,
-  },
-  summaryIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: radii.sm,
-    justifyContent: "center",
-    alignItems: "center",
+    gap: spacing.xs,
   },
   summaryNumber: {
     fontSize: 20,

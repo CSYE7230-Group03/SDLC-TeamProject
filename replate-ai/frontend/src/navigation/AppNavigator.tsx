@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { ActivityIndicator, View, Text, TouchableOpacity } from "react-native";
+import { useAppTheme } from "../theme/ThemeProvider";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import CapturePhotoScreen from "../screens/CapturePhotoScreen";
 import IngredientReviewScreen from "../screens/IngredientReviewScreen";
@@ -73,6 +74,7 @@ export type RootStackParamList = {
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export default function AppNavigator() {
+  const { theme } = useAppTheme();
   const [initializing, setInitializing] = useState(true);
   const [initialRoute, setInitialRoute] =
     useState<keyof RootStackParamList>("Login");
@@ -87,9 +89,9 @@ export default function AppNavigator() {
   if (initializing) {
     return (
       <View
-        style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#fff" }}
+        style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "transparent" }}
       >
-        <ActivityIndicator size="large" color="#2d6a4f" />
+        <ActivityIndicator size="large" color={theme.colors.primary} />
       </View>
     );
   }
@@ -129,7 +131,7 @@ export default function AppNavigator() {
               onPress={() => navigation.navigate("Home")}
               style={{ marginLeft: 8, padding: 4, flexDirection: "row", alignItems: "center" }}
             >
-              <Text style={{ fontSize: 16, color: "#2d6a4f" }}>‹ Home</Text>
+              <Text style={{ fontSize: 16, color: theme.colors.primary }}>‹ Home</Text>
             </TouchableOpacity>
           ),
         })}
@@ -144,7 +146,7 @@ export default function AppNavigator() {
               onPress={() => navigation.navigate("Home")}
               style={{ marginLeft: 8, padding: 4, flexDirection: "row", alignItems: "center" }}
             >
-              <Text style={{ fontSize: 16, color: "#2d6a4f" }}>‹ Home</Text>
+              <Text style={{ fontSize: 16, color: theme.colors.primary }}>‹ Home</Text>
             </TouchableOpacity>
           ),
         })}
@@ -184,7 +186,7 @@ export default function AppNavigator() {
               onPress={() => navigation.navigate("Home")}
               style={{ marginLeft: 8, padding: 4, flexDirection: "row", alignItems: "center" }}
             >
-              <Text style={{ fontSize: 16, color: "#2d6a4f" }}>‹ Home</Text>
+              <Text style={{ fontSize: 16, color: theme.colors.primary }}>‹ Home</Text>
             </TouchableOpacity>
           ),
         })}
