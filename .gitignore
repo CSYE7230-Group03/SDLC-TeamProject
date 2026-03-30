@@ -1,0 +1,43 @@
+.DS_Store
+node_modules/
+
+# Virtual environment
+venv/
+
+package-lock.json
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Build outputs
+dist/
+build/
+
+# IDE
+.vscode/
+.idea/
+CLAUDE.md
+
+# Terraform
+infra/terraform/**/.terraform/
+infra/terraform/**/terraform.tfvars
+infra/terraform/**/*.tfstate
+infra/terraform/**/*.tfstate.backup
+infra/terraform/**/.terraform.lock.hcl
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+replate-ai/frontend/node_modules/
+replate-ai/frontend/dist/
+replate-ai/frontend/package-lock.json
+replate-ai/backend/api-service/node_modules/
