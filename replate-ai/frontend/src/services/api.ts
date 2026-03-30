@@ -595,6 +595,12 @@ interface ToggleItemResponse {
   error?: string;
 }
 
+interface GroceryListItemResponse {
+  success: boolean;
+  item?: GroceryListItem;
+  error?: string;
+}
+
 export async function createGroceryList(params: {
   recipeId: string | number;
   recipeTitle: string;
@@ -627,4 +633,43 @@ export async function toggleGroceryItemAvailability(
     }
   );
   return parseResponse<ToggleItemResponse>(res);
+}
+
+export async function addGroceryItem(
+  listId: string,
+  item: { name: string; amount: number; unit: string }
+): Promise<GroceryListItemResponse> {
+  const res = await fetch(`${API_BASE_URL}/grocery-list/${listId}/item`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...authHeaders() },
+    body: JSON.stringify(item),
+  });
+  return parseResponse<GroceryListItemResponse>(res);
+}
+
+export async function deleteGroceryItem(
+  listId: string,
+  itemId: string
+): Promise<GroceryListItemResponse> {
+  const res = await fetch(
+    `${API_BASE_URL}/grocery-list/${listId}/item/${itemId}`,
+    { method: "DELETE", headers: authHeaders() }
+  );
+  return parseResponse<GroceryListItemResponse>(res);
+}
+
+export async function updateGroceryItemQuantity(
+  listId: string,
+  itemId: string,
+  amount: number
+): Promise<GroceryListItemResponse> {
+  const res = await fetch(
+    `${API_BASE_URL}/grocery-list/${listId}/item/${itemId}`,
+    {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", ...authHeaders() },
+      body: JSON.stringify({ amount }),
+    }
+  );
+  return parseResponse<GroceryListItemResponse>(res);
 }

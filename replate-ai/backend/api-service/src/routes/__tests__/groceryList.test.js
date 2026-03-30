@@ -17,6 +17,9 @@ const {
   getGroceryList,
   getUserGroceryLists,
   toggleItemAvailability,
+  addGroceryItem,
+  deleteGroceryItem,
+  updateGroceryItemQuantity,
 } = require('../../services/groceryListService');
 
 const app = express();
@@ -184,6 +187,174 @@ describe('PATCH /grocery-list/:listId/item/:itemId/toggle', () => {
     const response = await request(app).patch(
       '/grocery-list/list-1/item/non-existent/toggle'
     );
+
+    expect(response.status).toBe(404);
+    expect(response.body.success).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// POST /grocery-list/:listId/item
+// ---------------------------------------------------------------------------
+describe('POST /grocery-list/:listId/item', () => {
+  const mockItem = {
+    id: 'new-item-uuid',
+    name: 'Eggs',
+    amount: 3,
+    unit: 'whole',
+    isAvailableAtHome: false,
+  };
+
+  test('returns 201 with added item on success', async () => {
+    addGroceryItem.mockResolvedValue(mockItem);
+
+    const response = await request(app)
+      .post('/grocery-list/list-1/item')
+      .send({ name: 'Eggs', amount: 3, unit: 'whole' });
+
+    expect(response.status).toBe(201);
+    expect(response.body.success).toBe(true);
+    expect(response.body.item).toMatchObject({ name: 'Eggs', amount: 3 });
+    expect(addGroceryItem).toHaveBeenCalledWith('test-user-123', 'list-1', {
+      name: 'Eggs',
+      amount: 3,
+      unit: 'whole',
+    });
+  });
+
+  test('returns 400 when name is missing', async () => {
+    const response = await request(app)
+      .post('/grocery-list/list-1/item')
+      .send({ amount: 3, unit: 'whole' });
+
+    expect(response.status).toBe(400);
+    expect(response.body.success).toBe(false);
+    expect(addGroceryItem).not.toHaveBeenCalled();
+  });
+
+  test('returns 404 when list not found', async () => {
+    addGroceryItem.mockRejectedValue(new Error('Grocery list not found'));
+
+    const response = await request(app)
+      .post('/grocery-list/non-existent/item')
+      .send({ name: 'Eggs', amount: 3, unit: 'whole' });
+
+    expect(response.status).toBe(404);
+    expect(response.body.success).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// DELETE /grocery-list/:listId/item/:itemId
+// ---------------------------------------------------------------------------
+describe('DELETE /grocery-list/:listId/item/:itemId', () => {
+  const mockItem = {
+    id: 'item-1',
+    name: 'Pancetta',
+    amount: 200,
+    unit: 'g',
+    isAvailableAtHome: false,
+  };
+
+  test('returns 200 with deleted item on success', async () => {
+    deleteGroceryItem.mockResolvedValue(mockItem);
+
+    const response = await request(app).delete('/grocery-list/list-1/item/item-1');
+
+    expect(response.status).toBe(200);
+    expect(response.body.success).toBe(true);
+    expect(response.body.item).toMatchObject({ id: 'item-1', name: 'Pancetta' });
+    expect(deleteGroceryItem).toHaveBeenCalledWith('test-user-123', 'list-1', 'item-1');
+  });
+
+  test('returns 404 when list not found', async () => {
+    deleteGroceryItem.mockRejectedValue(new Error('Grocery list not found'));
+
+    const response = await request(app).delete('/grocery-list/non-existent/item/item-1');
+
+    expect(response.status).toBe(404);
+    expect(response.body.success).toBe(false);
+  });
+
+  test('returns 404 when item not found', async () => {
+    deleteGroceryItem.mockRejectedValue(new Error('Item not found in grocery list'));
+
+    const response = await request(app).delete('/grocery-list/list-1/item/non-existent');
+
+    expect(response.status).toBe(404);
+    expect(response.body.success).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// PATCH /grocery-list/:listId/item/:itemId
+// ---------------------------------------------------------------------------
+describe('PATCH /grocery-list/:listId/item/:itemId', () => {
+  const mockItem = {
+    id: 'item-1',
+    name: 'Pancetta',
+    amount: 350,
+    unit: 'g',
+    isAvailableAtHome: false,
+  };
+
+  test('returns 200 with updated item on success', async () => {
+    updateGroceryItemQuantity.mockResolvedValue(mockItem);
+
+    const response = await request(app)
+      .patch('/grocery-list/list-1/item/item-1')
+      .send({ amount: 350 });
+
+    expect(response.status).toBe(200);
+    expect(response.body.success).toBe(true);
+    expect(response.body.item).toMatchObject({ amount: 350 });
+    expect(updateGroceryItemQuantity).toHaveBeenCalledWith(
+      'test-user-123',
+      'list-1',
+      'item-1',
+      350
+    );
+  });
+
+  test('returns 400 when amount is missing', async () => {
+    const response = await request(app)
+      .patch('/grocery-list/list-1/item/item-1')
+      .send({});
+
+    expect(response.status).toBe(400);
+    expect(response.body.success).toBe(false);
+    expect(updateGroceryItemQuantity).not.toHaveBeenCalled();
+  });
+
+  test('returns 400 when amount is not a number', async () => {
+    const response = await request(app)
+      .patch('/grocery-list/list-1/item/item-1')
+      .send({ amount: 'lots' });
+
+    expect(response.status).toBe(400);
+    expect(response.body.success).toBe(false);
+    expect(updateGroceryItemQuantity).not.toHaveBeenCalled();
+  });
+
+  test('returns 404 when list not found', async () => {
+    updateGroceryItemQuantity.mockRejectedValue(new Error('Grocery list not found'));
+
+    const response = await request(app)
+      .patch('/grocery-list/non-existent/item/item-1')
+      .send({ amount: 100 });
+
+    expect(response.status).toBe(404);
+    expect(response.body.success).toBe(false);
+  });
+
+  test('returns 404 when item not found', async () => {
+    updateGroceryItemQuantity.mockRejectedValue(
+      new Error('Item not found in grocery list')
+    );
+
+    const response = await request(app)
+      .patch('/grocery-list/list-1/item/non-existent')
+      .send({ amount: 100 });
 
     expect(response.status).toBe(404);
     expect(response.body.success).toBe(false);

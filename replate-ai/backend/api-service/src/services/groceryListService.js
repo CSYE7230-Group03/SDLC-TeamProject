@@ -20,6 +20,7 @@ const {
   queryDocuments,
   updateSubDocument,
   serverTimestamp,
+  deleteField,
 } = require('../../../../../sdk/firebase/firestore');
 
 /**
@@ -146,9 +147,103 @@ async function toggleItemAvailability(userId, listId, itemId) {
   };
 }
 
+/**
+ * Add a new ingredient item to an existing grocery list.
+ *
+ * @param {string} userId
+ * @param {string} listId
+ * @param {{ name: string, amount: number, unit: string }} item
+ * @returns {Promise<Object>} - The newly added item with its generated id
+ */
+async function addGroceryItem(userId, listId, { name, amount, unit }) {
+  const path = `GroceryLists/${userId}/lists`;
+  const docs = await queryDocuments(path, {});
+
+  const doc = docs.find((d) => d.id === listId);
+  if (!doc) {
+    throw new Error('Grocery list not found');
+  }
+
+  const itemId = crypto.randomUUID();
+  const newItem = {
+    name,
+    amount: amount || 0,
+    unit: unit || '',
+    isAvailableAtHome: false,
+  };
+
+  await updateSubDocument(path, listId, {
+    [`items.${itemId}`]: newItem,
+  });
+
+  return { id: itemId, ...newItem };
+}
+
+/**
+ * Delete an ingredient item from an existing grocery list.
+ *
+ * @param {string} userId
+ * @param {string} listId
+ * @param {string} itemId
+ * @returns {Promise<Object>} - The deleted item
+ */
+async function deleteGroceryItem(userId, listId, itemId) {
+  const path = `GroceryLists/${userId}/lists`;
+  const docs = await queryDocuments(path, {});
+
+  const doc = docs.find((d) => d.id === listId);
+  if (!doc) {
+    throw new Error('Grocery list not found');
+  }
+
+  const item = (doc.items || {})[itemId];
+  if (!item) {
+    throw new Error('Item not found in grocery list');
+  }
+
+  await updateSubDocument(path, listId, {
+    [`items.${itemId}`]: deleteField(),
+  });
+
+  return { id: itemId, ...item };
+}
+
+/**
+ * Update the quantity (amount) of an existing grocery list item.
+ *
+ * @param {string} userId
+ * @param {string} listId
+ * @param {string} itemId
+ * @param {number} amount
+ * @returns {Promise<Object>} - The updated item with its new amount
+ */
+async function updateGroceryItemQuantity(userId, listId, itemId, amount) {
+  const path = `GroceryLists/${userId}/lists`;
+  const docs = await queryDocuments(path, {});
+
+  const doc = docs.find((d) => d.id === listId);
+  if (!doc) {
+    throw new Error('Grocery list not found');
+  }
+
+  const item = (doc.items || {})[itemId];
+  if (!item) {
+    throw new Error('Item not found in grocery list');
+  }
+
+  await updateSubDocument(path, listId, {
+    [`items.${itemId}.amount`]: amount,
+  });
+
+  return { id: itemId, ...item, amount };
+}
+
 module.exports = {
   createGroceryList,
   getGroceryList,
   getUserGroceryLists,
   toggleItemAvailability,
+  addGroceryItem,
+  deleteGroceryItem,
+  updateGroceryItemQuantity,
 };

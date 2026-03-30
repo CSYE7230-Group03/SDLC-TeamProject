@@ -1,11 +1,14 @@
 'use strict';
 
+const MOCK_DELETE_SENTINEL = Symbol('DELETE_SENTINEL');
+
 jest.mock('../../../../../../sdk/firebase/firestore', () => ({
   addSubDocument: jest.fn(),
   queryDocuments: jest.fn(),
   updateSubDocument: jest.fn(),
   deleteDocument: jest.fn(),
   serverTimestamp: () => 'MOCK_TIMESTAMP',
+  deleteField: () => MOCK_DELETE_SENTINEL,
 }));
 
 const {
@@ -19,6 +22,9 @@ const {
   getGroceryList,
   getUserGroceryLists,
   toggleItemAvailability,
+  addGroceryItem,
+  deleteGroceryItem,
+  updateGroceryItemQuantity,
 } = require('../groceryListService');
 
 beforeEach(() => {
@@ -248,6 +254,194 @@ describe('toggleItemAvailability', () => {
 
     await expect(
       toggleItemAvailability(userId, listId, 'non-existent-item')
+    ).rejects.toThrow('Item not found in grocery list');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// addGroceryItem
+// ---------------------------------------------------------------------------
+describe('addGroceryItem', () => {
+  const userId = 'user-abc';
+  const listId = 'list-xyz';
+
+  const firestoreDoc = {
+    id: listId,
+    recipeId: 'recipe-1',
+    recipeTitle: 'Pasta',
+    createdAt: 'MOCK_TIMESTAMP',
+    items: {
+      'item-1': { name: 'Pancetta', amount: 200, unit: 'g', isAvailableAtHome: false },
+    },
+  };
+
+  test('adds new item and returns it with generated id', async () => {
+    queryDocuments.mockResolvedValue([firestoreDoc]);
+    updateSubDocument.mockResolvedValue({});
+
+    const result = await addGroceryItem(userId, listId, {
+      name: 'Eggs',
+      amount: 3,
+      unit: 'whole',
+    });
+
+    expect(result).toHaveProperty('id');
+    expect(result.name).toBe('Eggs');
+    expect(result.amount).toBe(3);
+    expect(result.unit).toBe('whole');
+    expect(result.isAvailableAtHome).toBe(false);
+  });
+
+  test('defaults amount to 0 and unit to empty string when omitted', async () => {
+    queryDocuments.mockResolvedValue([firestoreDoc]);
+    updateSubDocument.mockResolvedValue({});
+
+    const result = await addGroceryItem(userId, listId, { name: 'Salt' });
+
+    expect(result.amount).toBe(0);
+    expect(result.unit).toBe('');
+  });
+
+  test('calls updateSubDocument with dot-notation key for the new item', async () => {
+    queryDocuments.mockResolvedValue([firestoreDoc]);
+    updateSubDocument.mockResolvedValue({});
+
+    const result = await addGroceryItem(userId, listId, {
+      name: 'Pepper',
+      amount: 1,
+      unit: 'tsp',
+    });
+
+    expect(updateSubDocument).toHaveBeenCalledTimes(1);
+    const updateCall = updateSubDocument.mock.calls[0];
+    const updatePayload = updateCall[2];
+    const key = `items.${result.id}`;
+    expect(updatePayload[key]).toBeDefined();
+    expect(updatePayload[key].name).toBe('Pepper');
+  });
+
+  test('throws error if list not found', async () => {
+    queryDocuments.mockResolvedValue([]);
+
+    await expect(
+      addGroceryItem(userId, listId, { name: 'Milk', amount: 1, unit: 'L' })
+    ).rejects.toThrow('Grocery list not found');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// deleteGroceryItem
+// ---------------------------------------------------------------------------
+describe('deleteGroceryItem', () => {
+  const userId = 'user-abc';
+  const listId = 'list-xyz';
+  const itemId = 'item-1';
+
+  const firestoreDoc = {
+    id: listId,
+    recipeId: 'recipe-1',
+    recipeTitle: 'Pasta',
+    createdAt: 'MOCK_TIMESTAMP',
+    items: {
+      [itemId]: { name: 'Pancetta', amount: 200, unit: 'g', isAvailableAtHome: false },
+    },
+  };
+
+  test('returns the deleted item', async () => {
+    queryDocuments.mockResolvedValue([firestoreDoc]);
+    updateSubDocument.mockResolvedValue({});
+
+    const result = await deleteGroceryItem(userId, listId, itemId);
+
+    expect(result.id).toBe(itemId);
+    expect(result.name).toBe('Pancetta');
+  });
+
+  test('calls updateSubDocument with deleteField sentinel for item key', async () => {
+    queryDocuments.mockResolvedValue([firestoreDoc]);
+    updateSubDocument.mockResolvedValue({});
+
+    await deleteGroceryItem(userId, listId, itemId);
+
+    expect(updateSubDocument).toHaveBeenCalledTimes(1);
+    const updateCall = updateSubDocument.mock.calls[0];
+    const updatePayload = updateCall[2];
+    expect(updatePayload[`items.${itemId}`]).toBeDefined();
+    expect(updatePayload[`items.${itemId}`]).toBe(MOCK_DELETE_SENTINEL);
+  });
+
+  test('throws error if list not found', async () => {
+    queryDocuments.mockResolvedValue([]);
+
+    await expect(
+      deleteGroceryItem(userId, listId, itemId)
+    ).rejects.toThrow('Grocery list not found');
+  });
+
+  test('throws error if item not found in list', async () => {
+    queryDocuments.mockResolvedValue([firestoreDoc]);
+
+    await expect(
+      deleteGroceryItem(userId, listId, 'non-existent-item')
+    ).rejects.toThrow('Item not found in grocery list');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// updateGroceryItemQuantity
+// ---------------------------------------------------------------------------
+describe('updateGroceryItemQuantity', () => {
+  const userId = 'user-abc';
+  const listId = 'list-xyz';
+  const itemId = 'item-1';
+
+  const firestoreDoc = {
+    id: listId,
+    recipeId: 'recipe-1',
+    recipeTitle: 'Pasta',
+    createdAt: 'MOCK_TIMESTAMP',
+    items: {
+      [itemId]: { name: 'Pancetta', amount: 200, unit: 'g', isAvailableAtHome: false },
+    },
+  };
+
+  test('returns item with updated amount', async () => {
+    queryDocuments.mockResolvedValue([firestoreDoc]);
+    updateSubDocument.mockResolvedValue({});
+
+    const result = await updateGroceryItemQuantity(userId, listId, itemId, 350);
+
+    expect(result.id).toBe(itemId);
+    expect(result.amount).toBe(350);
+    expect(result.name).toBe('Pancetta');
+  });
+
+  test('calls updateSubDocument with dot-notation for amount field', async () => {
+    queryDocuments.mockResolvedValue([firestoreDoc]);
+    updateSubDocument.mockResolvedValue({});
+
+    await updateGroceryItemQuantity(userId, listId, itemId, 100);
+
+    expect(updateSubDocument).toHaveBeenCalledTimes(1);
+    const updateCall = updateSubDocument.mock.calls[0];
+    expect(updateCall[2]).toMatchObject({
+      [`items.${itemId}.amount`]: 100,
+    });
+  });
+
+  test('throws error if list not found', async () => {
+    queryDocuments.mockResolvedValue([]);
+
+    await expect(
+      updateGroceryItemQuantity(userId, listId, itemId, 100)
+    ).rejects.toThrow('Grocery list not found');
+  });
+
+  test('throws error if item not found in list', async () => {
+    queryDocuments.mockResolvedValue([firestoreDoc]);
+
+    await expect(
+      updateGroceryItemQuantity(userId, listId, 'non-existent-item', 100)
     ).rejects.toThrow('Item not found in grocery list');
   });
 });

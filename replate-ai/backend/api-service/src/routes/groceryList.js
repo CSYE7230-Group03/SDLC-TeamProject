@@ -6,6 +6,9 @@ const {
   getGroceryList,
   getUserGroceryLists,
   toggleItemAvailability,
+  addGroceryItem,
+  deleteGroceryItem,
+  updateGroceryItemQuantity,
 } = require('../services/groceryListService');
 const { verifyFirebaseToken } = require('../../../../../sdk/firebase/firestore');
 
@@ -122,6 +125,109 @@ router.patch('/:listId/item/:itemId/toggle', verifyFirebaseToken, async (req, re
     }
 
     console.error('[GroceryListRoute] Error toggling item availability:', err.message);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+/**
+ * POST /grocery-list/:listId/item
+ *
+ * Add a new ingredient to an existing grocery list.
+ *
+ * Request body:
+ * { "name": "string", "amount": number, "unit": "string" }
+ *
+ * Response 201:
+ * { "success": true, "item": { "id": "...", "name": "...", "amount": number, "unit": "...", "isAvailableAtHome": false } }
+ *
+ * Response 404:
+ * { "success": false, "error": "Grocery list not found" }
+ */
+router.post('/:listId/item', verifyFirebaseToken, async (req, res) => {
+  try {
+    const { name, amount, unit } = req.body;
+
+    if (!name) {
+      return res.status(400).json({ success: false, error: 'name is required' });
+    }
+
+    const item = await addGroceryItem(req.userId, req.params.listId, { name, amount, unit });
+    return res.status(201).json({ success: true, item });
+  } catch (err) {
+    if (err.message === 'Grocery list not found') {
+      return res.status(404).json({ success: false, error: err.message });
+    }
+
+    console.error('[GroceryListRoute] Error adding grocery item:', err.message);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+/**
+ * DELETE /grocery-list/:listId/item/:itemId
+ *
+ * Remove an ingredient from a grocery list.
+ *
+ * Response 200:
+ * { "success": true, "item": { "id": "...", ... } }
+ *
+ * Response 404:
+ * { "success": false, "error": "Grocery list not found" | "Item not found in grocery list" }
+ */
+router.delete('/:listId/item/:itemId', verifyFirebaseToken, async (req, res) => {
+  try {
+    const { listId, itemId } = req.params;
+    const item = await deleteGroceryItem(req.userId, listId, itemId);
+    return res.status(200).json({ success: true, item });
+  } catch (err) {
+    const isNotFound =
+      err.message === 'Grocery list not found' ||
+      err.message === 'Item not found in grocery list';
+
+    if (isNotFound) {
+      return res.status(404).json({ success: false, error: err.message });
+    }
+
+    console.error('[GroceryListRoute] Error deleting grocery item:', err.message);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+/**
+ * PATCH /grocery-list/:listId/item/:itemId
+ *
+ * Update the quantity of an existing grocery list item.
+ *
+ * Request body:
+ * { "amount": number }
+ *
+ * Response 200:
+ * { "success": true, "item": { "id": "...", "amount": number, ... } }
+ *
+ * Response 404:
+ * { "success": false, "error": "Grocery list not found" | "Item not found in grocery list" }
+ */
+router.patch('/:listId/item/:itemId', verifyFirebaseToken, async (req, res) => {
+  try {
+    const { listId, itemId } = req.params;
+    const { amount } = req.body;
+
+    if (amount === undefined || typeof amount !== 'number') {
+      return res.status(400).json({ success: false, error: 'amount must be a number' });
+    }
+
+    const item = await updateGroceryItemQuantity(req.userId, listId, itemId, amount);
+    return res.status(200).json({ success: true, item });
+  } catch (err) {
+    const isNotFound =
+      err.message === 'Grocery list not found' ||
+      err.message === 'Item not found in grocery list';
+
+    if (isNotFound) {
+      return res.status(404).json({ success: false, error: err.message });
+    }
+
+    console.error('[GroceryListRoute] Error updating grocery item quantity:', err.message);
     return res.status(500).json({ success: false, error: err.message });
   }
 });
