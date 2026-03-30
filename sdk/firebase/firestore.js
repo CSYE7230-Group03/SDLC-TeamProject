@@ -151,5 +151,6 @@ module.exports = {
   verifyFirebaseToken,
   addSubDocument,
   updateSubDocument,
-  serverTimestamp: () => FieldValue.serverTimestamp()
+  serverTimestamp: () => FieldValue.serverTimestamp(),
+  deleteField: () => FieldValue.delete(),
 };
