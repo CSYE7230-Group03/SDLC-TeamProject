@@ -239,7 +239,15 @@ export default function RecipeDetailScreen({ route, navigation }: Props) {
       {/* Floating CTA */}
       <View style={[styles.ctaWrapper, { paddingBottom: Math.max(insets.bottom, 20) }]}>
         <TouchableOpacity
-          style={styles.ctaButton}
+          style={styles.orderButton}
+          onPress={() => navigation.navigate("GroceryOrder", { ingredients: recipe.ingredients })}
+          activeOpacity={0.85}
+        >
+          <Ionicons name="cart-outline" size={18} color="#2d6a4f" />
+          <Text style={styles.orderText}>Order</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.ctaButton, { flex: 1 }]}
           onPress={handleStartCooking}
           activeOpacity={0.85}
         >
@@ -411,6 +419,8 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 20,
     right: 20,
+    flexDirection: "row",
+    gap: 10,
   },
   ctaButton: {
     backgroundColor: CTA_COLOR,
@@ -422,6 +432,20 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.18,
     shadowRadius: 12,
     elevation: 6,
+  },
+  orderButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    backgroundColor: "#e8f5e9",
+    paddingVertical: 18,
+    paddingHorizontal: 20,
+    borderRadius: 999,
+  },
+  orderText: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: "#2d6a4f",
   },
   ctaText: {
     color: "#FFFFFF",

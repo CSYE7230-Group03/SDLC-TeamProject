@@ -12,6 +12,7 @@ const recipeHistoryRoutes = require("./routes/recipeHistory");
 const profileRoutes = require("./routes/profile");
 const settingsRoutes = require("./routes/settings");
 const groceryListRoutes = require("./routes/groceryList");
+const groceryOrderRoutes = require("./routes/groceryOrder");
 
 const app = express();
 const PORT = process.env.PORT || 5050;
@@ -38,6 +39,7 @@ app.use("/recipe-history", recipeHistoryRoutes);
 app.use("/profile", profileRoutes);
 app.use("/settings", settingsRoutes);
 app.use("/grocery-list", groceryListRoutes);
+app.use("/grocery-order", groceryOrderRoutes);
 
 // Simple root endpoint so you can quickly confirm the service is up.
 app.get("/", (req, res) => {

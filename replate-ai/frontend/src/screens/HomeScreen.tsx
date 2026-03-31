@@ -26,6 +26,8 @@ import {
   getUserInventory,
   getProfileAnalysis,
   ProfileAnalysis,
+  getPopularRecipes,
+  PopularRecipe,
 } from "../services/api";
 import { useAppTheme } from "../theme/ThemeProvider";
 import { spacing, radii } from "../theme/theme";
@@ -74,6 +76,9 @@ export default function HomeScreen({ navigation }: Props) {
   const [profileAnalysis, setProfileAnalysis] =
     useState<ProfileAnalysis | null>(null);
   const [loadingProfile, setLoadingProfile] = useState(false);
+  const [cartItems, setCartItems] = useState<any[]>([]);
+  const [typedText, setTypedText] = useState("");
+  const [popularRecipes, setPopularRecipes] = useState<PopularRecipe[]>([]);
 
   // ─── Animations ──────────────────────────────────────────────────────────
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -126,6 +131,25 @@ export default function HomeScreen({ navigation }: Props) {
     loadCachedData();
     loadUserData();
 
+    // Typing animation
+    const fullText = "Feeling hungry?\nWhat are we cookin' today?";
+    let i = 0;
+    const timer = setInterval(() => {
+      setTypedText(fullText.slice(0, i + 1));
+      i++;
+      if (i >= fullText.length) clearInterval(timer);
+    }, 35);
+
+    // Load cart
+    AsyncStorage.getItem("replate_grocery_cart").then((data) => {
+      setCartItems(data ? JSON.parse(data) : []);
+    });
+
+    // Load popular recipes
+    getPopularRecipes().then((res) => {
+      if (res.success) setPopularRecipes(res.recipes);
+    }).catch(() => {});
+
     Animated.parallel([
       Animated.timing(fadeAnim, {
         toValue: 1,
@@ -139,6 +163,8 @@ export default function HomeScreen({ navigation }: Props) {
         useNativeDriver: true,
       }),
     ]).start();
+
+    return () => clearInterval(timer);
   }, []);
 
   useEffect(() => {
@@ -152,6 +178,12 @@ export default function HomeScreen({ navigation }: Props) {
     useCallback(() => {
       if (!mountedRef.current) { mountedRef.current = true; return; }
       loadInventoryCount();
+      AsyncStorage.getItem("replate_grocery_cart").then((data) => {
+        setCartItems(data ? JSON.parse(data) : []);
+      });
+      getPopularRecipes().then((res) => {
+        if (res.success) setPopularRecipes(res.recipes);
+      }).catch(() => {});
     }, []),
   );
 
@@ -210,7 +242,7 @@ export default function HomeScreen({ navigation }: Props) {
         const ingredientNames = activeItems.map((i) => i.ingredientName);
 
         if (ingredientNames.length > 0) {
-          const recRes = await generateRecipes(ingredientNames, undefined, 3);
+          const recRes = await generateRecipes(ingredientNames, undefined, 5);
           if (recRes.success && recRes.recipes.length > 0) {
             setRecommendations(recRes.recipes);
             await AsyncStorage.setItem(
@@ -392,14 +424,13 @@ export default function HomeScreen({ navigation }: Props) {
             { opacity: fadeAnim, transform: [{ translateY: slideAnim }] },
           ]}
         >
-          <Text style={styles.heroText}>{"Feeling hungry?"}</Text>
-          <Text style={styles.heroText}>{"What are we cookin' today?"}</Text>
+          <Text style={styles.heroText}>{typedText}<Text style={styles.cursor}>|</Text></Text>
         </Animated.View>
 
-        {/* ── Recommendation section ─────────────────────────────────────── */}
+        {/* ── Replate's Recipe of The Week ─────────────────────────────── */}
         <View style={styles.section}>
           <View style={styles.sectionHeaderRow}>
-            <Text style={styles.sectionTitle}>Recommendation</Text>
+            <Text style={styles.sectionTitle}>Replate's Recipe of The Week</Text>
             <TouchableOpacity
               onPress={() => navigation.navigate("History")}
               activeOpacity={0.7}
@@ -444,12 +475,13 @@ export default function HomeScreen({ navigation }: Props) {
           )}
         </View>
 
-        {/* ── Recipe of The Week section ─────────────────────────────────── */}
-        {weekRecipes.length > 0 && (
+        {/* ── Try Something New section ──────────────────────────────── */}
+        {popularRecipes.length > 0 && (
           <View style={styles.section}>
             <View style={styles.sectionHeaderRow}>
-              <Text style={styles.sectionTitle}>Recipe of The Week</Text>
+              <Text style={styles.sectionTitle}>Try Something New</Text>
             </View>
+            <Text style={styles.sectionSubtitle}>Most cooked by Replate users — give them a try!</Text>
 
             <ScrollView
               horizontal
@@ -458,11 +490,72 @@ export default function HomeScreen({ navigation }: Props) {
               decelerationRate="fast"
               contentContainerStyle={styles.weekList}
             >
-              {weekRecipes.map((item, index) => renderWeekCard(item, index))}
+              {popularRecipes.map((item, index) => (
+                <TouchableOpacity
+                  key={item.id?.toString() || index.toString()}
+                  style={styles.weekCard}
+                  onPress={() => rootNavigation.navigate("RecipeDetail", { recipe: item })}
+                  activeOpacity={0.88}
+                >
+                  {item.image ? (
+                    <Image source={{ uri: item.image }} style={styles.weekCardImage} resizeMode="cover" />
+                  ) : (
+                    <View style={[styles.weekCardImage, styles.weekCardImagePlaceholder]}>
+                      <MaterialCommunityIcons name="silverware-fork-knife" size={28} color={CARD_WHITE} />
+                    </View>
+                  )}
+                  <View style={styles.weekCardInfo}>
+                    <Text style={styles.weekCardTitle} numberOfLines={2}>{item.title}</Text>
+                    <Text style={styles.weekCardMeta}>
+                      {item.cookedCount} {item.cookedCount === 1 ? "cook" : "cooks"}
+                      {item.readyInMinutes ? ` · ${item.readyInMinutes} min` : ""}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              ))}
             </ScrollView>
           </View>
         )}
 
+
+        {/* ── What's in My Cart? ──────────────────────────────────────── */}
+        {cartItems.length > 0 && (
+          <View style={styles.section}>
+            <View style={styles.sectionHeaderRow}>
+              <Text style={styles.sectionTitle}>What's in My Cart?</Text>
+              <TouchableOpacity
+                onPress={() => rootNavigation.navigate("Cart")}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.seeAllText}>View All</Text>
+              </TouchableOpacity>
+            </View>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.cartList}
+            >
+              {cartItems.slice(0, 6).map((item: any, i: number) => (
+                <TouchableOpacity
+                  key={i}
+                  style={styles.cartItem}
+                  onPress={() => rootNavigation.navigate("Cart")}
+                  activeOpacity={0.8}
+                >
+                  {item.image ? (
+                    <Image source={{ uri: item.image }} style={styles.cartItemImage} />
+                  ) : (
+                    <View style={[styles.cartItemImage, { backgroundColor: "#f0f0f0", justifyContent: "center", alignItems: "center" }]}>
+                      <Ionicons name="bag-outline" size={20} color="#999" />
+                    </View>
+                  )}
+                  <Text style={styles.cartItemName} numberOfLines={1}>{item.ingredientName}</Text>
+                  <Text style={styles.cartItemPrice}>${item.price?.toFixed(2)}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        )}
 
         {/* Bottom padding so content clears tab bar */}
         <View style={{ height: tabBarHeight }} />
@@ -541,10 +634,14 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xl,
   },
   heroText: {
-    fontSize: 30,
-    fontWeight: "700",
-    color: TEXT_PRIMARY,
-    lineHeight: 38,
+    fontSize: 22,
+    fontWeight: "300",
+    color: "#999999",
+    lineHeight: 30,
+  },
+  cursor: {
+    color: "#cccccc",
+    fontWeight: "100",
   },
 
   // Section
@@ -567,6 +664,12 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: "600",
     color: GREEN_DARK,
+  },
+  sectionSubtitle: {
+    fontSize: 13,
+    color: TEXT_SECONDARY,
+    paddingHorizontal: spacing.xl,
+    marginBottom: spacing.md,
   },
 
   // Recommendation cards
@@ -705,5 +808,29 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     fontSize: 14,
   },
-
+  cartList: {
+    paddingHorizontal: spacing.xl,
+    gap: 12,
+  },
+  cartItem: {
+    width: 100,
+    alignItems: "center",
+  },
+  cartItemImage: {
+    width: 80,
+    height: 80,
+    borderRadius: 12,
+    marginBottom: 6,
+  },
+  cartItemName: {
+    fontSize: 11,
+    fontWeight: "600",
+    color: TEXT_PRIMARY,
+    textAlign: "center",
+  },
+  cartItemPrice: {
+    fontSize: 11,
+    color: TEXT_SECONDARY,
+    marginTop: 2,
+  },
 });

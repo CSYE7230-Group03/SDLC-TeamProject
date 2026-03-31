@@ -673,3 +673,103 @@ export async function updateGroceryItemQuantity(
   );
   return parseResponse<GroceryListItemResponse>(res);
 }
+
+
+// ---------------------------------------------------------------------------
+// Grocery Order (Walmart)
+// ---------------------------------------------------------------------------
+
+export interface GroceryOrderProduct {
+  providerId: string;
+  providerName: string;
+  productName: string;
+  price: number;
+  image: string;
+  inStock: boolean;
+  url: string;
+}
+
+export interface GroceryOrderItem {
+  ingredient: {
+    originalName: string;
+    canonicalName: string;
+    amount: number;
+    unit: string;
+  };
+  product: GroceryOrderProduct;
+  quantity: number;
+}
+
+export interface GroceryOrderResponse {
+  success: boolean;
+  order?: {
+    provider: string;
+    orderItems: GroceryOrderItem[];
+    notFound: { originalName: string; canonicalName: string }[];
+    summary: {
+      totalItems: number;
+      totalPrice: number;
+      missingItems: number;
+    };
+  };
+  error?: string;
+}
+
+export async function generateGroceryOrder(
+  ingredients: { name: string; amount: number; unit: string }[],
+  provider: string = "walmart"
+): Promise<GroceryOrderResponse> {
+  const res = await fetch(`${API_BASE_URL}/grocery-order/generate`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...authHeaders() },
+    body: JSON.stringify({ ingredients, provider }),
+  });
+  return parseResponse<GroceryOrderResponse>(res);
+}
+
+
+// ---------------------------------------------------------------------------
+// Popular Recipes
+// ---------------------------------------------------------------------------
+
+export interface PopularRecipe extends Recipe {
+  cookedCount: number;
+}
+
+interface PopularRecipesResponse {
+  success: boolean;
+  recipes: PopularRecipe[];
+}
+
+export async function getPopularRecipes(): Promise<PopularRecipesResponse> {
+  const res = await fetch(`${API_BASE_URL}/recipe-history/popular`, {
+    headers: authHeaders(),
+  });
+  return parseResponse<PopularRecipesResponse>(res);
+}
+
+
+// ---------------------------------------------------------------------------
+// Walmart Search
+// ---------------------------------------------------------------------------
+
+export interface WalmartProduct {
+  itemId: number;
+  name: string;
+  price: number;
+  image: string;
+  category: string;
+  inStock: boolean;
+}
+
+interface WalmartSearchResponse {
+  success: boolean;
+  products: WalmartProduct[];
+}
+
+export async function searchWalmartProducts(query: string): Promise<WalmartSearchResponse> {
+  const res = await fetch(`${API_BASE_URL}/grocery-order/search?q=${encodeURIComponent(query)}`, {
+    headers: authHeaders(),
+  });
+  return parseResponse<WalmartSearchResponse>(res);
+}
