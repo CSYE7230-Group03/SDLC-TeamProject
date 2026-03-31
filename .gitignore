@@ -41,3 +41,6 @@ replate-ai/frontend/node_modules/
 replate-ai/frontend/dist/
 replate-ai/frontend/package-lock.json
 replate-ai/backend/api-service/node_modules/
+
+# Walmart API keys
+WM_IO_*.pem

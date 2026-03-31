@@ -1,5 +1,5 @@
 const express = require("express");
-const { saveRecipe, getUserHistory } = require("../services/recipeHistoryService");
+const { saveRecipe, getUserHistory, getPopularRecipes } = require("../services/recipeHistoryService");
 
 const router = express.Router();
 
@@ -35,6 +35,21 @@ router.post("/", placeholderAuth, async (req, res) => {
     return res.status(201).json({ success: true, ...result });
   } catch (err) {
     console.error("[RecipeHistoryRoute] Error saving recipe:", err.message);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+/**
+ * GET /recipe-history/popular
+ *
+ * Get the most popular recipes across all users (top 3).
+ */
+router.get("/popular", async (req, res) => {
+  try {
+    const recipes = await getPopularRecipes(3);
+    return res.status(200).json({ success: true, recipes });
+  } catch (err) {
+    console.error("[RecipeHistoryRoute] Error fetching popular:", err.message);
     return res.status(500).json({ success: false, error: err.message });
   }
 });

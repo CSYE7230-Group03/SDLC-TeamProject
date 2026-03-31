@@ -4,6 +4,8 @@ const {
   serverTimestamp,
 } = require("../../../../../sdk/firebase/firestore");
 
+const { getFirestore } = require("../../../../../sdk/firebase/index");
+
 const COLLECTION = "RecipeHistory";
 
 /**
@@ -66,4 +68,54 @@ async function getUserHistory(userId) {
   return recipes;
 }
 
-module.exports = { saveRecipe, getUserHistory };
+
+/**
+ * Get the most popular recipes across ALL users.
+ * Aggregates recipe titles from all users' history and returns top N.
+ *
+ * @param {number} limit - Number of top recipes to return
+ * @returns {Promise<Array>}
+ */
+async function getPopularRecipes(limit = 3) {
+  const db = getFirestore();
+
+  // Use collectionGroup to query ALL recipes subcollections across all users
+  const allRecipesSnapshot = await db.collectionGroup("recipes").get();
+  console.log("[Popular] Total recipes across all users:", allRecipesSnapshot.docs.length);
+
+  const recipeCount = new Map(); // title -> { count, recipe }
+
+  for (const recipeDoc of allRecipesSnapshot.docs) {
+    // Only include docs under RecipeHistory (not other collections with "recipes" subcollection)
+    if (!recipeDoc.ref.path.startsWith(COLLECTION + "/")) continue;
+
+    const data = recipeDoc.data();
+    const key = data.title?.toLowerCase();
+    if (!key) continue;
+
+    if (recipeCount.has(key)) {
+      recipeCount.get(key).count++;
+    } else {
+      recipeCount.set(key, {
+        count: 1,
+        recipe: {
+          id: data.recipeId || recipeDoc.id,
+          title: data.title,
+          image: data.image,
+          readyInMinutes: data.readyInMinutes,
+          servings: data.servings,
+          ingredients: data.ingredients,
+          instructions: data.instructions,
+        },
+      });
+    }
+  }
+
+  // Sort by count descending, return top N
+  return Array.from(recipeCount.values())
+    .sort((a, b) => b.count - a.count)
+    .slice(0, limit)
+    .map((entry) => ({ ...entry.recipe, cookedCount: entry.count }));
+}
+
+module.exports = { saveRecipe, getUserHistory, getPopularRecipes };

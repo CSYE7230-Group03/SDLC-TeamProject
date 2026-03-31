@@ -172,6 +172,9 @@ export default function InventoryScreen({ navigation }: Props) {
           </Text>
           <Text style={[styles.unitText, { color: theme.colors.textMuted }]}>{item.unit}</Text>
         </View>
+        {isEmpty && (
+          <Ionicons name="cart-outline" size={18} color={theme.colors.primary || "#2d6a4f"} style={{ marginLeft: 8 }} />
+        )}
       </Animated.View>
     );
   }, [theme, fadeAnim]);
@@ -200,10 +203,30 @@ export default function InventoryScreen({ navigation }: Props) {
             <Text style={[styles.summaryLabel, { color: theme.colors.textMuted }]}>Available</Text>
           </View>
           <View style={[styles.summaryDivider, { backgroundColor: theme.colors.border }]} />
-          <View style={styles.summaryItem}>
-            <Text style={[styles.summaryNumber, { color: theme.colors.textMuted }]}>{emptyItems.length}</Text>
-            <Text style={[styles.summaryLabel, { color: theme.colors.textMuted }]}>Out of stock</Text>
-          </View>
+          <TouchableOpacity
+            style={styles.summaryItem}
+            onPress={() => {
+              if (emptyItems.length > 0) {
+                (navigation as any).getParent()?.navigate("GroceryOrder", {
+                  ingredients: emptyItems.map((i) => ({
+                    name: i.ingredientName,
+                    amount: 1,
+                    unit: i.unit || "piece",
+                  })),
+                });
+              }
+            }}
+            disabled={emptyItems.length === 0}
+            activeOpacity={0.6}
+          >
+            <Text style={[styles.summaryNumber, { color: emptyItems.length > 0 ? "#f44336" : theme.colors.textMuted }]}>{emptyItems.length}</Text>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+              <Text style={[styles.summaryLabel, { color: emptyItems.length > 0 ? "#f44336" : theme.colors.textMuted }]}>Out of stock</Text>
+              {emptyItems.length > 0 && (
+                <Ionicons name="cart-outline" size={14} color="#f44336" />
+              )}
+            </View>
+          </TouchableOpacity>
         </View>
 
         {items.length === 0 ? (
@@ -228,7 +251,7 @@ export default function InventoryScreen({ navigation }: Props) {
             data={[...activeItems, ...emptyItems]}
             keyExtractor={(item) => item.id}
             renderItem={renderItem}
-            contentContainerStyle={styles.list}
+            contentContainerStyle={[styles.list, { paddingBottom: 80 }]}
             showsVerticalScrollIndicator={false}
             ListHeaderComponent={
               lastImage ? (
@@ -259,7 +282,7 @@ export default function InventoryScreen({ navigation }: Props) {
         )}
 
         {/* Bottom Action — sits above the tab bar */}
-        <View style={[styles.bottomAction, { backgroundColor: theme.colors.background, borderTopColor: theme.colors.border, paddingBottom: tabBarHeight }]}>
+        <View style={[styles.bottomAction, { backgroundColor: theme.colors.background, borderTopColor: theme.colors.border, paddingBottom: tabBarHeight + 10, marginBottom: 10 }]}>
           <TouchableOpacity
             style={styles.captureButton}
             onPress={() => navigation.navigate("Capture")}

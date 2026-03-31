@@ -18,6 +18,11 @@ import ForgotPasswordScreen from "../screens/ForgotPasswordScreen";
 import { loadStoredSession } from "../services/api";
 import RecipeHistoryScreen from "../screens/RecipeHistoryScreen";
 import GroceryListScreen from "../screens/GroceryListScreen";
+import GroceryOrderScreen from "../screens/GroceryOrderScreen";
+import CartScreen from "../screens/CartScreen";
+import WalmartWebViewScreen from "../screens/WalmartWebViewScreen";
+import CheckoutScreen from "../screens/CheckoutScreen";
+import FloatingCartButton from "../components/FloatingCartButton";
 import BottomTabBar from "../components/BottomTabBar";
 
 export type RootStackParamList = {
@@ -67,6 +72,12 @@ export type RootStackParamList = {
     listId: string;
     recipeTitle: string;
   };
+  GroceryOrder: {
+    ingredients?: { name: string; amount: number; unit: string }[];
+  };
+  Cart: undefined;
+  WalmartWebView: { url?: string };
+  Checkout: { items: any[] };
 };
 
 export type TabParamList = {
@@ -82,16 +93,19 @@ const Tab = createBottomTabNavigator<TabParamList>();
 
 function TabNavigator() {
   return (
-    <Tab.Navigator
-      tabBar={(props) => <BottomTabBar {...props} />}
-      screenOptions={{ headerShown: false }}
-    >
-      <Tab.Screen name="Home" component={HomeScreen} />
-      <Tab.Screen name="Inventory" component={InventoryScreen} />
-      <Tab.Screen name="Capture" component={CapturePhotoScreen} />
-      <Tab.Screen name="History" component={RecipeHistoryScreen} />
-      <Tab.Screen name="Profile" component={ProfilePreferencesScreen} />
-    </Tab.Navigator>
+    <View style={{ flex: 1 }}>
+      <Tab.Navigator
+        tabBar={(props) => <BottomTabBar {...props} />}
+        screenOptions={{ headerShown: false }}
+      >
+        <Tab.Screen name="Home" component={HomeScreen} />
+        <Tab.Screen name="Inventory" component={InventoryScreen} />
+        <Tab.Screen name="Capture" component={CapturePhotoScreen} />
+        <Tab.Screen name="History" component={RecipeHistoryScreen} />
+        <Tab.Screen name="Profile" component={ProfilePreferencesScreen} />
+      </Tab.Navigator>
+      <FloatingCartButton />
+    </View>
   );
 }
 
@@ -173,6 +187,26 @@ export default function AppNavigator() {
           headerTintColor: theme.colors.text,
           headerShadowVisible: false,
         }}
+      />
+      <Stack.Screen
+        name="GroceryOrder"
+        component={GroceryOrderScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="Cart"
+        component={CartScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="WalmartWebView"
+        component={WalmartWebViewScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="Checkout"
+        component={CheckoutScreen}
+        options={{ headerShown: false }}
       />
     </Stack.Navigator>
   );
