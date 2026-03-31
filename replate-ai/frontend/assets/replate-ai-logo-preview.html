@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Replate AI — Logo Preview</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;600&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #F7FAF8; font-family: 'DM Sans', sans-serif; min-height: 100vh; padding: 40px 20px; }
+
+  h1 { text-align: center; font-family: 'DM Serif Display', serif; font-size: 18px; color: #999; margin-bottom: 48px; letter-spacing: 3px; text-transform: uppercase; }
+
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; max-width: 860px; margin: 0 auto; }
+
+  .card { border-radius: 20px; padding: 40px; display: flex; flex-direction: column; align-items: center; gap: 16px; }
+
+  .label { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; opacity: 0.5; }
+
+  /* White bg */
+  .bg-white { background: #ffffff; box-shadow: 0 2px 24px rgba(0,0,0,0.06); }
+  .bg-white .label { color: #333; }
+
+  /* Dark bg */
+  .bg-dark { background: #162820; }
+  .bg-dark .label { color: #fff; }
+
+  /* Green bg */
+  .bg-green { background: linear-gradient(135deg, #4ECDA4, #2BAE82); }
+  .bg-green .label { color: #fff; }
+
+  /* Warm bg */
+  .bg-warm { background: #FFF8F0; box-shadow: 0 2px 24px rgba(0,0,0,0.06); }
+  .bg-warm .label { color: #333; }
+
+  svg { max-width: 100%; }
+
+  /* Dark mode logo adaptation */
+  .dark-logo text { fill: white !important; }
+  .dark-logo text[fill="#1A2E24"] { fill: white !important; }
+  .dark-logo text[fill="#7ABFA0"] { fill: #4ECDA4 !important; }
+  .dark-logo circle[fill="#F0FBF6"] { fill: #1e3d30 !important; }
+  .dark-logo circle[fill="white"] { fill: #1e3d30 !important; }
+</style>
+</head>
+<body>
+
+<h1>Replate AI — Logo Preview</h1>
+
+<div class="grid">
+
+  <!-- White bg -->
+  <div class="card bg-white">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 160" width="360">
+      <defs>
+        <linearGradient id="g1" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" style="stop-color:#4ECDA4"/>
+          <stop offset="100%" style="stop-color:#2BAE82"/>
+        </linearGradient>
+        <linearGradient id="g2" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" style="stop-color:#FFD166"/>
+          <stop offset="100%" style="stop-color:#FF9A3C"/>
+        </linearGradient>
+        <filter id="sh1"><feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#4ECDA4" flood-opacity="0.2"/></filter>
+      </defs>
+      <g filter="url(#sh1)">
+        <circle cx="76" cy="80" r="58" fill="#F0FBF6"/>
+        <circle cx="76" cy="80" r="50" fill="white"/>
+        <circle cx="76" cy="80" r="50" fill="none" stroke="url(#g1)" stroke-width="5"/>
+        <circle cx="76" cy="80" r="36" fill="none" stroke="#D6F5E8" stroke-width="2"/>
+        <g transform="translate(58, 52)">
+          <rect x="6" y="0" width="2.5" height="22" rx="1.2" fill="url(#g1)"/>
+          <rect x="2" y="0" width="2" height="12" rx="1" fill="url(#g1)"/>
+          <rect x="10" y="0" width="2" height="12" rx="1" fill="url(#g1)"/>
+          <rect x="4" y="11" width="8" height="2.5" rx="1" fill="url(#g1)"/>
+        </g>
+        <g transform="translate(84, 52)">
+          <ellipse cx="5.5" cy="7" rx="5" ry="7" fill="url(#g1)"/>
+          <ellipse cx="5.5" cy="7" rx="3.5" ry="5" fill="white" opacity="0.4"/>
+          <rect x="4.2" y="13" width="2.5" height="13" rx="1.2" fill="url(#g1)"/>
+        </g>
+        <g transform="translate(96, 36)">
+          <polygon points="8,0 10,6 16,8 10,10 8,16 6,10 0,8 6,6" fill="url(#g2)"/>
+        </g>
+        <circle cx="116" cy="42" r="2.5" fill="#FFD166" opacity="0.7"/>
+        <circle cx="122" cy="50" r="1.8" fill="#FF9A3C" opacity="0.5"/>
+      </g>
+      <text x="152" y="72" font-family="'DM Serif Display', Georgia, serif" font-size="38" font-weight="700" letter-spacing="-1" fill="#1A2E24">Re</text>
+      <text x="192" y="72" font-family="'DM Serif Display', Georgia, serif" font-size="38" font-weight="700" letter-spacing="-1" fill="url(#g1)">plate</text>
+      <rect x="153" y="82" width="28" height="16" rx="8" fill="url(#g2)"/>
+      <text x="167" y="94" font-family="'DM Sans', Arial, sans-serif" font-size="10" font-weight="700" fill="white" text-anchor="middle" letter-spacing="1">AI</text>
+      <text x="191" y="118" font-family="'DM Sans', Arial, sans-serif" font-size="13" fill="#7ABFA0" letter-spacing="2.5" font-weight="600">LEFTOVER MAGIC</text>
+    </svg>
+    <span class="label">Light Background</span>
+  </div>
+
+  <!-- Dark bg -->
+  <div class="card bg-dark">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 160" width="360">
+      <defs>
+        <linearGradient id="g3" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" style="stop-color:#4ECDA4"/>
+          <stop offset="100%" style="stop-color:#2BAE82"/>
+        </linearGradient>
+        <linearGradient id="g4" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" style="stop-color:#FFD166"/>
+          <stop offset="100%" style="stop-color:#FF9A3C"/>
+        </linearGradient>
+        <filter id="sh2"><feDropShadow dx="0" dy="4" stdDeviation="10" flood-color="#4ECDA4" flood-opacity="0.3"/></filter>
+      </defs>
+      <g filter="url(#sh2)">
+        <circle cx="76" cy="80" r="58" fill="#1e3d30"/>
+        <circle cx="76" cy="80" r="50" fill="#162820"/>
+        <circle cx="76" cy="80" r="50" fill="none" stroke="url(#g3)" stroke-width="5"/>
+        <circle cx="76" cy="80" r="36" fill="none" stroke="#2a4a3a" stroke-width="2"/>
+        <g transform="translate(58, 52)">
+          <rect x="6" y="0" width="2.5" height="22" rx="1.2" fill="url(#g3)"/>
+          <rect x="2" y="0" width="2" height="12" rx="1" fill="url(#g3)"/>
+          <rect x="10" y="0" width="2" height="12" rx="1" fill="url(#g3)"/>
+          <rect x="4" y="11" width="8" height="2.5" rx="1" fill="url(#g3)"/>
+        </g>
+        <g transform="translate(84, 52)">
+          <ellipse cx="5.5" cy="7" rx="5" ry="7" fill="url(#g3)"/>
+          <ellipse cx="5.5" cy="7" rx="3.5" ry="5" fill="#162820" opacity="0.4"/>
+          <rect x="4.2" y="13" width="2.5" height="13" rx="1.2" fill="url(#g3)"/>
+        </g>
+        <g transform="translate(96, 36)">
+          <polygon points="8,0 10,6 16,8 10,10 8,16 6,10 0,8 6,6" fill="url(#g4)"/>
+        </g>
+        <circle cx="116" cy="42" r="2.5" fill="#FFD166" opacity="0.7"/>
+        <circle cx="122" cy="50" r="1.8" fill="#FF9A3C" opacity="0.5"/>
+      </g>
+      <text x="152" y="72" font-family="'DM Serif Display', Georgia, serif" font-size="38" font-weight="700" letter-spacing="-1" fill="white">Re</text>
+      <text x="192" y="72" font-family="'DM Serif Display', Georgia, serif" font-size="38" font-weight="700" letter-spacing="-1" fill="url(#g3)">plate</text>
+      <rect x="153" y="82" width="28" height="16" rx="8" fill="url(#g4)"/>
+      <text x="167" y="94" font-family="'DM Sans', Arial, sans-serif" font-size="10" font-weight="700" fill="#162820" text-anchor="middle" letter-spacing="1">AI</text>
+      <text x="191" y="118" font-family="'DM Sans', Arial, sans-serif" font-size="13" fill="#4ECDA4" letter-spacing="2.5" font-weight="600">LEFTOVER MAGIC</text>
+    </svg>
+    <span class="label" style="color:#4ECDA4;">Dark Background</span>
+  </div>
+
+  <!-- Green gradient bg -->
+  <div class="card bg-green">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 160" width="360">
+      <defs>
+        <linearGradient id="g5" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" style="stop-color:#FFD166"/>
+          <stop offset="100%" style="stop-color:#FF9A3C"/>
+        </linearGradient>
+      </defs>
+      <circle cx="76" cy="80" r="58" fill="rgba(255,255,255,0.15)"/>
+      <circle cx="76" cy="80" r="50" fill="rgba(255,255,255,0.9)"/>
+      <circle cx="76" cy="80" r="50" fill="none" stroke="white" stroke-width="5"/>
+      <circle cx="76" cy="80" r="36" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="2"/>
+      <g transform="translate(58, 52)">
+        <rect x="6" y="0" width="2.5" height="22" rx="1.2" fill="#2BAE82"/>
+        <rect x="2" y="0" width="2" height="12" rx="1" fill="#2BAE82"/>
+        <rect x="10" y="0" width="2" height="12" rx="1" fill="#2BAE82"/>
+        <rect x="4" y="11" width="8" height="2.5" rx="1" fill="#2BAE82"/>
+      </g>
+      <g transform="translate(84, 52)">
+        <ellipse cx="5.5" cy="7" rx="5" ry="7" fill="#2BAE82"/>
+        <ellipse cx="5.5" cy="7" rx="3.5" ry="5" fill="white" opacity="0.5"/>
+        <rect x="4.2" y="13" width="2.5" height="13" rx="1.2" fill="#2BAE82"/>
+      </g>
+      <g transform="translate(96, 36)">
+        <polygon points="8,0 10,6 16,8 10,10 8,16 6,10 0,8 6,6" fill="url(#g5)"/>
+      </g>
+      <circle cx="116" cy="42" r="2.5" fill="#FFD166" opacity="0.8"/>
+      <circle cx="122" cy="50" r="1.8" fill="#FF9A3C" opacity="0.6"/>
+      <text x="152" y="72" font-family="'DM Serif Display', Georgia, serif" font-size="38" font-weight="700" letter-spacing="-1" fill="white">Re</text>
+      <text x="192" y="72" font-family="'DM Serif Display', Georgia, serif" font-size="38" font-weight="700" letter-spacing="-1" fill="white">plate</text>
+      <rect x="153" y="82" width="28" height="16" rx="8" fill="url(#g5)"/>
+      <text x="167" y="94" font-family="'DM Sans', Arial, sans-serif" font-size="10" font-weight="700" fill="white" text-anchor="middle" letter-spacing="1">AI</text>
+      <text x="191" y="118" font-family="'DM Sans', Arial, sans-serif" font-size="13" fill="rgba(255,255,255,0.85)" letter-spacing="2.5" font-weight="600">LEFTOVER MAGIC</text>
+    </svg>
+    <span class="label" style="color:rgba(255,255,255,0.7);">Brand Green Background</span>
+  </div>
+
+  <!-- Icon only -->
+  <div class="card bg-warm" style="justify-content: center;">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" width="120">
+      <defs>
+        <linearGradient id="g6" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" style="stop-color:#4ECDA4"/>
+          <stop offset="100%" style="stop-color:#2BAE82"/>
+        </linearGradient>
+        <linearGradient id="g7" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" style="stop-color:#FFD166"/>
+          <stop offset="100%" style="stop-color:#FF9A3C"/>
+        </linearGradient>
+        <filter id="sh3"><feDropShadow dx="0" dy="6" stdDeviation="12" flood-color="#4ECDA4" flood-opacity="0.3"/></filter>
+      </defs>
+      <g filter="url(#sh3)">
+        <circle cx="80" cy="80" r="68" fill="#F0FBF6"/>
+        <circle cx="80" cy="80" r="58" fill="white"/>
+        <circle cx="80" cy="80" r="58" fill="none" stroke="url(#g6)" stroke-width="6"/>
+        <circle cx="80" cy="80" r="42" fill="none" stroke="#D6F5E8" stroke-width="2.5"/>
+        <g transform="translate(60, 54)">
+          <rect x="6" y="0" width="3" height="26" rx="1.5" fill="url(#g6)"/>
+          <rect x="1.5" y="0" width="2.5" height="14" rx="1.2" fill="url(#g6)"/>
+          <rect x="11" y="0" width="2.5" height="14" rx="1.2" fill="url(#g6)"/>
+          <rect x="3.5" y="13" width="9" height="3" rx="1.5" fill="url(#g6)"/>
+        </g>
+        <g transform="translate(90, 54)">
+          <ellipse cx="6" cy="8" rx="6" ry="8" fill="url(#g6)"/>
+          <ellipse cx="6" cy="8" rx="4" ry="5.5" fill="white" opacity="0.4"/>
+          <rect x="4.5" y="15" width="3" height="15" rx="1.5" fill="url(#g6)"/>
+        </g>
+        <g transform="translate(104, 36)">
+          <polygon points="9,0 11,7 18,9 11,11 9,18 7,11 0,9 7,7" fill="url(#g7)"/>
+        </g>
+        <circle cx="128" cy="44" r="3" fill="#FFD166" opacity="0.7"/>
+        <circle cx="135" cy="54" r="2" fill="#FF9A3C" opacity="0.5"/>
+      </g>
+    </svg>
+    <span class="label">App Icon</span>
+  </div>
+
+</div>
+
+<div style="text-align:center; margin-top:48px; color:#bbb; font-size:12px; letter-spacing:1px;">
+  REPLATE AI · BRAND IDENTITY · 2025
+</div>
+
+</body>
+</html>
