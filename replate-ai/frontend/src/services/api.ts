@@ -614,6 +614,25 @@ export async function createGroceryList(params: {
   return parseResponse<GroceryListResponse>(res);
 }
 
+/**
+ * Create a single aggregated grocery list from multiple recipes.
+ * The backend merges duplicate ingredients and sums their quantities.
+ */
+export async function createAggregatedGroceryList(params: {
+  recipes: Array<{
+    recipeId: string | number;
+    recipeTitle: string;
+    ingredients: { name: string; amount: number; unit: string }[];
+  }>;
+}): Promise<GroceryListResponse> {
+  const res = await fetch(`${API_BASE_URL}/grocery-list/aggregate`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...authHeaders() },
+    body: JSON.stringify(params),
+  });
+  return parseResponse<GroceryListResponse>(res);
+}
+
 export async function getGroceryList(listId: string): Promise<GroceryListResponse> {
   const res = await fetch(`${API_BASE_URL}/grocery-list/${listId}`, {
     headers: authHeaders(),

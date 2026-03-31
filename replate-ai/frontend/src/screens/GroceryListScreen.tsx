@@ -31,7 +31,7 @@ export default function GroceryListScreen({ route, navigation }: Props) {
   const [togglingId, setTogglingId] = useState<string | null>(null);
 
   useEffect(() => {
-    navigation.setOptions({ title: `Grocery List for ${recipeTitle}` });
+    navigation.setOptions({ title: `Grocery List · ${recipeTitle}` });
     fetchList();
   }, []);
 
