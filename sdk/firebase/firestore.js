@@ -9,7 +9,7 @@ const { getFirestore, admin, getAuth } = require('./index');
  */
 async function createDocument(collection, docId, data) {
   const db = getFirestore();
-  await db.collection(collection).doc(docId).set(data);
+  await db.collection(collection).doc(docId).set(data, { merge: true });
 }
 
 /**
