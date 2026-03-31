@@ -85,7 +85,6 @@ export default function CartScreen({ navigation }: Props) {
     setItems(updated);
     setSearchResults([]);
     setSearchQuery("");
-    setShowSearch(false);
   }
 
   async function clearCart() {
@@ -208,7 +207,7 @@ export default function CartScreen({ navigation }: Props) {
               <Text style={styles.bottomTotal}>${total.toFixed(2)}</Text>
             </View>
             <TouchableOpacity style={styles.shopBtn} onPress={() => {
-              if (items[0]?.url) Linking.openURL("https://www.walmart.com");
+              (navigation as any).navigate("Checkout", { items });
             }}>
               <Text style={styles.shopBtnText}>Shop on Walmart</Text>
             </TouchableOpacity>

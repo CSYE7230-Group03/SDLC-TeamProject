@@ -20,6 +20,8 @@ import RecipeHistoryScreen from "../screens/RecipeHistoryScreen";
 import GroceryListScreen from "../screens/GroceryListScreen";
 import GroceryOrderScreen from "../screens/GroceryOrderScreen";
 import CartScreen from "../screens/CartScreen";
+import WalmartWebViewScreen from "../screens/WalmartWebViewScreen";
+import CheckoutScreen from "../screens/CheckoutScreen";
 import FloatingCartButton from "../components/FloatingCartButton";
 import BottomTabBar from "../components/BottomTabBar";
 
@@ -74,6 +76,8 @@ export type RootStackParamList = {
     ingredients?: { name: string; amount: number; unit: string }[];
   };
   Cart: undefined;
+  WalmartWebView: { url?: string };
+  Checkout: { items: any[] };
 };
 
 export type TabParamList = {
@@ -192,6 +196,16 @@ export default function AppNavigator() {
       <Stack.Screen
         name="Cart"
         component={CartScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="WalmartWebView"
+        component={WalmartWebViewScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="Checkout"
+        component={CheckoutScreen}
         options={{ headerShown: false }}
       />
     </Stack.Navigator>

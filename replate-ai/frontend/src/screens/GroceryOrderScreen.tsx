@@ -234,7 +234,7 @@ export default function GroceryOrderScreen({ navigation, route }: Props) {
                       </View>
                     </View>
                   </View>
-                  <TouchableOpacity onPress={() => Linking.openURL(item.product.url)}>
+                  <TouchableOpacity onPress={() => (navigation as any).navigate("WalmartWebView", { url: item.product.url })}>
                     <Ionicons name="open-outline" size={18} color={TEXT_LIGHT} />
                   </TouchableOpacity>
                 </TouchableOpacity>
