@@ -17,7 +17,15 @@ export default function FloatingCartButton() {
     });
   }, []));
 
-  if (count === 0) return null;
+  if (count === 0) return (
+    <TouchableOpacity
+      style={[styles.fab, { backgroundColor: "#aaa" }]}
+      onPress={() => navigation.navigate("Cart")}
+      activeOpacity={0.8}
+    >
+      <Ionicons name="cart-outline" size={22} color="#fff" />
+    </TouchableOpacity>
+  );
 
   return (
     <TouchableOpacity

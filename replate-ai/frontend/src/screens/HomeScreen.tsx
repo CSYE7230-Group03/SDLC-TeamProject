@@ -519,17 +519,17 @@ export default function HomeScreen({ navigation }: Props) {
 
 
         {/* ── What's in My Cart? ──────────────────────────────────────── */}
-        {cartItems.length > 0 && (
-          <View style={styles.section}>
-            <View style={styles.sectionHeaderRow}>
-              <Text style={styles.sectionTitle}>What's in My Cart?</Text>
-              <TouchableOpacity
-                onPress={() => rootNavigation.navigate("Cart")}
-                activeOpacity={0.7}
-              >
-                <Text style={styles.seeAllText}>View All</Text>
-              </TouchableOpacity>
-            </View>
+        <View style={styles.section}>
+          <View style={styles.sectionHeaderRow}>
+            <Text style={styles.sectionTitle}>What's in My Cart?</Text>
+            <TouchableOpacity
+              onPress={() => rootNavigation.navigate("Cart")}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.seeAllText}>View All</Text>
+            </TouchableOpacity>
+          </View>
+          {cartItems.length > 0 ? (
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
@@ -554,8 +554,13 @@ export default function HomeScreen({ navigation }: Props) {
                 </TouchableOpacity>
               ))}
             </ScrollView>
-          </View>
-        )}
+          ) : (
+            <View style={{ alignItems: "center", paddingVertical: 20 }}>
+              <Ionicons name="cart-outline" size={32} color="#ccc" />
+              <Text style={{ fontSize: 13, color: TEXT_SECONDARY, marginTop: 8 }}>Your cart is empty</Text>
+            </View>
+          )}
+        </View>
 
         {/* Bottom padding so content clears tab bar */}
         <View style={{ height: tabBarHeight }} />
