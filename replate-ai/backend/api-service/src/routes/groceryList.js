@@ -3,6 +3,7 @@
 const express = require('express');
 const {
   createGroceryList,
+  createAggregatedGroceryList,
   getGroceryList,
   getUserGroceryLists,
   toggleItemAvailability,
@@ -49,6 +50,55 @@ router.post('/', verifyFirebaseToken, async (req, res) => {
     return res.status(201).json({ success: true, list });
   } catch (err) {
     console.error('[GroceryListRoute] Error creating grocery list:', err.message);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+/**
+ * POST /grocery-list/aggregate
+ *
+ * Create a single consolidated grocery list from multiple recipes.
+ * Ingredients with the same name and unit are merged and their
+ * quantities summed, satisfying the aggregation acceptance criteria.
+ *
+ * Request body:
+ * {
+ *   "recipes": [
+ *     {
+ *       "recipeId": "string|number",
+ *       "recipeTitle": "string",
+ *       "ingredients": [{ "name": "string", "amount": number, "unit": "string" }]
+ *     }
+ *   ]
+ * }
+ *
+ * Response 201:
+ * { "success": true, "list": { ... } }
+ */
+router.post('/aggregate', verifyFirebaseToken, async (req, res) => {
+  try {
+    const { recipes } = req.body;
+
+    if (!Array.isArray(recipes) || recipes.length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'recipes must be a non-empty array',
+      });
+    }
+
+    for (const r of recipes) {
+      if (!r.recipeId || !r.recipeTitle || !Array.isArray(r.ingredients)) {
+        return res.status(400).json({
+          success: false,
+          error: 'each recipe must have recipeId, recipeTitle, and an ingredients array',
+        });
+      }
+    }
+
+    const list = await createAggregatedGroceryList(req.userId, { recipes });
+    return res.status(201).json({ success: true, list });
+  } catch (err) {
+    console.error('[GroceryListRoute] Error creating aggregated grocery list:', err.message);
     return res.status(500).json({ success: false, error: err.message });
   }
 });
