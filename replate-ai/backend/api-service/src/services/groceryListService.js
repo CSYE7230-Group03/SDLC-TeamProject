@@ -238,8 +238,90 @@ async function updateGroceryItemQuantity(userId, listId, itemId, amount) {
   return { id: itemId, ...item, amount };
 }
 
+/**
+ * Aggregate ingredients from multiple recipes into a single deduplicated list.
+ *
+ * Deduplication rules:
+ *  - Names are normalized (lowercase + trimmed) for comparison.
+ *  - Items with the same name AND unit have their amounts summed.
+ *  - Items with the same name but different units are kept as separate entries
+ *    because unit conversion cannot be done safely without a lookup table.
+ *
+ * @param {Array<{ ingredients: Array<{ name: string, amount: number, unit: string }> }>} recipesList
+ * @returns {Array<{ name: string, amount: number, unit: string }>}
+ */
+function aggregateIngredients(recipesList) {
+  const merged = {};
+
+  for (const { ingredients = [] } of recipesList) {
+    for (const ing of ingredients) {
+      const nameKey = ing.name.trim().toLowerCase();
+      const unitKey = (ing.unit || '').trim().toLowerCase();
+      const key = `${nameKey}::${unitKey}`;
+
+      if (merged[key]) {
+        merged[key].amount = (merged[key].amount || 0) + (ing.amount || 0);
+      } else {
+        merged[key] = {
+          name: ing.name.trim(),
+          amount: ing.amount || 0,
+          unit: ing.unit || '',
+        };
+      }
+    }
+  }
+
+  return Object.values(merged);
+}
+
+/**
+ * Create a single consolidated grocery list from multiple recipes.
+ *
+ * All ingredients across the provided recipes are aggregated using
+ * `aggregateIngredients` (duplicates merged, quantities summed).
+ *
+ * @param {string} userId
+ * @param {{ recipes: Array<{ recipeId: string|number, recipeTitle: string, ingredients: Array<{ name: string, amount: number, unit: string }> }> }} payload
+ * @returns {Promise<Object>} - Formatted list with aggregated items array
+ */
+async function createAggregatedGroceryList(userId, { recipes }) {
+  const aggregated = aggregateIngredients(recipes);
+
+  const titles = recipes.map((r) => r.recipeTitle);
+  let listTitle;
+  if (titles.length === 1) {
+    listTitle = titles[0];
+  } else if (titles.length === 2) {
+    listTitle = `${titles[0]} & ${titles[1]}`;
+  } else {
+    listTitle = `${titles[0]} + ${titles.length - 1} more`;
+  }
+
+  const items = {};
+  for (const ingredient of aggregated) {
+    const itemId = crypto.randomUUID();
+    items[itemId] = {
+      name: ingredient.name,
+      amount: ingredient.amount,
+      unit: ingredient.unit,
+      isAvailableAtHome: false,
+    };
+  }
+
+  const listData = {
+    recipeId: recipes.map((r) => String(r.recipeId)).join(','),
+    recipeTitle: listTitle,
+    createdAt: serverTimestamp(),
+    items,
+  };
+
+  const saved = await addSubDocument('GroceryLists', userId, 'lists', listData);
+  return formatList({ ...listData, id: saved.id });
+}
+
 module.exports = {
   createGroceryList,
+  createAggregatedGroceryList,
   getGroceryList,
   getUserGroceryLists,
   toggleItemAvailability,

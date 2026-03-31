@@ -20,6 +20,7 @@ import {
   getUserInventory,
   markRecipeAsCooked,
   createGroceryList,
+  createAggregatedGroceryList,
   getAuthToken,
   Recipe,
   InventoryItem,
@@ -135,6 +136,10 @@ export default function RecipeGenerationScreen({ route, navigation }: Props) {
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
   const [creatingList, setCreatingList] = useState(false);
 
+  // Multi-select state for aggregated grocery list
+  const [selectedIds, setSelectedIds] = useState<Set<string | number>>(new Set());
+  const [buildingList, setBuildingList] = useState(false);
+
   useEffect(() => {
     loadData();
     navigation.setOptions({
@@ -195,6 +200,52 @@ export default function RecipeGenerationScreen({ route, navigation }: Props) {
     setSelectedRecipe(null);
   }
 
+  function toggleRecipeSelection(id: string | number) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  }
+
+  async function handleBuildGroceryList() {
+    if (buildingList || selectedIds.size === 0) return;
+    setBuildingList(true);
+    try {
+      const chosenRecipes = recipes.filter((r) => selectedIds.has(r.id));
+      const recipesPayload = chosenRecipes.map((recipe) => {
+        const feasibility = checkFeasibility(recipe, inventory);
+        const missingIngredients = (recipe.ingredients ?? []).filter((ing) =>
+          feasibility.missing.some((m) => norm(m) === norm(ing.name))
+        );
+        return {
+          recipeId: recipe.id,
+          recipeTitle: recipe.title,
+          ingredients: missingIngredients,
+        };
+      });
+
+      const result = await createAggregatedGroceryList({ recipes: recipesPayload });
+      if (result.success && result.list) {
+        setSelectedIds(new Set());
+        navigation.navigate("GroceryList", {
+          listId: result.list.id,
+          recipeTitle: result.list.recipeTitle ?? chosenRecipes[0].title,
+        });
+      } else {
+        Alert.alert("Error", result.error ?? "Could not create grocery list.");
+      }
+    } catch {
+      Alert.alert("Error", "Network error. Please try again.");
+    } finally {
+      setBuildingList(false);
+    }
+  }
+
   function renderFeasibilityBadge(feasibility: FeasibilityResult) {
     const colors = BADGE_COLORS[feasibility.label];
     return (
@@ -213,9 +264,14 @@ export default function RecipeGenerationScreen({ route, navigation }: Props) {
 
   function renderRecipeCard({ item }: { item: Recipe }) {
     const feasibility = checkFeasibility(item, inventory);
+    const isSelected = selectedIds.has(item.id);
     return (
       <TouchableOpacity
-        style={[styles.recipeCard, { backgroundColor: theme.colors.card }]}
+        style={[
+          styles.recipeCard,
+          { backgroundColor: theme.colors.card },
+          isSelected && { borderWidth: 2, borderColor: theme.colors.buttonPrimary },
+        ]}
         onPress={() => showRecipeDetails(item)}
         activeOpacity={0.8}
       >
@@ -247,7 +303,26 @@ export default function RecipeGenerationScreen({ route, navigation }: Props) {
               )}
             </View>
           </View>
-          <Text style={[styles.chevron, { color: theme.colors.border }]}>›</Text>
+
+          {/* Selection toggle — separate hit area from card tap */}
+          <TouchableOpacity
+            style={[
+              styles.selectCircle,
+              isSelected
+                ? { backgroundColor: theme.colors.buttonPrimary, borderColor: theme.colors.buttonPrimary }
+                : { backgroundColor: "transparent", borderColor: theme.colors.border },
+            ]}
+            onPress={() => toggleRecipeSelection(item.id)}
+            accessibilityRole="checkbox"
+            accessibilityState={{ checked: isSelected }}
+            accessibilityLabel={`${isSelected ? "Remove" : "Add"} ${item.title} to grocery list`}
+          >
+            <Ionicons
+              name={isSelected ? "checkmark" : "add"}
+              size={16}
+              color={isSelected ? theme.colors.buttonPrimaryText : theme.colors.textMuted}
+            />
+          </TouchableOpacity>
         </View>
       </TouchableOpacity>
     );
@@ -476,7 +551,7 @@ export default function RecipeGenerationScreen({ route, navigation }: Props) {
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <Text style={[styles.title, { color: theme.colors.text }]}>Generated Recipes</Text>
       <Text style={[styles.subtitle, { color: theme.colors.textSecondary }]}>
-        Found {recipes.length} recipes with your ingredients
+        Tap a recipe to view details · Use + to select for a combined grocery list
       </Text>
 
       {recipes.length === 0 ? (
@@ -491,8 +566,32 @@ export default function RecipeGenerationScreen({ route, navigation }: Props) {
           data={recipes}
           keyExtractor={(item) => item.id.toString()}
           renderItem={renderRecipeCard}
-          contentContainerStyle={styles.list}
+          contentContainerStyle={[styles.list, selectedIds.size > 0 && { paddingBottom: 96 }]}
         />
+      )}
+
+      {/* Sticky footer: shown when ≥1 recipe is selected */}
+      {selectedIds.size > 0 && (
+        <View style={[styles.buildFooter, { backgroundColor: theme.colors.card, borderTopColor: theme.colors.border }]}>
+          <TouchableOpacity
+            style={[styles.buildButton, { backgroundColor: buildingList ? theme.colors.border : theme.colors.buttonPrimary }]}
+            onPress={handleBuildGroceryList}
+            disabled={buildingList}
+            accessibilityRole="button"
+            accessibilityLabel={`Build grocery list from ${selectedIds.size} selected recipes`}
+          >
+            {buildingList ? (
+              <ActivityIndicator size="small" color="#fff" />
+            ) : (
+              <View style={styles.buildBtnContent}>
+                <Ionicons name="cart-outline" size={18} color={theme.colors.buttonPrimaryText} />
+                <Text style={[styles.buildBtnText, { color: theme.colors.buttonPrimaryText }]}>
+                  Build Grocery List · {selectedIds.size} {selectedIds.size === 1 ? "recipe" : "recipes"}
+                </Text>
+              </View>
+            )}
+          </TouchableOpacity>
+        </View>
       )}
     </View>
   );
@@ -642,4 +741,32 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   retryButtonText: { color: "#fff", fontWeight: "600", fontSize: 14 },
+
+  // Multi-select circle on each recipe card
+  selectCircle: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    borderWidth: 2,
+    justifyContent: "center",
+    alignItems: "center",
+    marginLeft: 8,
+  },
+
+  // Sticky footer for building aggregated grocery list
+  buildFooter: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    padding: 16,
+    borderTopWidth: 1,
+  },
+  buildButton: {
+    paddingVertical: 14,
+    borderRadius: 14,
+    alignItems: "center",
+  },
+  buildBtnContent: { flexDirection: "row", alignItems: "center", gap: 8 },
+  buildBtnText: { fontWeight: "bold", fontSize: 15 },
 });
