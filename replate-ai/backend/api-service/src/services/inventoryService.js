@@ -168,7 +168,6 @@ async function saveIngredient(userId, ingredient) {
 async function saveIngredientsBatch(userId, items) {
     const savedItems = [];
     const skippedItems = [];
-    console.log("In saveIngredientBatch");
     for (const item of items) {
       try {
         const saved = await saveIngredient(userId, {
