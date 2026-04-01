@@ -6,6 +6,54 @@ const { verifyFirebaseToken } = require("../../../../../sdk/firebase/firestore")
 
 const router = express.Router();
 
+/**
+ * @swagger
+ * /ingredients/photo:
+ *   post:
+ *     summary: Detect ingredients from a photo
+ *     description: >
+ *       Accepts a JPEG/PNG photo (max 5 MB), optionally uploads it to S3,
+ *       and runs AI-based ingredient detection. Returns a list of detected
+ *       ingredients with confidence scores.
+ *     tags: [Ingredients]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             required: [image]
+ *             properties:
+ *               image:
+ *                 type: string
+ *                 format: binary
+ *                 description: Image file (JPEG or PNG, max 5 MB)
+ *     responses:
+ *       200:
+ *         description: Ingredients detected successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:    { type: boolean, example: true }
+ *                 imageUrl:   { type: string, format: uri }
+ *                 ingredients:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/DetectedIngredient'
+ *       400:
+ *         description: No image file uploaded
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       401:
+ *         description: Unauthorized
+ */
+
 // We keep files in memory so we can push the buffer straight to S3.
 const upload = multer({
   storage: multer.memoryStorage(),

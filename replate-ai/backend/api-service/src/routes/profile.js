@@ -9,6 +9,64 @@ const {
 
 const router = express.Router();
 
+/**
+ * @swagger
+ * /profile:
+ *   get:
+ *     summary: Get the authenticated user's profile and dietary preferences
+ *     tags: [Profile]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Profile returned
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success: { type: boolean, example: true }
+ *                 profile:
+ *                   $ref: '#/components/schemas/UserProfile'
+ *                 dietaryPreferences:
+ *                   $ref: '#/components/schemas/DietaryPreferences'
+ *       401:
+ *         description: Unauthorized
+ *
+ *   patch:
+ *     summary: Update profile fields and/or dietary preferences
+ *     tags: [Profile]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               displayName: { type: string, example: "Jane Doe" }
+ *               dietaryPreferences:
+ *                 $ref: '#/components/schemas/DietaryPreferences'
+ *     responses:
+ *       200:
+ *         description: Profile updated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success: { type: boolean, example: true }
+ *                 profile:
+ *                   $ref: '#/components/schemas/UserProfile'
+ *                 dietaryPreferences:
+ *                   $ref: '#/components/schemas/DietaryPreferences'
+ *       400:
+ *         description: Validation error
+ *       401:
+ *         description: Unauthorized
+ */
+
 function normalizeStringArray(value) {
   if (value === undefined) return undefined;
   if (!Array.isArray(value)) return null;

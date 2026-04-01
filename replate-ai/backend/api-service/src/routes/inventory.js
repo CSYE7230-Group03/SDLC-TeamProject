@@ -16,6 +16,282 @@ const { verifyFirebaseToken } = require("../../../../../sdk/firebase/firestore")
 
 const router = express.Router();
 
+/**
+ * @swagger
+ * /inventory:
+ *   get:
+ *     summary: Get the authenticated user's ingredient inventory
+ *     tags: [Inventory]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Inventory retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success: { type: boolean, example: true }
+ *                 items:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/InventoryItem'
+ *       401:
+ *         description: Unauthorized
+ *
+ * /inventory/review:
+ *   post:
+ *     summary: Start an ingredient review session
+ *     description: Creates an in-memory session from detected ingredients so the user can edit them before committing to inventory.
+ *     tags: [Inventory]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [ingredients]
+ *             properties:
+ *               ingredients:
+ *                 type: array
+ *                 items:
+ *                   $ref: '#/components/schemas/DetectedIngredient'
+ *     responses:
+ *       201:
+ *         description: Session created
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:     { type: boolean, example: true }
+ *                 sessionId:   { type: string }
+ *                 ingredients:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/DetectedIngredient'
+ *       400:
+ *         description: Missing or empty ingredients
+ *
+ * /inventory/review/{sessionId}:
+ *   get:
+ *     summary: Get the current state of a review session
+ *     tags: [Inventory]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: sessionId
+ *         required: true
+ *         schema: { type: string }
+ *     responses:
+ *       200:
+ *         description: Session data returned
+ *       404:
+ *         description: Session not found
+ *
+ * /inventory/review/{sessionId}/item/{ingredientId}:
+ *   patch:
+ *     summary: Edit an ingredient name in a pending session
+ *     tags: [Inventory]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: sessionId
+ *         required: true
+ *         schema: { type: string }
+ *       - in: path
+ *         name: ingredientId
+ *         required: true
+ *         schema: { type: string }
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [name]
+ *             properties:
+ *               name: { type: string, example: "red onion" }
+ *     responses:
+ *       200:
+ *         description: Ingredient updated
+ *       404:
+ *         description: Session or ingredient not found
+ *   delete:
+ *     summary: Remove an ingredient from a pending session
+ *     tags: [Inventory]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: sessionId
+ *         required: true
+ *         schema: { type: string }
+ *       - in: path
+ *         name: ingredientId
+ *         required: true
+ *         schema: { type: string }
+ *     responses:
+ *       200:
+ *         description: Ingredient removed
+ *       404:
+ *         description: Session or ingredient not found
+ *
+ * /inventory/review/{sessionId}/item:
+ *   post:
+ *     summary: Add a new ingredient to a pending session
+ *     tags: [Inventory]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: sessionId
+ *         required: true
+ *         schema: { type: string }
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [name]
+ *             properties:
+ *               name: { type: string, example: "basil" }
+ *     responses:
+ *       201:
+ *         description: Ingredient added
+ *       404:
+ *         description: Session not found
+ *
+ * /inventory/review/{sessionId}/confirm:
+ *   post:
+ *     summary: Confirm session and save ingredients to inventory
+ *     description: Finalises the review session and writes all ingredients to Firestore. The session is destroyed afterwards.
+ *     tags: [Inventory]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: sessionId
+ *         required: true
+ *         schema: { type: string }
+ *     responses:
+ *       200:
+ *         description: Ingredients saved to inventory
+ *       404:
+ *         description: Session not found
+ *
+ * /inventory/update:
+ *   post:
+ *     summary: Bulk-save ingredients directly to inventory
+ *     tags: [Inventory]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [items]
+ *             properties:
+ *               items:
+ *                 type: array
+ *                 items:
+ *                   $ref: '#/components/schemas/InventoryItem'
+ *     responses:
+ *       201:
+ *         description: Ingredients saved
+ *       400:
+ *         description: No items provided
+ *
+ * /inventory/item/{itemId}:
+ *   patch:
+ *     summary: Update quantity, unit, or expiry date of an inventory item
+ *     tags: [Inventory]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: itemId
+ *         required: true
+ *         schema: { type: string }
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               quant:      { type: number, example: 3 }
+ *               unit:       { type: string, example: "kg" }
+ *               expiryDate: { type: string, format: date, example: "2026-06-01" }
+ *     responses:
+ *       200:
+ *         description: Item updated
+ *       400:
+ *         description: Validation error
+ *
+ * /inventory/cook:
+ *   post:
+ *     summary: Deduct ingredients after cooking a recipe
+ *     description: Called when the user marks a recipe as cooked. Reduces inventory quantities accordingly.
+ *     tags: [Inventory]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [ingredients]
+ *             properties:
+ *               ingredients:
+ *                 type: array
+ *                 items:
+ *                   $ref: '#/components/schemas/RecipeIngredient'
+ *     responses:
+ *       200:
+ *         description: Inventory updated; returns deducted and skipped items
+ *       400:
+ *         description: Empty ingredients array
+ *
+ * /inventory/profile-analysis:
+ *   get:
+ *     summary: AI-based user profile analysis from fridge contents
+ *     description: Analyses active inventory items to determine the user's cooking persona, diet type, and lifestyle.
+ *     tags: [Inventory]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Profile analysis returned
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:        { type: boolean, example: true }
+ *                 ingredientCount: { type: integer }
+ *                 analysis:
+ *                   type: object
+ *                   properties:
+ *                     persona:       { type: string }
+ *                     emoji:         { type: string }
+ *                     description:   { type: string }
+ *                     dietType:      { type: string }
+ *                     cookingStyle:  { type: string }
+ *                     healthScore:   { type: integer }
+ *                     funFact:       { type: string }
+ *       400:
+ *         description: No ingredients in inventory
+ */
 
 /**
  * GET /inventory

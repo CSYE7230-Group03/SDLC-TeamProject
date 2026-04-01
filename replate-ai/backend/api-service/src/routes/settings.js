@@ -9,6 +9,60 @@ const {
 
 const router = express.Router();
 
+/**
+ * @swagger
+ * /settings:
+ *   get:
+ *     summary: Get the authenticated user's application settings
+ *     tags: [Settings]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Settings returned
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success: { type: boolean, example: true }
+ *                 appSettings:
+ *                   $ref: '#/components/schemas/AppSettings'
+ *       401:
+ *         description: Unauthorized
+ *
+ *   patch:
+ *     summary: Update application settings
+ *     tags: [Settings]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [appSettings]
+ *             properties:
+ *               appSettings:
+ *                 $ref: '#/components/schemas/AppSettings'
+ *     responses:
+ *       200:
+ *         description: Settings updated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success: { type: boolean, example: true }
+ *                 appSettings:
+ *                   $ref: '#/components/schemas/AppSettings'
+ *       400:
+ *         description: Validation error
+ *       401:
+ *         description: Unauthorized
+ */
+
 function normalizeThemeMode(value) {
   if (value === undefined) return undefined;
   if (value === "light" || value === "dark" || value === "system") return value;

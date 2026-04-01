@@ -16,6 +16,247 @@ const { verifyFirebaseToken } = require('../../../../../sdk/firebase/firestore')
 const router = express.Router();
 
 /**
+ * @swagger
+ * /grocery-list/aggregate:
+ *   post:
+ *     summary: Create an aggregated grocery list from multiple recipes
+ *     description: >
+ *       Accepts an array of recipes with their ingredients. Ingredients with the
+ *       same name and unit are merged into a single entry and their amounts are
+ *       summed. The resulting consolidated list is stored in Firestore and returned.
+ *     tags: [Grocery List]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [recipes]
+ *             properties:
+ *               recipes:
+ *                 type: array
+ *                 minItems: 1
+ *                 items:
+ *                   type: object
+ *                   required: [recipeId, recipeTitle, ingredients]
+ *                   properties:
+ *                     recipeId:    { type: string, example: "716429" }
+ *                     recipeTitle: { type: string, example: "Pasta with Garlic" }
+ *                     ingredients:
+ *                       type: array
+ *                       items:
+ *                         $ref: '#/components/schemas/RecipeIngredient'
+ *     responses:
+ *       201:
+ *         description: Aggregated grocery list created
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success: { type: boolean, example: true }
+ *                 list:
+ *                   $ref: '#/components/schemas/GroceryList'
+ *       400:
+ *         description: Validation error
+ *       401:
+ *         description: Unauthorized
+ *
+ * /grocery-list:
+ *   post:
+ *     summary: Create a grocery list from a single recipe's missing ingredients
+ *     tags: [Grocery List]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [recipeId, recipeTitle, missingIngredients]
+ *             properties:
+ *               recipeId:            { type: string, example: "716429" }
+ *               recipeTitle:         { type: string, example: "Pasta with Garlic" }
+ *               missingIngredients:
+ *                 type: array
+ *                 items:
+ *                   $ref: '#/components/schemas/RecipeIngredient'
+ *     responses:
+ *       201:
+ *         description: Grocery list created
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success: { type: boolean, example: true }
+ *                 list:
+ *                   $ref: '#/components/schemas/GroceryList'
+ *       400:
+ *         description: Missing required fields
+ *
+ *   get:
+ *     summary: Get all grocery lists for the authenticated user
+ *     tags: [Grocery List]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Lists returned
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success: { type: boolean, example: true }
+ *                 lists:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/GroceryList'
+ *
+ * /grocery-list/{listId}:
+ *   get:
+ *     summary: Get a specific grocery list by ID
+ *     tags: [Grocery List]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: listId
+ *         required: true
+ *         schema: { type: string }
+ *     responses:
+ *       200:
+ *         description: List returned
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success: { type: boolean, example: true }
+ *                 list:
+ *                   $ref: '#/components/schemas/GroceryList'
+ *       404:
+ *         description: List not found
+ *
+ * /grocery-list/{listId}/item/{itemId}/toggle:
+ *   patch:
+ *     summary: Toggle isAvailableAtHome for a grocery item
+ *     description: Items marked as available are excluded from the buy list but remain visible.
+ *     tags: [Grocery List]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: listId
+ *         required: true
+ *         schema: { type: string }
+ *       - in: path
+ *         name: itemId
+ *         required: true
+ *         schema: { type: string }
+ *     responses:
+ *       200:
+ *         description: Item availability toggled
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success: { type: boolean, example: true }
+ *                 item:
+ *                   $ref: '#/components/schemas/GroceryListItem'
+ *       404:
+ *         description: List or item not found
+ *
+ * /grocery-list/{listId}/item:
+ *   post:
+ *     summary: Add a new item to an existing grocery list
+ *     tags: [Grocery List]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: listId
+ *         required: true
+ *         schema: { type: string }
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/RecipeIngredient'
+ *     responses:
+ *       201:
+ *         description: Item added
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success: { type: boolean, example: true }
+ *                 item:
+ *                   $ref: '#/components/schemas/GroceryListItem'
+ *       404:
+ *         description: List not found
+ *
+ * /grocery-list/{listId}/item/{itemId}:
+ *   delete:
+ *     summary: Remove an item from a grocery list
+ *     tags: [Grocery List]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: listId
+ *         required: true
+ *         schema: { type: string }
+ *       - in: path
+ *         name: itemId
+ *         required: true
+ *         schema: { type: string }
+ *     responses:
+ *       200:
+ *         description: Item removed
+ *       404:
+ *         description: List or item not found
+ *
+ *   patch:
+ *     summary: Update the quantity of a grocery list item
+ *     tags: [Grocery List]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: listId
+ *         required: true
+ *         schema: { type: string }
+ *       - in: path
+ *         name: itemId
+ *         required: true
+ *         schema: { type: string }
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [amount]
+ *             properties:
+ *               amount: { type: number, example: 3 }
+ *     responses:
+ *       200:
+ *         description: Quantity updated
+ *       400:
+ *         description: amount is not a number
+ *       404:
+ *         description: List or item not found
+ */
+
+/**
  * POST /grocery-list
  *
  * Create a new grocery list from a recipe's missing ingredients.

@@ -1,5 +1,7 @@
 require("dotenv").config({ path: ".env.local" }); // load local overrides first
 require("dotenv").config(); // fallback: load .env for any vars not set above
+const swaggerUi = require("swagger-ui-express");
+const swaggerSpec = require("./config/swagger");
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
@@ -29,6 +31,13 @@ app.use(cors({
 }));
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "..", "public")));
+
+// Interactive API documentation (OpenAPI 3.0 / Swagger UI)
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
+  customSiteTitle: "Replate AI – API Docs",
+}));
+// Expose raw OpenAPI JSON spec for tooling / static doc generation
+app.get("/api-docs.json", (_req, res) => res.json(swaggerSpec));
 
 // Routes
 app.use("/auth", authRoutes);
