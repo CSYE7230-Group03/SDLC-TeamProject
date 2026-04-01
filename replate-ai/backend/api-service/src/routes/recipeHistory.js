@@ -3,6 +3,67 @@ const { saveRecipe, getUserHistory, getPopularRecipes } = require("../services/r
 
 const router = express.Router();
 
+/**
+ * @swagger
+ * /recipe-history:
+ *   post:
+ *     summary: Save a recipe to the user's history
+ *     description: Silently skips if the recipe is already saved (dedup by recipeId).
+ *     tags: [Recipe History]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [recipe]
+ *             properties:
+ *               recipe:
+ *                 $ref: '#/components/schemas/Recipe'
+ *     responses:
+ *       201:
+ *         description: Recipe saved (or already existed)
+ *       400:
+ *         description: Missing recipe or recipe.id
+ *
+ *   get:
+ *     summary: Get all saved recipes for the authenticated user
+ *     description: Returns recipes ordered by savedAt descending.
+ *     tags: [Recipe History]
+ *     responses:
+ *       200:
+ *         description: Recipe history returned
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success: { type: boolean, example: true }
+ *                 recipes:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Recipe'
+ *
+ * /recipe-history/popular:
+ *   get:
+ *     summary: Get the top 3 most popular recipes across all users
+ *     tags: [Recipe History]
+ *     security: []
+ *     responses:
+ *       200:
+ *         description: Popular recipes returned
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success: { type: boolean, example: true }
+ *                 recipes:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Recipe'
+ */
+
 // PLACEHOLDER: Replace with placeholderAuth from sdk/firebase/firestore.js once auth (#33) is merged.
 // Usage: router.post("/", placeholderAuth, async (req, res) => { ... })
 function placeholderAuth(req, res, next) {

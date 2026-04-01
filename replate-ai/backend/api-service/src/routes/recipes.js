@@ -5,6 +5,68 @@ const { verifyFirebaseToken, readDocument } = require("../../../../../sdk/fireba
 const router = express.Router();
 
 /**
+ * @swagger
+ * /recipes/generate:
+ *   post:
+ *     summary: Generate AI-powered recipe suggestions
+ *     description: >
+ *       Generates personalised recipe suggestions based on provided ingredients
+ *       and the authenticated user's dietary preferences. If no preferences are
+ *       supplied in the request body, they are loaded automatically from the
+ *       user's Firestore profile.
+ *     tags: [Recipes]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [ingredients]
+ *             properties:
+ *               ingredients:
+ *                 type: array
+ *                 items: { type: string }
+ *                 example: ["chicken", "rice", "onion"]
+ *               preferences:
+ *                 type: object
+ *                 description: Optional dietary preferences (loaded from profile if omitted)
+ *                 properties:
+ *                   restrictions:
+ *                     type: array
+ *                     items: { type: string }
+ *                   maxCookingTime: { type: integer, example: 30 }
+ *               count:
+ *                 type: integer
+ *                 description: Number of recipes to generate (default 3)
+ *                 example: 5
+ *     responses:
+ *       200:
+ *         description: Recipes generated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success: { type: boolean, example: true }
+ *                 source:  { type: string, example: "spoonacular" }
+ *                 count:   { type: integer, example: 3 }
+ *                 recipes:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Recipe'
+ *       400:
+ *         description: Missing or empty ingredients array
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       401:
+ *         description: Unauthorized – invalid or missing Bearer token
+ */
+
+/**
  * POST /recipes/generate
  *
  * Generate personalized recipe suggestions based on confirmed ingredients
