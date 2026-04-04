@@ -1,143 +1,391 @@
-# Repository Template
+# ReplateAI
 
-[![Build Status](https://app.travis-ci.com/melaasar/cs130-template.svg?branch=master)](https://app.travis-ci.com/github/melaasar/cs130-template)
-[![Release](https://img.shields.io/github/v/release/melaasar/cs130-template?label=release)](https://github.com/melaasar/cs130-template/releases/latest)
+> Photograph your leftovers, identify your ingredients with AI, and get personalized recipes — then order what you're missing directly from Walmart.
 
-This repo serves as a template for a repository that follows the Scrum process. The following information describes how the native features/workflows of Github can be customized to work in a scrum development process.
-
-## Issues
-
-An issue is a unit of tracking work. Issues can be classified into different classes using `labels`. This can be used to classify issues in the scrum process as follows.
-
-### Epic
-
-An [epic](https://dev.to/jorenrui/a-look-into-how-i-manage-my-personal-projects-my-git-github-workflow-1e7h#epic-issue) is an issue with the label `epic`. It represents a large story that can be broken into stories, which can be addressed over multiple sprints. An epic issue references its story issues as a task list in its description. A Github action has been added to automatically check/uncheck the story task items when they get closed/reopened.
-
-### Story
-
-A [story](https://www.atlassian.com/agile/project-management/epics-stories-themes) is an issue with the label `story`. It may represents a new feature, or an enhancement to an existing feature. A story issue can be broken into sub tasks, which are added as a task list in the description of the story issue. These sub task items can be checked manually by the developer to indicate completion.
-
-### Bug
-
-A bug is an issue with the label `bug`. It represents a problem with the existing code that needs to be fixed.
-
-### Question
-
-A question is an issue with the label `question`. It represents a question raised by any one and that may get converted into other types of issues.
-
-## Labels
-
-In addition to the [standard labels](https://docs.github.com/en/free-pro-team@latest/github/managing-your-work-on-github/managing-labels#about-default-labels) above, you can add new labels to issues to classify them into different classes like `documentation`, `frontend`, etc, or to add metadata like `duplicate`, `invalid` etc.
-
-## Milestones
-
-A [milestone](https://docs.github.com/en/free-pro-team@latest/github/managing-your-work-on-github/tracking-the-progress-of-your-work-with-milestones) groups issues that are expected to be delivered at some point in time. It also allows ordering (prioritizing) theses issues and tracking their progress (percentage of issues completed so far). In the scrum context, a milestone can be used as a sprint. So, you can create your sprints and give them names like Sprint1, Sprint2, etc. and set their due dates respectively.
-
-## Projects
-
-A [project](https://docs.github.com/en/free-pro-team@latest/github/managing-your-work-on-github/tracking-the-progress-of-your-work-with-project-boards) is a kanban-style board that can aggregate a set of issues for any purpose. In the scrum context, we can create one project called `Scrum Board` and choose its template as `Automated kanban with reviews`. (This will create a set of initial notes that you can delete).
-
-## Branches
-
-The `master` branch is the main branch used for releases. Other branches can be created. For example, a branch called `gh-pages` is often used to create a website for the repository (for more information check this [link](https://pages.github.com/)). Other branches can be created to address the issues of the repository, one branch per issue (called an `issue` branch). Such branches can then be used to create pull requests, where they get peer reviewed and eventually merged into the `master` branch. For more information on branches, check this [link](https://docs.github.com/en/free-pro-team@latest/github/collaborating-with-issues-and-pull-requests/about-branches).
-
-## Pull Requests
-
-A [pull request](https://docs.github.com/en/free-pro-team@latest/github/collaborating-with-issues-and-pull-requests/about-pull-requests) is a request to merge commits from one branch to another branch. This is typically used to merge commits from an `issue` branch into the `master` branch. A pull request is how the process of peer review is carried. Reviewers can comment on the code changes to show approval or request changes (which will need to be addressed by additional commits to the `issue` branch). When a CI pipeline is configured for a repository (see below), it will run on any `issue` branch that is part of a pull request. When the peer review process has concluded, the new commits can merged into the `master` branch. The recommended merge option is `Squash and merge`, (i.e., squash all commits into a single commit), since it makes the repository's history simple and linear.
-
-## Tags
-
-Tags can be used to mark release points in a repository's commit history. Typically, after some work goal has been achieved, with a set of commits, a tag (typically a version number like 1.0.0, 1.0.1, etc.) is [pushed to the respository](https://stackoverflow.com/questions/18216991/create-a-tag-in-a-github-repository) to mark this point. This results in the tag showing up in the repository's [tags page](https://docs.github.com/en/free-pro-team@latest/github/administering-a-repository/viewing-your-repositorys-releases-and-tags).
-
-## Workflows
-
-### Creating issues
-
-An issue can be created from the `issues` tab of a repository. An issue type (bug, story, epic, question) is first chosen then its corresponding template can be sufficiently filled.
-
-### Triaging issues
-
-The Product Owner goes frequently to the `Scrum Board` project and clicks on the `Add Cards` link to triage new issues in the repository to the board's `To do` column, which acts here as the `Product Backlog`. Product Owner can also added unbaked ideas to the `To do` column as notes, which are placeholders that can later be converted into issues. Issues and notes can then be ordered in the `To do` column to show their priority.
-
-### Planning sprints
-
-The Scrum Master creates a new milestone and gives it a suitable name (e.g., Sprint1) and a due date. Then, in the `Scrum Board`, issues from the top of the `To do` column (assuming they have been ordered based on priority) can be assigned to that milestone and to the developers who will work on them.
-
-### Working on issues
-
-Developers go to the `Scrum Board` where they can filter it for the issues assigned to them in a given milestone. They can pick ones to work on by moving them to the `In progress` column (this is important since this is not automated).
-
-### Reviewing progress
-
-In the daily standup, the `Scrum Master` can review progress by going to the `Scrum Board` and filtering it by the current milestone (sprint). Developers can then reference issues in the various columns when they answer the usual standup questions, e.g., isses they work on (`In progress`), finsihed (`Done`) or yet to work on (`To do`).
-
-### Working with issue branches
-
-Before developers can work on an issue, they should checkout and pull the `master` branch to ensure that they have all the latest commits locally. Then, they should create a new local `issue` branch and name it `issue-[number]` (replacing `[number]` by the issue number). Several `issue` branches can be created concurrently, one for each issue, but it is important to make them independent from each other by checking out the `master` branch before creating each of them. This allows them to be pushed and merged independently from each other (and with the least conflicts).
-
-Each `issue` branch can accumulate commits to address the issue. When ready, it can then be pushed to a corresponding remote branch that can then be used to create a pull request into the `master` branch. The pull request template needs to be filled at this point. Once created, a pull request can be reviewed by a peer reviewer who may request changes. These changes can be made using new commits in the local `issue` branch that can subsequently be pushed to the corresponding remote `issue` branch. When all peer reviews have concluded, the pull request can then be `squash merged` into the `master` branch ([read more here](https://docs.github.com/en/free-pro-team@latest/github/collaborating-with-issues-and-pull-requests/about-pull-request-merges#squash-and-merge-your-pull-request-commits)), and the `issue` branch [can be deleted](https://docs.github.com/en/free-pro-team@latest/github/administering-a-repository/managing-the-automatic-deletion-of-branches). If the pull request description includes the words `fixes #[number]` (where `[number]` is an issue number), the issue with that number will [automatically be closed](https://docs.github.com/en/free-pro-team@latest/github/managing-your-work-on-github/linking-a-pull-request-to-an-issue#linking-a-pull-request-to-an-issue-using-a-keyword).
-
-> it is recommeded to not push commits to the master branch directly but to always go through a peer review process using an `issue` branch.
-
-### Creating releases
-
-It is recommended to [create periodic releases](https://docs.github.com/en/free-pro-team@latest/github/administering-a-repository/managing-releases-in-a-repository#creating-a-release) from a repository, at least at the end of each sprint but can be more frequent. These releases should be working versions of the component(s) being developed in the repository. To create such releases, a new tag representing a version number (e.g., 1.0.0) is added to the local `master` branch then pushed to the remote `master` branch. A new release can then be created in Github using this tag.
-
-### Using a CI/CD pipeline
-
-Every repository needs to have a way to build its artifacts headlessly. It is a good idea to run tests as part of such build. Instructions on how to build the components in a repository needs to be documented in the repository's README.md.
-
-A repository can also be setup to build continuously whenever a commit is pushed to the `master` branch by setting up a CI script (e.g., [Travis CI](https://www.travis-ci.com/)) in its root folder. Such script will configure the build environment (as a virtual machine) and invoke the build script on the `master` branch. If the script fails for some reason, the committer will be notified to fix it. It is a good practice to add a build [badge](https://shields.io/category/version) to the README.md file to visibly indicate the status of the last CI build (Travis CI provides such badges). 
-
-The CI script will also be run when a new pull request is created or when more commits are pushed to its linked `issue` branch. Such build assures peer reviewers that the new commits when accepted will not break the build. In fact, a successful CI build can be a prerequisute for peer reviewers to look at the changes.
-
-When a tag is pushed to the `master` branch, the CI script will additionally deliver and/or deploy the built artifact(s). The script can also be configured to create a Github release based on the tag.
-
+[![CI Pipeline](https://github.com/CSYE7230-Group03/SDLC-TeamProject/actions/workflows/ci.yml/badge.svg)](https://github.com/CSYE7230-Group03/SDLC-TeamProject/actions/workflows/ci.yml)
+[![API Docs](https://img.shields.io/badge/API%20Docs-Swagger%20UI-85EA2D?logo=swagger)](https://csye7230-group03.github.io/SDLC-TeamProject/)
+[![Node.js](https://img.shields.io/badge/Node.js-20-339933?logo=node.js)](https://nodejs.org/)
+[![Python](https://img.shields.io/badge/Python-3.11-3776AB?logo=python)](https://www.python.org/)
+[![React Native](https://img.shields.io/badge/React%20Native-Expo-000020?logo=expo)](https://expo.dev/)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 
 ---
 
-## ReplateAI - Cloud Setup
+## Table of Contents
 
-### Quick Start
+- [Overview](#overview)
+- [Features](#features)
+- [Architecture](#architecture)
+- [Tech Stack](#tech-stack)
+- [Prerequisites](#prerequisites)
+- [Getting Started](#getting-started)
+- [Environment Variables](#environment-variables)
+- [API Documentation](#api-documentation)
+- [Project Structure](#project-structure)
+- [Development Workflow](#development-workflow)
+- [License](#license)
 
-1. **Install dependencies**
-   ```bash
-   npm install
-   ```
+---
 
-2. **Configure environment variables**
-   ```bash
-   cp .env.example .env
-   # Edit .env with your actual credentials
-   ```
+## Overview
 
-3. **Test cloud access**
-   ```bash
-   npm run test:cloud
-   ```
+ReplateAI solves a common problem: you have ingredients in your fridge, no plan for dinner, and no idea what to make. Instead of ordering takeout or letting food go to waste, you open ReplateAI, photograph what you have, and within seconds the app identifies your ingredients and generates recipes tailored to what is already in your kitchen.
 
-### Required Cloud Services
+The app is built as a three-service monorepo. A React Native mobile frontend communicates with a Node.js REST API, which delegates ingredient detection to a Python FastAPI microservice powered by OpenAI's GPT-4.1-mini vision model. When a recipe calls for something you are missing, ReplateAI connects directly to the Walmart API so you can add items to a cart and check out without leaving the app.
 
-- **Firebase**: Firestore, Authentication, Storage
-- **AWS**: S3 for file storage
+ReplateAI is developed as a software engineering capstone project following Scrum/Agile practices, with sprint planning, issue-tracked development, and a continuous integration pipeline that validates all three services on every pull request.
 
-For detailed setup instructions, see [Cloud Setup Guide](docs/CLOUD_SETUP.md).
+---
 
-### Project Structure
+## Features
+
+- **AI Ingredient Detection** — Photograph your fridge or pantry and have GPT-4.1-mini vision identify every ingredient automatically
+- **Recipe Generation** — Receive personalized recipe suggestions based on detected ingredients via the Spoonacular API
+- **Grocery Ordering via Walmart** — Browse missing ingredients and place a Walmart order in-app through a seamless WebView checkout flow
+- **Inventory Tracking** — Automatically updates your ingredient inventory when you complete a recipe
+- **User Authentication** — Email/password sign-up and login powered by Firebase Authentication
+- **Ingredient Review** — Manually add, remove, or correct detected ingredients before generating recipes
+- **Recipe History** — Browse every recipe you have made with ReplateAI
+- **Grocery List Management** — Build and manage a running grocery list across sessions
+- **Profile and Preferences** — Customize dietary preferences that influence recipe recommendations
+- **Push Notifications** — Receive timely reminders and recipe suggestions via Expo Notifications
+- **Cross-platform** — Runs on iOS, Android, and web from a single Expo codebase
+
+---
+
+## Architecture
 
 ```
-replate-ai/
-├── backend/
-│   ├── api-service/     # Node.js Express API
-│   └── ai-service/      # Python AI/ML service
-├── frontend/            # React Native mobile app
-├── scripts/             # Utility scripts
-│   └── test-cloud-access.js
-└── docs/               # Documentation
-    └── CLOUD_SETUP.md
+┌─────────────────────────────────────────────────────────────┐
+│                     Mobile App (Expo)                       │
+│              React Native + TypeScript (iOS/Android/Web)    │
+└──────────────────────────┬──────────────────────────────────┘
+                           │ HTTPS (port 5050)
+                           ▼
+┌─────────────────────────────────────────────────────────────┐
+│                  API Service (Node.js Express)               │
+│                                                             │
+│  /auth        /ingredients    /recipes      /groceryOrder   │
+│  /profile     /inventory      /recipeHistory /groceryList   │
+│  /settings                                                  │
+│                                                             │
+│  firebase-admin  @aws-sdk/client-s3  multer  swagger-ui     │
+└────┬──────────────┬────────────┬──────────────┬─────────────┘
+     │              │            │              │
+     ▼              ▼            ▼              ▼
+┌─────────┐  ┌──────────┐  ┌──────────┐  ┌──────────────┐
+│Firebase │  │  AWS S3  │  │Spoonacular│  │  Walmart API │
+│Firestore│  │ (images) │  │ (recipes) │  │  (grocery)   │
+│  Auth   │  └──────────┘  └──────────┘  └──────────────┘
+└─────────┘
+     ▲
+     │  POST /ingredients/identify
+     │
+┌─────────────────────────────────────────────────────────────┐
+│                  AI Service (Python FastAPI)                 │
+│                                                             │
+│  Receives image URL → OpenAI GPT-4.1-mini vision           │
+│  Returns structured ingredient list                         │
+│  Falls back to mock data when OPENAI_API_KEY is absent      │
+└─────────────────────────────────────────────────────────────┘
 ```
 
-### Development Scripts
+### Service Descriptions
 
-- `npm run test:cloud` - Validate cloud service credentials
-- `npm run setup` - Initialize .env file from template
+**Frontend** (`replate-ai/frontend/`) — A React Native app built with Expo that runs on iOS, Android, and web. It handles all user interactions across 18 screens, stores auth tokens securely with `expo-secure-store`, and communicates with the API service through a centralized `api.ts` service layer.
+
+**API Service** (`replate-ai/backend/api-service/`) — A Node.js Express server (port 5050) that acts as the system's orchestration layer. It handles authentication via Firebase Admin SDK, routes image uploads through multer to AWS S3, delegates ingredient detection to the AI service, fetches recipes from Spoonacular, and manages Firestore documents for inventory, history, and user profiles.
+
+**AI Service** (`replate-ai/backend/ai-service/`) — A Python FastAPI microservice with a single responsibility: accept an image URL and return a structured list of identified ingredients. It calls OpenAI's `gpt-4.1-mini` vision model and returns a pydantic-validated response. When `OPENAI_API_KEY` is not set, the service returns mock data, which keeps the rest of the system functional during local development without an API key.
+
+**SDK** (`sdk/`) — Shared Firebase Admin and AWS S3 wrapper code consumed by the backend services.
+
+---
+
+## Tech Stack
+
+### Frontend
+
+| Technology          | Purpose                                 |
+| ------------------- | --------------------------------------- |
+| React Native + Expo | Cross-platform mobile framework         |
+| TypeScript          | Static typing                           |
+| react-navigation    | Bottom tabs and native stack navigation |
+| expo-image-picker   | Camera and photo library access         |
+| expo-secure-store   | Secure token storage (native)           |
+| expo-notifications  | Push notification support               |
+| axios               | HTTP client for API calls               |
+
+### API Service
+
+| Technology                         | Purpose                                        |
+| ---------------------------------- | ---------------------------------------------- |
+| Node.js 20 + Express               | HTTP server and routing                        |
+| firebase-admin                     | Firestore database and Auth token verification |
+| @aws-sdk/client-s3                 | Image upload to AWS S3                         |
+| multer                             | Multipart form data / file uploads             |
+| swagger-jsdoc + swagger-ui-express | Interactive API documentation                  |
+| cors + dotenv                      | Cross-origin support and environment config    |
+
+### AI Service
+
+| Technology            | Purpose                              |
+| --------------------- | ------------------------------------ |
+| Python 3.11 + FastAPI | High-performance async API framework |
+| uvicorn               | ASGI server                          |
+| pydantic              | Request/response validation          |
+| OpenAI Python SDK     | GPT-4.1-mini vision inference        |
+
+### Cloud Services
+
+| Service                 | Purpose                                      |
+| ----------------------- | -------------------------------------------- |
+| Firebase Firestore      | Primary application database                 |
+| Firebase Authentication | User sign-up, login, and token management    |
+| AWS S3                  | Ingredient photo storage                     |
+| Spoonacular API         | Recipe search and suggestions                |
+| Walmart API             | In-app grocery ordering                      |
+| OpenAI API              | Ingredient detection via GPT-4.1-mini vision |
+
+---
+
+## Prerequisites
+
+Before running ReplateAI locally, ensure you have the following installed and configured.
+
+**Runtime requirements:**
+
+| Tool     | Version | Install                               |
+| -------- | ------- | ------------------------------------- |
+| Node.js  | 20+     | [nodejs.org](https://nodejs.org/)     |
+| npm      | 9+      | Included with Node.js                 |
+| Python   | 3.11+   | [python.org](https://www.python.org/) |
+| Expo CLI | Latest  | `npm install -g expo-cli`             |
+
+**Account and API key requirements:**
+
+- **Firebase project** with Firestore, Authentication, and Storage enabled — [console.firebase.google.com](https://console.firebase.google.com/)
+- **AWS account** with an S3 bucket and an IAM user that has `s3:PutObject` and `s3:GetObject` permissions
+- **Spoonacular API key** — [spoonacular.com/food-api](https://spoonacular.com/food-api)
+- **OpenAI API key** — [platform.openai.com](https://platform.openai.com/) (required for live ingredient detection; the AI service falls back to mock data without it)
+- **Walmart API credentials** — required only for the grocery ordering flow
+
+---
+
+## Getting Started
+
+Follow these steps to run all three services locally.
+
+### 1. Clone the repository
+
+```bash
+git clone https://github.com/CSYE7230-Group03/SDLC-TeamProject.git
+cd SDLC-TeamProject
+```
+
+### 2. Configure the API service environment
+
+```bash
+cd replate-ai/backend/api-service
+cp .env.example .env
+```
+
+Open `.env` and fill in your Firebase, AWS, Spoonacular, OpenAI, and Walmart credentials. See the [Environment Variables](#environment-variables) section for the full list.
+
+### 3. Install and start the API service
+
+```bash
+# From replate-ai/backend/api-service
+npm install
+npm run dev
+```
+
+The API server starts on `http://localhost:5050`. Interactive Swagger docs are available at `http://localhost:5050/api-docs`.
+
+### 4. Install and start the AI service
+
+Open a second terminal:
+
+```bash
+cd replate-ai/backend/ai-service
+pip install -r requirements.txt
+uvicorn app:app --reload
+```
+
+The AI service starts on `http://localhost:8000` by default. Set `AI_SERVICE_URL=http://localhost:8000` in the API service `.env` so the two services can communicate.
+
+### 5. Install and start the frontend
+
+Open a third terminal:
+
+```bash
+cd replate-ai/frontend
+npm install
+npm start
+```
+
+Expo will open a browser tab with a QR code. Scan it with the **Expo Go** app on your phone, or press `i` to open an iOS simulator or `a` to open an Android emulator.
+
+To run on specific platforms:
+
+```bash
+npm run ios       # iOS simulator (macOS only)
+npm run android   # Android emulator
+npm run web       # Web browser at http://localhost:8081
+```
+
+### 6. Verify the setup
+
+```bash
+# Check cloud service connectivity (from repo root)
+npm run test:cloud
+```
+
+---
+
+## Environment Variables
+
+The API service requires a `.env` file at `replate-ai/backend/api-service/`. The AI service reads `OPENAI_API_KEY` from its environment.
+
+### API Service
+
+| Variable                  | Description                                                        |
+| ------------------------- | ------------------------------------------------------------------ |
+| `PORT`                    | Port for the Express server (default: `5050`)                      |
+| `FIREBASE_PROJECT_ID`     | Firebase project identifier                                        |
+| `FIREBASE_CLIENT_EMAIL`   | Firebase service account email                                     |
+| `FIREBASE_PRIVATE_KEY`    | Firebase service account private key (keep newlines as `\n`)       |
+| `FIREBASE_STORAGE_BUCKET` | Firebase Storage bucket name                                       |
+| `AWS_REGION`              | AWS region where the S3 bucket is hosted                           |
+| `AWS_ACCESS_KEY_ID`       | AWS IAM access key ID                                              |
+| `AWS_SECRET_ACCESS_KEY`   | AWS IAM secret access key                                          |
+| `AWS_S3_BUCKET_NAME`      | Name of the S3 bucket for image storage                            |
+| `SPOONACULAR_API_KEY`     | Spoonacular API key for recipe search                              |
+| `AI_SERVICE_URL`          | Base URL of the running AI service (e.g., `http://localhost:8000`) |
+| `OPENAI_API_KEY`          | OpenAI API key (used by the AI service, may also be set here)      |
+| `WALMART_CLIENT_ID`       | Walmart API client ID for grocery ordering                         |
+| `WALMART_CLIENT_SECRET`   | Walmart API client secret                                          |
+
+### AI Service
+
+| Variable         | Description                                                                                            |
+| ---------------- | ------------------------------------------------------------------------------------------------------ |
+| `OPENAI_API_KEY` | OpenAI API key for GPT-4.1-mini vision inference. If absent, the service returns mock ingredient data. |
+
+> **Security note:** Never commit `.env` files or credentials to version control. The `.gitignore` excludes `.env` files by default. Rotate any credentials that are accidentally exposed.
+
+---
+
+## API Documentation
+
+Interactive API documentation is hosted on GitHub Pages:
+
+**[https://csye7230-group03.github.io/SDLC-TeamProject/](https://csye7230-group03.github.io/SDLC-TeamProject/)**
+
+The documentation is generated from OpenAPI/Swagger annotations in the API service source code and covers all endpoints across these route groups:
+
+| Route Group      | Description                                    |
+| ---------------- | ---------------------------------------------- |
+| `/auth`          | User registration, login, and token management |
+| `/ingredients`   | Ingredient detection via photo upload          |
+| `/recipes`       | Recipe search and suggestion                   |
+| `/recipeHistory` | User recipe history                            |
+| `/inventory`     | Ingredient inventory management                |
+| `/groceryList`   | Grocery list CRUD operations                   |
+| `/groceryOrder`  | Walmart grocery order placement                |
+| `/profile`       | User profile and preferences                   |
+| `/settings`      | Application settings                           |
+
+You can also access local Swagger UI at `http://localhost:5050/api-docs` when the API service is running.
+
+---
+
+## Project Structure
+
+```
+SDLC-TeamProject/
+├── .github/
+│   ├── ISSUE_TEMPLATE/          # Bug, epic, story, and question templates
+│   ├── PULL_REQUEST_TEMPLATE/   # PR description template
+│   └── workflows/
+│       ├── ci.yml               # Main CI pipeline (backend + frontend)
+│       ├── deploy-docs.yml      # GitHub Pages deployment for API docs
+│       └── epics.yml            # Epic issue automation
+├── docs/
+│   ├── api/                     # Swagger/OpenAPI source files
+│   └── CLOUD_SETUP.md           # Detailed cloud service setup guide
+├── infra/
+│   └── terraform/               # Infrastructure as code
+├── replate-ai/
+│   ├── backend/
+│   │   ├── api-service/         # Node.js Express REST API (port 5050)
+│   │   │   ├── src/
+│   │   │   │   ├── routes/      # auth, ingredients, recipes, inventory, ...
+│   │   │   │   ├── services/    # Business logic per domain
+│   │   │   │   ├── middleware/  # Auth, error handling, upload
+│   │   │   │   └── app.js       # Express app entry point
+│   │   │   └── package.json
+│   │   └── ai-service/          # Python FastAPI AI microservice
+│   │       ├── app.py           # FastAPI app with /ingredients/identify
+│   │       └── requirements.txt
+│   └── frontend/                # React Native Expo app
+│       ├── src/
+│       │   ├── screens/         # 18 application screens
+│       │   ├── navigation/      # AppNavigator, tab and stack config
+│       │   ├── services/        # api.ts and other service clients
+│       │   └── components/      # Shared UI components
+│       ├── App.tsx              # Root component
+│       └── package.json
+├── scripts/
+│   └── test-cloud-access.js     # Cloud credential validation script
+├── sdk/                         # Shared Firebase Admin + AWS S3 wrappers
+├── CLAUDE.md                    # AI assistant configuration
+└── package.json                 # Root scripts (test:cloud, setup)
+```
+
+---
+
+## Development Workflow
+
+ReplateAI follows a Scrum/Agile process using GitHub's native project management features.
+
+### Branch Strategy
+
+| Branch           | Purpose                                             |
+| ---------------- | --------------------------------------------------- |
+| `main`           | Production-ready code; protected; merge via PR only |
+| `develop`        | Integration branch for in-progress sprint work      |
+| `issue-[number]` | Feature/bugfix branch for a specific GitHub issue   |
+
+**Standard flow:**
+
+1. Pick an issue from the sprint backlog on the Scrum Board
+2. Check out `main` and pull the latest changes
+3. Create an issue branch: `git checkout -b issue-42`
+4. Commit your changes with conventional commit messages (`feat:`, `fix:`, `docs:`, etc.)
+5. Push the branch and open a pull request against `main`
+6. Pass CI and obtain at least one peer review approval
+7. Squash merge into `main` — the issue branch is deleted automatically
+
+### CI Pipeline
+
+The GitHub Actions pipeline (`.github/workflows/ci.yml`) runs on every push and pull request targeting `main` or `develop`. All three jobs must pass before a PR can be merged.
+
+| Job           | Runtime     | Checks                                                           |
+| ------------- | ----------- | ---------------------------------------------------------------- |
+| `backend-api` | Node.js 20  | `npm ci`, lint, `node -c src/app.js` syntax check                |
+| `backend-ai`  | Python 3.11 | `pip install`, `python -m py_compile app.py` syntax check        |
+| `frontend`    | Node.js 20  | `npm ci`, TypeScript check (`tsc --noEmit`), lint, `expo-doctor` |
+
+### Scrum Artifacts
+
+- **Product Backlog** — Managed as GitHub Issues on the Scrum Board project (`To Do` column)
+- **Sprint Planning** — Issues are assigned to milestones (Sprint 1, Sprint 2, etc.) with due dates
+- **Epics** — Large issue groups tracked with the `epic` label; sub-stories are linked as task lists
+- **Releases** — Tagged on `main` at the end of each sprint (e.g., `v1.0.0`, `v1.1.0`)
+
+---
+
+## License
+
+This project is licensed under the Apache License 2.0. See the [LICENSE](LICENSE) file for the full text.
