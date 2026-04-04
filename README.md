@@ -23,6 +23,7 @@
 - [API Documentation](#api-documentation)
 - [Project Structure](#project-structure)
 - [Development Workflow](#development-workflow)
+- [Continuous Deployment](#continuous-deployment)
 - [License](#license)
 
 ---
@@ -376,6 +377,53 @@ The GitHub Actions pipeline (`.github/workflows/ci.yml`) runs on every push and 
 | `backend-api` | Node.js 20  | `npm ci`, lint, `node -c src/app.js` syntax check                |
 | `backend-ai`  | Python 3.11 | `pip install`, `python -m py_compile app.py` syntax check        |
 | `frontend`    | Node.js 20  | `npm ci`, TypeScript check (`tsc --noEmit`), lint, `expo-doctor` |
+
+### Continuous Deployment
+
+CD jobs are triggered automatically after all CI checks pass on `main`. Each service has its own deployment target and strategy.
+
+#### Frontend — Expo EAS + GitHub Releases
+
+The CD workflow calls `eas build --non-interactive` for iOS and Android using production credentials stored as GitHub Actions Secrets. Once the EAS build completes, the workflow reads the version from `package.json`, creates a tagged GitHub Release, and attaches the build artifacts.
+
+JavaScript-only changes that do not modify native code can bypass the full EAS build cycle and be delivered directly to installed apps using OTA updates:
+
+```bash
+eas update --branch production --message "Fix recipe card layout"
+```
+
+#### Backend API + AI Service — Railway
+
+Both backend services deploy to Railway, which watches the `main` branch directly. On each new commit, Railway builds from the `Dockerfile` in the respective service directory and performs a rolling replacement — the previous container stays live until the new one passes its health check.
+
+| Aspect              | Detail                                                                  |
+| ------------------- | ----------------------------------------------------------------------- |
+| Trigger             | Push to `main` (automatic, no manual step)                              |
+| Build input         | `Dockerfile` in each service directory                                  |
+| Deployment strategy | Rolling replacement — zero downtime                                     |
+| Environment config  | Injected at runtime from Railway's project environment; not in source   |
+| Rollback            | Re-promote any prior deployment from the Railway dashboard in one click |
+
+#### Secrets Management
+
+Secrets are managed in three layers depending on context.
+
+| Layer      | Store                      | How it reaches the process                                                                          |
+| ---------- | -------------------------- | --------------------------------------------------------------------------------------------------- |
+| Local dev  | `.env` files (git-ignored) | Loaded by the runtime directly; `.env.example` documents required keys without values               |
+| CI         | GitHub Actions Secrets     | Injected as environment variables at workflow runtime; never echoed in logs                         |
+| Production | AWS Secrets Manager        | Retrieved at runtime via the AWS SDK; Railway services authenticate with a least-privilege IAM role |
+
+Example: injecting a Railway deploy token in a GitHub Actions workflow:
+
+```yaml
+env:
+  RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+```
+
+Production secrets (Firebase service account, AWS credentials, Spoonacular API key, OpenAI API key) are provisioned by Terraform, which references each secret by ARN — values never appear in Terraform state files. Rotating a secret requires only updating the value in AWS Secrets Manager; no redeployment is needed. Every access is recorded in AWS CloudTrail for a full audit trail.
+
+---
 
 ### Scrum Artifacts
 
