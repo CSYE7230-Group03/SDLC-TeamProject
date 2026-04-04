@@ -340,7 +340,6 @@ SDLC-TeamProject/
 ├── scripts/
 │   └── test-cloud-access.js     # Cloud credential validation script
 ├── sdk/                         # Shared Firebase Admin + AWS S3 wrappers
-├── CLAUDE.md                    # AI assistant configuration
 └── package.json                 # Root scripts (test:cloud, setup)
 ```
 
