@@ -21,6 +21,7 @@
 - [Getting Started](#getting-started)
 - [Environment Variables](#environment-variables)
 - [API Documentation](#api-documentation)
+- [User Manual](#user-manual)
 - [Project Structure](#project-structure)
 - [Development Workflow](#development-workflow)
 - [Continuous Deployment](#continuous-deployment)
@@ -298,6 +299,14 @@ The documentation is generated from OpenAPI/Swagger annotations in the API servi
 | `/settings`      | Application settings                           |
 
 You can also access local Swagger UI at `http://localhost:5050/api-docs` when the API service is running.
+
+---
+
+## User Manual
+
+A comprehensive user manual covering installation, account setup, ingredient scanning, recipe generation, grocery ordering, and more is available on the project wiki:
+
+**[ReplateAI User Manual](https://github.com/CSYE7230-Group03/SDLC-TeamProject/wiki/ReplateAI-%E2%80%90-User-Manual)**
 
 ---
 
