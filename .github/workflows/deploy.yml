@@ -9,7 +9,6 @@ jobs:
   deploy-api-service:
     name: Deploy API Service
     runs-on: ubuntu-latest
-    environment: production
 
     env:
       RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
@@ -53,7 +52,6 @@ jobs:
   deploy-ai-service:
     name: Deploy AI Service
     runs-on: ubuntu-latest
-    environment: production
 
     env:
       RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
