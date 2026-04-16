@@ -1,7 +1,7 @@
 const express = require("express");
 const axios = require("axios");
-const { getAuth } = require("../../../../../sdk/firebase/index");
-const { createDocument, serverTimestamp } = require("../../../../../sdk/firebase/firestore");
+const { getAuth } = require("../lib/firebase/index");
+const { createDocument, serverTimestamp } = require("../lib/firebase/firestore");
 
 const router = express.Router();
 

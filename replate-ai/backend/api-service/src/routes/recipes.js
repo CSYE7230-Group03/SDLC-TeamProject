@@ -1,6 +1,6 @@
 const express = require("express");
 const { generateRecipes } = require("../services/recipeService");
-const { verifyFirebaseToken, readDocument } = require("../../../../../sdk/firebase/firestore");
+const { verifyFirebaseToken, readDocument } = require("../lib/firebase/firestore");
 
 const router = express.Router();
 

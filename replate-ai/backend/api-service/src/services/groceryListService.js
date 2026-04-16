@@ -21,7 +21,7 @@ const {
   updateSubDocument,
   serverTimestamp,
   deleteField,
-} = require('../../../../../sdk/firebase/firestore');
+} = require('../lib/firebase/firestore');
 
 /**
  * Convert the Firestore items map to an array with each item's key

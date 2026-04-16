@@ -11,7 +11,7 @@ const {
   deleteGroceryItem,
   updateGroceryItemQuantity,
 } = require('../services/groceryListService');
-const { verifyFirebaseToken } = require('../../../../../sdk/firebase/firestore');
+const { verifyFirebaseToken } = require('../lib/firebase/firestore');
 
 const router = express.Router();
 

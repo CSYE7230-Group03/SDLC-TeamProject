@@ -2,7 +2,7 @@ const express = require("express");
 const multer = require("multer");
 const { uploadIngredientImage } = require("../services/s3Service");
 const { detectIngredientsFromImage } = require("../services/ingredientVisionService");
-const { verifyFirebaseToken } = require("../../../../../sdk/firebase/firestore");
+const { verifyFirebaseToken } = require("../lib/firebase/firestore");
 
 const router = express.Router();
 

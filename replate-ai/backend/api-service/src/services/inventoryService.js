@@ -9,8 +9,8 @@
 
 const crypto = require("crypto");
 // const admin = require("firebase-admin");
-const { createDocument, addSubDocument, serverTimestamp, queryDocuments, updateSubDocument} = require("../../../../../sdk/firebase/firestore");
-// const { getFirestore } = require("../../../../../sdk/firebase/index");
+const { createDocument, addSubDocument, serverTimestamp, queryDocuments, updateSubDocument} = require("../lib/firebase/firestore");
+// const { getFirestore } = require("../lib/firebase/index");
 
 // In-memory store keyed by sessionId.
 const pendingSessions = new Map();

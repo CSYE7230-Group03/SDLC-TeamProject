@@ -2,9 +2,9 @@ const {
   queryDocuments,
   addSubDocument,
   serverTimestamp,
-} = require("../../../../../sdk/firebase/firestore");
+} = require("../lib/firebase/firestore");
 
-const { getFirestore } = require("../../../../../sdk/firebase/index");
+const { getFirestore } = require("../lib/firebase/index");
 
 const COLLECTION = "RecipeHistory";
 

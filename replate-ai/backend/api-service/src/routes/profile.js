@@ -5,7 +5,7 @@ const {
   readDocument,
   updateDocument,
   createDocument,
-} = require("../../../../../sdk/firebase/firestore");
+} = require("../lib/firebase/firestore");
 
 const router = express.Router();
 

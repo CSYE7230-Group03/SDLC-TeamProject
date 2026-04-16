@@ -12,7 +12,7 @@ const {
   deductIngredientsForRecipe
 } = require("../services/inventoryService");
 const { analyzeUserProfile } = require("../services/profileAnalysisService");
-const { verifyFirebaseToken } = require("../../../../../sdk/firebase/firestore");
+const { verifyFirebaseToken } = require("../lib/firebase/firestore");
 
 const router = express.Router();
 

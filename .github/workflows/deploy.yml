@@ -16,6 +16,7 @@ jobs:
 
     env:
       RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+      VAR_FIREBASE_SA_KEY: ${{ secrets.FIREBASE_SA_KEY }}
       VAR_FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
       VAR_FIREBASE_STORAGE_BUCKET: ${{ secrets.FIREBASE_STORAGE_BUCKET }}
       VAR_FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
@@ -48,6 +49,7 @@ jobs:
           }
 
           railway variables --set "PORT=5050" --service "$RAILWAY_API_SERVICE_NAME"
+          set_if_not_empty "FIREBASE_SA_KEY"         "$VAR_FIREBASE_SA_KEY"
           set_if_not_empty "FIREBASE_PROJECT_ID"     "$VAR_FIREBASE_PROJECT_ID"
           set_if_not_empty "FIREBASE_STORAGE_BUCKET" "$VAR_FIREBASE_STORAGE_BUCKET"
           set_if_not_empty "FIREBASE_API_KEY"        "$VAR_FIREBASE_API_KEY"
