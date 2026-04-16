@@ -4,13 +4,17 @@ const path = require("path");
 
 const CONSUMER_ID = process.env.WALMART_CONSUMER_ID;
 const KEY_VERSION = process.env.WALMART_KEY_VERSION || "1";
-const PRIVATE_KEY_PATH = path.join(__dirname, "../../../../../WM_IO_private_key.pem");
 
 let privateKey = null;
-try {
-  privateKey = fs.readFileSync(PRIVATE_KEY_PATH, "utf8");
-} catch (e) {
-  console.warn("[WalmartService] Private key not found at", PRIVATE_KEY_PATH);
+if (process.env.WALMART_PRIVATE_KEY_BASE64) {
+  privateKey = Buffer.from(process.env.WALMART_PRIVATE_KEY_BASE64, "base64").toString("utf8");
+} else {
+  const PRIVATE_KEY_PATH = path.join(__dirname, "../../../../../WM_IO_private_key.pem");
+  try {
+    privateKey = fs.readFileSync(PRIVATE_KEY_PATH, "utf8");
+  } catch (e) {
+    console.warn("[WalmartService] Private key not found at", PRIVATE_KEY_PATH);
+  }
 }
 
 function generateSignature(timestamp) {

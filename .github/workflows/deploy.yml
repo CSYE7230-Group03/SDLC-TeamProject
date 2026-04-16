@@ -27,6 +27,9 @@ jobs:
       VAR_OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       VAR_SPOONACULAR_API_KEY: ${{ secrets.SPOONACULAR_API_KEY }}
       VAR_ALLOWED_ORIGINS: ${{ secrets.ALLOWED_ORIGINS }}
+      VAR_WALMART_CONSUMER_ID: ${{secrets.WALMART_CONSUMER_ID}}
+      VAR_WALMART_KEY_VERSION: ${{secrets.WALMART_KEY_VERSION}}
+      VAR_WALMART_PRIVATE_KEY_BASE64: ${{secrets.WALMART_PRIVATE_KEY_BASE64}}
 
     steps:
       - uses: actions/checkout@v4
@@ -60,6 +63,9 @@ jobs:
           set_if_not_empty "OPENAI_API_KEY"          "$VAR_OPENAI_API_KEY"
           set_if_not_empty "SPOONACULAR_API_KEY"     "$VAR_SPOONACULAR_API_KEY"
           set_if_not_empty "ALLOWED_ORIGINS"         "$VAR_ALLOWED_ORIGINS"
+          set_if_not_empty "WALMART_CONSUMER_ID"     "$VAR_WALMART_CONSUMER_ID"
+          set_if_not_empty "WALMART_KEY_VERSION"     "$VAR_WALMART_KEY_VERSION"
+          set_if_not_empty "WALMART_PRIVATE_KEY_BASE64" "$VAR_WALMART_PRIVATE_KEY_BASE64"
 
   deploy-ai-service:
     name: Deploy AI Service
