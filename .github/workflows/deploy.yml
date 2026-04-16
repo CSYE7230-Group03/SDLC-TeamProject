@@ -1,0 +1,76 @@
+name: Deploy to Railway
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy-api-service:
+    name: Deploy API Service
+    runs-on: ubuntu-latest
+    environment: production
+
+    env:
+      RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+      RAILWAY_API_SERVICE_ID: ${{ secrets.RAILWAY_API_SERVICE_ID }}
+      VAR_FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+      VAR_FIREBASE_STORAGE_BUCKET: ${{ secrets.FIREBASE_STORAGE_BUCKET }}
+      VAR_FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
+      VAR_AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      VAR_AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      VAR_AWS_REGION: ${{ secrets.AWS_REGION }}
+      VAR_AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
+      VAR_OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      VAR_SPOONACULAR_API_KEY: ${{ secrets.SPOONACULAR_API_KEY }}
+      VAR_ALLOWED_ORIGINS: ${{ secrets.ALLOWED_ORIGINS }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli
+
+      - name: Set env vars on Railway (API Service)
+        run: |
+          railway variables set \
+            PORT=5050 \
+            FIREBASE_PROJECT_ID="$VAR_FIREBASE_PROJECT_ID" \
+            FIREBASE_STORAGE_BUCKET="$VAR_FIREBASE_STORAGE_BUCKET" \
+            FIREBASE_API_KEY="$VAR_FIREBASE_API_KEY" \
+            AWS_ACCESS_KEY_ID="$VAR_AWS_ACCESS_KEY_ID" \
+            AWS_SECRET_ACCESS_KEY="$VAR_AWS_SECRET_ACCESS_KEY" \
+            AWS_REGION="$VAR_AWS_REGION" \
+            AWS_S3_BUCKET="$VAR_AWS_S3_BUCKET" \
+            OPENAI_API_KEY="$VAR_OPENAI_API_KEY" \
+            SPOONACULAR_API_KEY="$VAR_SPOONACULAR_API_KEY" \
+            ALLOWED_ORIGINS="$VAR_ALLOWED_ORIGINS" \
+            --service "$RAILWAY_API_SERVICE_ID"
+
+      - name: Deploy API Service
+        run: railway redeploy --service "$RAILWAY_API_SERVICE_ID" --yes
+
+  deploy-ai-service:
+    name: Deploy AI Service
+    runs-on: ubuntu-latest
+    environment: production
+
+    env:
+      RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+      RAILWAY_AI_SERVICE_ID: ${{ secrets.RAILWAY_AI_SERVICE_ID }}
+      VAR_OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli
+
+      - name: Set env vars on Railway (AI Service)
+        run: |
+          railway variables set \
+            OPENAI_API_KEY="$VAR_OPENAI_API_KEY" \
+            --service "$RAILWAY_AI_SERVICE_ID"
+
+      - name: Deploy AI Service
+        run: railway redeploy --service "$RAILWAY_AI_SERVICE_ID" --yes
