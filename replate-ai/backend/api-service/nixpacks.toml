@@ -1,0 +1,11 @@
+[phases.setup]
+nixPkgs = ["nodejs_20"]
+
+[phases.install]
+cmds = [
+  "cd /app/sdk && npm install",
+  "cd /app/replate-ai/backend/api-service && npm install"
+]
+
+[start]
+cmd = "cd /app/replate-ai/backend/api-service && node src/app.js"
