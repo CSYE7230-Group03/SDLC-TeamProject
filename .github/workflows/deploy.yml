@@ -32,19 +32,27 @@ jobs:
 
       - name: Set env vars on Railway (API Service)
         run: |
-          railway variables \
-            --set "PORT=5050" \
-            --set "FIREBASE_PROJECT_ID=$VAR_FIREBASE_PROJECT_ID" \
-            --set "FIREBASE_STORAGE_BUCKET=$VAR_FIREBASE_STORAGE_BUCKET" \
-            --set "FIREBASE_API_KEY=$VAR_FIREBASE_API_KEY" \
-            --set "AWS_ACCESS_KEY_ID=$VAR_AWS_ACCESS_KEY_ID" \
-            --set "AWS_SECRET_ACCESS_KEY=$VAR_AWS_SECRET_ACCESS_KEY" \
-            --set "AWS_REGION=$VAR_AWS_REGION" \
-            --set "AWS_S3_BUCKET=$VAR_AWS_S3_BUCKET" \
-            --set "OPENAI_API_KEY=$VAR_OPENAI_API_KEY" \
-            --set "SPOONACULAR_API_KEY=$VAR_SPOONACULAR_API_KEY" \
-            --set "ALLOWED_ORIGINS=$VAR_ALLOWED_ORIGINS" \
-            --service "$RAILWAY_API_SERVICE_ID"
+          set_if_not_empty() {
+            local key="$1"
+            local value="$2"
+            if [ -n "$value" ]; then
+              railway variables --set "${key}=${value}" --service "$RAILWAY_API_SERVICE_ID"
+            else
+              echo "Skipping $key (not set)"
+            fi
+          }
+
+          railway variables --set "PORT=5050" --service "$RAILWAY_API_SERVICE_ID"
+          set_if_not_empty "FIREBASE_PROJECT_ID"    "$VAR_FIREBASE_PROJECT_ID"
+          set_if_not_empty "FIREBASE_STORAGE_BUCKET" "$VAR_FIREBASE_STORAGE_BUCKET"
+          set_if_not_empty "FIREBASE_API_KEY"        "$VAR_FIREBASE_API_KEY"
+          set_if_not_empty "AWS_ACCESS_KEY_ID"       "$VAR_AWS_ACCESS_KEY_ID"
+          set_if_not_empty "AWS_SECRET_ACCESS_KEY"   "$VAR_AWS_SECRET_ACCESS_KEY"
+          set_if_not_empty "AWS_REGION"              "$VAR_AWS_REGION"
+          set_if_not_empty "AWS_S3_BUCKET"           "$VAR_AWS_S3_BUCKET"
+          set_if_not_empty "OPENAI_API_KEY"          "$VAR_OPENAI_API_KEY"
+          set_if_not_empty "SPOONACULAR_API_KEY"     "$VAR_SPOONACULAR_API_KEY"
+          set_if_not_empty "ALLOWED_ORIGINS"         "$VAR_ALLOWED_ORIGINS"
 
       - name: Deploy API Service
         run: railway redeploy --service "$RAILWAY_API_SERVICE_ID" --yes
@@ -66,9 +74,11 @@ jobs:
 
       - name: Set env vars on Railway (AI Service)
         run: |
-          railway variables \
-            --set "OPENAI_API_KEY=$VAR_OPENAI_API_KEY" \
-            --service "$RAILWAY_AI_SERVICE_ID"
+          if [ -n "$VAR_OPENAI_API_KEY" ]; then
+            railway variables --set "OPENAI_API_KEY=$VAR_OPENAI_API_KEY" --service "$RAILWAY_AI_SERVICE_ID"
+          else
+            echo "Skipping OPENAI_API_KEY (not set)"
+          fi
 
       - name: Deploy AI Service
         run: railway redeploy --service "$RAILWAY_AI_SERVICE_ID" --yes
