@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ReplateAI - Ingredient Photo Test</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #f5f5f5; padding: 20px; }
+    .container { max-width: 900px; margin: 0 auto; }
+    h1 { color: #2d3436; margin-bottom: 20px; }
+    .card { background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 20px; }
+    label { display: block; font-weight: 600; margin-bottom: 8px; color: #636e72; }
+    input[type="file"] { width: 100%; margin-bottom: 12px; }
+    button { background: #0984e3; color: #fff; border: none; padding: 12px 24px; border-radius: 8px; font-size: 16px; cursor: pointer; width: 100%; }
+    button:hover { background: #0772c2; }
+    button:disabled { background: #b2bec3; cursor: not-allowed; }
+    .preview { margin-top: 12px; text-align: center; }
+    .preview img { max-width: 100%; border-radius: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
+    .results { margin-top: 16px; }
+    .ingredient-pill { display: inline-flex; align-items: center; padding: 6px 10px; border-radius: 999px; background: #dfe6e9; margin: 4px; font-size: 14px; color: #2d3436; }
+    .ingredient-pill span { margin-left: 6px; font-size: 12px; color: #636e72; }
+    .error { background: #ff7675; color: #fff; padding: 12px; border-radius: 8px; margin-top: 12px; }
+    .info { font-size: 13px; color: #636e72; margin-top: 8px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>ReplateAI Ingredient Photo Identification</h1>
+
+    <div class="card">
+      <label for="imageInput">Upload a photo of your leftover ingredients</label>
+      <input type="file" id="imageInput" accept="image/*" />
+      <button id="uploadBtn" onclick="uploadPhoto()">Identify Ingredients</button>
+      <div class="info">
+        This page is for testing only. It sends your photo to <code>/ingredients/photo</code>, which uploads it to S3 and returns detected ingredients.
+      </div>
+
+      <div class="preview" id="preview"></div>
+      <div class="results" id="results"></div>
+    </div>
+  </div>
+
+  <script>
+    let lastPreviewUrl = null;
+
+    function setPreview(file) {
+      const preview = document.getElementById('preview');
+      if (lastPreviewUrl) {
+        URL.revokeObjectURL(lastPreviewUrl);
+      }
+      if (!file) {
+        preview.innerHTML = '';
+        return;
+      }
+      const url = URL.createObjectURL(file);
+      lastPreviewUrl = url;
+      preview.innerHTML = '<img src="' + url + '" alt="Selected ingredients">';
+    }
+
+    async function uploadPhoto() {
+      const input = document.getElementById('imageInput');
+      const btn = document.getElementById('uploadBtn');
+      const results = document.getElementById('results');
+
+      const file = input.files[0];
+      if (!file) {
+        results.innerHTML = '<div class="error">Please choose a photo first.</div>';
+        return;
+      }
+
+      setPreview(file);
+      btn.disabled = true;
+      btn.textContent = 'Processing...';
+      results.innerHTML = '';
+
+      try {
+        const formData = new FormData();
+        formData.append('image', file);
+
+        const res = await fetch('/ingredients/photo', {
+          method: 'POST',
+          body: formData
+        });
+
+        const data = await res.json();
+
+        if (!data.success) {
+          results.innerHTML = '<div class="error">' + (data.error || 'Failed to process image') + '</div>';
+          return;
+        }
+
+        if (!data.ingredients || data.ingredients.length === 0) {
+          results.innerHTML = '<div class="info">No ingredients were detected. Try a clearer photo.</div>';
+          return;
+        }
+
+        const pills = data.ingredients.map(ing =>
+          '<div class="ingredient-pill">' +
+            ing.name +
+            '<span>' + Math.round((ing.confidence || 0) * 100) + '%</span>' +
+          '</div>'
+        ).join('');
+
+        results.innerHTML =
+          '<div class="info">Review the detected ingredients below. In the mobile app, this is where you would confirm or edit them before recipe generation.</div>' +
+          pills;
+      } catch (err) {
+        results.innerHTML = '<div class="error">Error: ' + err.message + '</div>';
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Identify Ingredients';
+      }
+    }
+
+    document.getElementById('imageInput').addEventListener('change', (e) => {
+      setPreview(e.target.files[0]);
+    });
+  </script>
+</body>
+</html>
+
