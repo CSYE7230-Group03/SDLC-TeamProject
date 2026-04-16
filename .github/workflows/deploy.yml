@@ -33,18 +33,18 @@ jobs:
 
       - name: Set env vars on Railway (API Service)
         run: |
-          railway variables set \
-            PORT=5050 \
-            FIREBASE_PROJECT_ID="$VAR_FIREBASE_PROJECT_ID" \
-            FIREBASE_STORAGE_BUCKET="$VAR_FIREBASE_STORAGE_BUCKET" \
-            FIREBASE_API_KEY="$VAR_FIREBASE_API_KEY" \
-            AWS_ACCESS_KEY_ID="$VAR_AWS_ACCESS_KEY_ID" \
-            AWS_SECRET_ACCESS_KEY="$VAR_AWS_SECRET_ACCESS_KEY" \
-            AWS_REGION="$VAR_AWS_REGION" \
-            AWS_S3_BUCKET="$VAR_AWS_S3_BUCKET" \
-            OPENAI_API_KEY="$VAR_OPENAI_API_KEY" \
-            SPOONACULAR_API_KEY="$VAR_SPOONACULAR_API_KEY" \
-            ALLOWED_ORIGINS="$VAR_ALLOWED_ORIGINS" \
+          railway variables \
+            --set "PORT=5050" \
+            --set "FIREBASE_PROJECT_ID=$VAR_FIREBASE_PROJECT_ID" \
+            --set "FIREBASE_STORAGE_BUCKET=$VAR_FIREBASE_STORAGE_BUCKET" \
+            --set "FIREBASE_API_KEY=$VAR_FIREBASE_API_KEY" \
+            --set "AWS_ACCESS_KEY_ID=$VAR_AWS_ACCESS_KEY_ID" \
+            --set "AWS_SECRET_ACCESS_KEY=$VAR_AWS_SECRET_ACCESS_KEY" \
+            --set "AWS_REGION=$VAR_AWS_REGION" \
+            --set "AWS_S3_BUCKET=$VAR_AWS_S3_BUCKET" \
+            --set "OPENAI_API_KEY=$VAR_OPENAI_API_KEY" \
+            --set "SPOONACULAR_API_KEY=$VAR_SPOONACULAR_API_KEY" \
+            --set "ALLOWED_ORIGINS=$VAR_ALLOWED_ORIGINS" \
             --service "$RAILWAY_API_SERVICE_ID"
 
       - name: Deploy API Service
@@ -68,8 +68,8 @@ jobs:
 
       - name: Set env vars on Railway (AI Service)
         run: |
-          railway variables set \
-            OPENAI_API_KEY="$VAR_OPENAI_API_KEY" \
+          railway variables \
+            --set "OPENAI_API_KEY=$VAR_OPENAI_API_KEY" \
             --service "$RAILWAY_AI_SERVICE_ID"
 
       - name: Deploy AI Service
