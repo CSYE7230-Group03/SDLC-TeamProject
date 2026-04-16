@@ -19,13 +19,27 @@ const groceryOrderRoutes = require("./routes/groceryOrder");
 const app = express();
 const PORT = process.env.PORT || 5050;
 
+const ALLOWED_ORIGINS = process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(",").map((o) => o.trim())
+  : [];
+
 app.use(cors({
-  origin: [
-    "http://localhost:8081",  // Expo web
-    "http://localhost:19006", // Expo web (older)
-    /^http:\/\/192\.168\./,   // LAN devices
-    /^http:\/\/10\./,         // LAN devices (10.x.x.x)
-  ],
+  origin: (origin, callback) => {
+    // Allow requests with no origin (mobile apps, curl, Postman)
+    if (!origin) return callback(null, true);
+    // Always allow localhost dev origins
+    if (
+      origin === "http://localhost:8081" ||
+      origin === "http://localhost:19006" ||
+      /^http:\/\/192\.168\./.test(origin) ||
+      /^http:\/\/10\./.test(origin)
+    ) {
+      return callback(null, true);
+    }
+    // Allow any origins configured via env var
+    if (ALLOWED_ORIGINS.includes(origin)) return callback(null, true);
+    return callback(new Error(`CORS: origin ${origin} not allowed`));
+  },
   methods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
 }));
