@@ -57,8 +57,6 @@ jobs:
           set_if_not_empty "SPOONACULAR_API_KEY"     "$VAR_SPOONACULAR_API_KEY"
           set_if_not_empty "ALLOWED_ORIGINS"         "$VAR_ALLOWED_ORIGINS"
 
-      - name: Deploy API Service
-        run: railway redeploy --service "$RAILWAY_API_SERVICE_NAME" --yes
 
   deploy-ai-service:
     name: Deploy AI Service
@@ -82,5 +80,3 @@ jobs:
             echo "Skipping OPENAI_API_KEY (not set)"
           fi
 
-      - name: Deploy AI Service
-        run: railway redeploy --service "$RAILWAY_AI_SERVICE_NAME" --yes
