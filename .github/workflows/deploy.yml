@@ -31,7 +31,9 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Install Railway CLI
-        run: npm install -g @railway/cli
+        run: |
+          curl -fsSL https://railway.app/install.sh | sh
+          echo "$HOME/.railway/bin" >> $GITHUB_PATH
 
       - name: Set env vars on Railway (API Service)
         run: |
@@ -57,7 +59,6 @@ jobs:
           set_if_not_empty "SPOONACULAR_API_KEY"     "$VAR_SPOONACULAR_API_KEY"
           set_if_not_empty "ALLOWED_ORIGINS"         "$VAR_ALLOWED_ORIGINS"
 
-
   deploy-ai-service:
     name: Deploy AI Service
     runs-on: ubuntu-latest
@@ -70,7 +71,9 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Install Railway CLI
-        run: npm install -g @railway/cli
+        run: |
+          curl -fsSL https://railway.app/install.sh | sh
+          echo "$HOME/.railway/bin" >> $GITHUB_PATH
 
       - name: Set env vars on Railway (AI Service)
         run: |
@@ -79,4 +82,3 @@ jobs:
           else
             echo "Skipping OPENAI_API_KEY (not set)"
           fi
-
