@@ -1,7 +1,9 @@
 import * as SecureStore from "expo-secure-store";
 import { Platform } from "react-native";
 
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || "http://localhost:5050";
+const API_BASE_URL =
+  process.env.EXPO_PUBLIC_API_URL ||
+  "https://api-service-production-1e67.up.railway.app";
 
 // ---------------------------------------------------------------------------
 // Secure storage helpers (SecureStore on native, localStorage on web)
@@ -50,7 +52,11 @@ export function getAuthToken(): string | null {
 // ---------------------------------------------------------------------------
 
 /** Save idToken + refreshToken to secure storage and update in-memory token. */
-export async function saveSession(idToken: string, refreshToken: string, displayName?: string): Promise<void> {
+export async function saveSession(
+  idToken: string,
+  refreshToken: string,
+  displayName?: string,
+): Promise<void> {
   _authToken = idToken;
   await storageSave(SESSION_TOKEN_KEY, idToken);
   await storageSave(SESSION_REFRESH_KEY, refreshToken);
@@ -221,7 +227,9 @@ export async function getAppSettings(): Promise<AppSettingsResponse> {
   return parseResponse<AppSettingsResponse>(res);
 }
 
-export async function updateAppSettings(appSettings: Partial<AppSettings>): Promise<AppSettingsResponse> {
+export async function updateAppSettings(
+  appSettings: Partial<AppSettings>,
+): Promise<AppSettingsResponse> {
   const res = await fetch(`${API_BASE_URL}/settings`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json", ...authHeaders() },
@@ -305,7 +313,9 @@ export async function forgotPassword(email: string): Promise<AuthResponse> {
   return parseResponse<AuthResponse>(res);
 }
 
-export async function refreshSession(refreshToken: string): Promise<AuthResponse> {
+export async function refreshSession(
+  refreshToken: string,
+): Promise<AuthResponse> {
   const res = await fetch(`${API_BASE_URL}/auth/refresh`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -319,7 +329,7 @@ export async function refreshSession(refreshToken: string): Promise<AuthResponse
 // ---------------------------------------------------------------------------
 
 export async function createReviewSession(
-  ingredients: { name: string; confidence: number }[]
+  ingredients: { name: string; confidence: number }[],
 ): Promise<SessionResponse> {
   const res = await fetch(`${API_BASE_URL}/inventory/review`, {
     method: "POST",
@@ -330,7 +340,7 @@ export async function createReviewSession(
 }
 
 export async function getReviewSession(
-  sessionId: string
+  sessionId: string,
 ): Promise<IngredientsResponse> {
   const res = await fetch(`${API_BASE_URL}/inventory/review/${sessionId}`, {
     headers: authHeaders(),
@@ -341,7 +351,7 @@ export async function getReviewSession(
 export async function editIngredientName(
   sessionId: string,
   ingredientId: string,
-  name: string
+  name: string,
 ): Promise<IngredientsResponse> {
   const res = await fetch(
     `${API_BASE_URL}/inventory/review/${sessionId}/item/${ingredientId}`,
@@ -349,35 +359,35 @@ export async function editIngredientName(
       method: "PATCH",
       headers: { "Content-Type": "application/json", ...authHeaders() },
       body: JSON.stringify({ name }),
-    }
+    },
   );
   return parseResponse<IngredientsResponse>(res);
 }
 
 export async function removeIngredient(
   sessionId: string,
-  ingredientId: string
+  ingredientId: string,
 ): Promise<IngredientsResponse> {
   const res = await fetch(
     `${API_BASE_URL}/inventory/review/${sessionId}/item/${ingredientId}`,
-    { method: "DELETE", headers: authHeaders() }
+    { method: "DELETE", headers: authHeaders() },
   );
   return parseResponse<IngredientsResponse>(res);
 }
 
 export async function confirmIngredients(
-  sessionId: string
+  sessionId: string,
 ): Promise<IngredientsResponse> {
   const res = await fetch(
     `${API_BASE_URL}/inventory/review/${sessionId}/confirm`,
-    { method: "POST", headers: authHeaders() }
+    { method: "POST", headers: authHeaders() },
   );
   return parseResponse<IngredientsResponse>(res);
 }
 
 export async function addIngredient(
   sessionId: string,
-  name: string
+  name: string,
 ): Promise<IngredientsResponse> {
   const res = await fetch(
     `${API_BASE_URL}/inventory/review/${sessionId}/item`,
@@ -385,13 +395,13 @@ export async function addIngredient(
       method: "POST",
       headers: { "Content-Type": "application/json", ...authHeaders() },
       body: JSON.stringify({ name }),
-    }
+    },
   );
   return parseResponse<IngredientsResponse>(res);
 }
 
 export async function detectIngredients(
-  imageUri: string
+  imageUri: string,
 ): Promise<DetectionResponse> {
   const formData = new FormData();
 
@@ -437,7 +447,7 @@ interface GetHistoryResponse {
  */
 export async function saveRecipeToHistory(
   recipe: Recipe,
-  token: string
+  token: string,
 ): Promise<SaveHistoryResponse> {
   const res = await fetch(`${API_BASE_URL}/recipe-history`, {
     method: "POST",
@@ -454,7 +464,7 @@ export async function saveRecipeToHistory(
  * Get all saved recipes for the authenticated user.
  */
 export async function getRecipeHistory(
-  token: string
+  token: string,
 ): Promise<GetHistoryResponse> {
   const res = await fetch(`${API_BASE_URL}/recipe-history`, {
     headers: { Authorization: `Bearer ${token}` },
@@ -465,7 +475,7 @@ export async function getRecipeHistory(
 export async function generateRecipes(
   ingredients: string[],
   preferences?: { restrictions?: string[]; maxCookingTime?: number },
-  count: number = 3
+  count: number = 3,
 ): Promise<RecipeResponse> {
   const res = await fetch(`${API_BASE_URL}/recipes/generate`, {
     method: "POST",
@@ -509,7 +519,12 @@ export async function getUserInventory(): Promise<InventoryResponse> {
 interface CookResponse {
   success: boolean;
   message?: string;
-  deducted: { name: string; previousQty: number; deductedAmount: number; newQty: number }[];
+  deducted: {
+    name: string;
+    previousQty: number;
+    deductedAmount: number;
+    newQty: number;
+  }[];
   skipped: { name: string; reason: string }[];
   errors: { name: string; error: string }[];
   error?: string;
@@ -520,7 +535,7 @@ interface CookResponse {
  * Called when user clicks "Start Cooking".
  */
 export async function markRecipeAsCooked(
-  ingredients: { name: string; amount: number; unit: string }[]
+  ingredients: { name: string; amount: number; unit: string }[],
 ): Promise<CookResponse> {
   const res = await fetch(`${API_BASE_URL}/inventory/cook`, {
     method: "POST",
@@ -633,7 +648,9 @@ export async function createAggregatedGroceryList(params: {
   return parseResponse<GroceryListResponse>(res);
 }
 
-export async function getGroceryList(listId: string): Promise<GroceryListResponse> {
+export async function getGroceryList(
+  listId: string,
+): Promise<GroceryListResponse> {
   const res = await fetch(`${API_BASE_URL}/grocery-list/${listId}`, {
     headers: authHeaders(),
   });
@@ -642,21 +659,21 @@ export async function getGroceryList(listId: string): Promise<GroceryListRespons
 
 export async function toggleGroceryItemAvailability(
   listId: string,
-  itemId: string
+  itemId: string,
 ): Promise<ToggleItemResponse> {
   const res = await fetch(
     `${API_BASE_URL}/grocery-list/${listId}/item/${itemId}/toggle`,
     {
       method: "PATCH",
       headers: authHeaders(),
-    }
+    },
   );
   return parseResponse<ToggleItemResponse>(res);
 }
 
 export async function addGroceryItem(
   listId: string,
-  item: { name: string; amount: number; unit: string }
+  item: { name: string; amount: number; unit: string },
 ): Promise<GroceryListItemResponse> {
   const res = await fetch(`${API_BASE_URL}/grocery-list/${listId}/item`, {
     method: "POST",
@@ -668,11 +685,11 @@ export async function addGroceryItem(
 
 export async function deleteGroceryItem(
   listId: string,
-  itemId: string
+  itemId: string,
 ): Promise<GroceryListItemResponse> {
   const res = await fetch(
     `${API_BASE_URL}/grocery-list/${listId}/item/${itemId}`,
-    { method: "DELETE", headers: authHeaders() }
+    { method: "DELETE", headers: authHeaders() },
   );
   return parseResponse<GroceryListItemResponse>(res);
 }
@@ -680,7 +697,7 @@ export async function deleteGroceryItem(
 export async function updateGroceryItemQuantity(
   listId: string,
   itemId: string,
-  amount: number
+  amount: number,
 ): Promise<GroceryListItemResponse> {
   const res = await fetch(
     `${API_BASE_URL}/grocery-list/${listId}/item/${itemId}`,
@@ -688,11 +705,10 @@ export async function updateGroceryItemQuantity(
       method: "PATCH",
       headers: { "Content-Type": "application/json", ...authHeaders() },
       body: JSON.stringify({ amount }),
-    }
+    },
   );
   return parseResponse<GroceryListItemResponse>(res);
 }
-
 
 // ---------------------------------------------------------------------------
 // Grocery Order (Walmart)
@@ -736,7 +752,7 @@ export interface GroceryOrderResponse {
 
 export async function generateGroceryOrder(
   ingredients: { name: string; amount: number; unit: string }[],
-  provider: string = "walmart"
+  provider: string = "walmart",
 ): Promise<GroceryOrderResponse> {
   const res = await fetch(`${API_BASE_URL}/grocery-order/generate`, {
     method: "POST",
@@ -745,7 +761,6 @@ export async function generateGroceryOrder(
   });
   return parseResponse<GroceryOrderResponse>(res);
 }
-
 
 // ---------------------------------------------------------------------------
 // Popular Recipes
@@ -767,7 +782,6 @@ export async function getPopularRecipes(): Promise<PopularRecipesResponse> {
   return parseResponse<PopularRecipesResponse>(res);
 }
 
-
 // ---------------------------------------------------------------------------
 // Walmart Search
 // ---------------------------------------------------------------------------
@@ -786,9 +800,14 @@ interface WalmartSearchResponse {
   products: WalmartProduct[];
 }
 
-export async function searchWalmartProducts(query: string): Promise<WalmartSearchResponse> {
-  const res = await fetch(`${API_BASE_URL}/grocery-order/search?q=${encodeURIComponent(query)}`, {
-    headers: authHeaders(),
-  });
+export async function searchWalmartProducts(
+  query: string,
+): Promise<WalmartSearchResponse> {
+  const res = await fetch(
+    `${API_BASE_URL}/grocery-order/search?q=${encodeURIComponent(query)}`,
+    {
+      headers: authHeaders(),
+    },
+  );
   return parseResponse<WalmartSearchResponse>(res);
 }
