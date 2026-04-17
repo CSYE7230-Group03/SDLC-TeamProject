@@ -1,0 +1,92 @@
+name: Deploy to Railway
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  RAILWAY_API_SERVICE_NAME: api-service
+  RAILWAY_AI_SERVICE_NAME: ai-service
+
+jobs:
+  deploy-api-service:
+    name: Deploy API Service
+    runs-on: ubuntu-latest
+
+    env:
+      RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+      VAR_FIREBASE_SA_KEY: ${{ secrets.FIREBASE_SA_KEY }}
+      VAR_FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+      VAR_FIREBASE_STORAGE_BUCKET: ${{ secrets.FIREBASE_STORAGE_BUCKET }}
+      VAR_FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
+      VAR_AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      VAR_AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      VAR_AWS_REGION: ${{ secrets.AWS_REGION }}
+      VAR_AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
+      VAR_OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      VAR_SPOONACULAR_API_KEY: ${{ secrets.SPOONACULAR_API_KEY }}
+      VAR_ALLOWED_ORIGINS: ${{ secrets.ALLOWED_ORIGINS }}
+      VAR_WALMART_CONSUMER_ID: ${{secrets.WALMART_CONSUMER_ID}}
+      VAR_WALMART_KEY_VERSION: ${{secrets.WALMART_KEY_VERSION}}
+      VAR_WALMART_PRIVATE_KEY_BASE64: ${{secrets.WALMART_PRIVATE_KEY_BASE64}}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Railway CLI
+        run: |
+          curl -fsSL https://railway.app/install.sh | sh
+          echo "$HOME/.railway/bin" >> $GITHUB_PATH
+
+      - name: Set env vars on Railway (API Service)
+        run: |
+          set_if_not_empty() {
+            local key="$1"
+            local value="$2"
+            if [ -n "$value" ]; then
+              railway variables --set "${key}=${value}" --service "$RAILWAY_API_SERVICE_NAME"
+            else
+              echo "Skipping $key (not set)"
+            fi
+          }
+
+          railway variables --set "PORT=5050" --service "$RAILWAY_API_SERVICE_NAME"
+          set_if_not_empty "FIREBASE_SA_KEY"         "$VAR_FIREBASE_SA_KEY"
+          set_if_not_empty "FIREBASE_PROJECT_ID"     "$VAR_FIREBASE_PROJECT_ID"
+          set_if_not_empty "FIREBASE_STORAGE_BUCKET" "$VAR_FIREBASE_STORAGE_BUCKET"
+          set_if_not_empty "FIREBASE_API_KEY"        "$VAR_FIREBASE_API_KEY"
+          set_if_not_empty "AWS_ACCESS_KEY_ID"       "$VAR_AWS_ACCESS_KEY_ID"
+          set_if_not_empty "AWS_SECRET_ACCESS_KEY"   "$VAR_AWS_SECRET_ACCESS_KEY"
+          set_if_not_empty "AWS_REGION"              "$VAR_AWS_REGION"
+          set_if_not_empty "AWS_S3_BUCKET"           "$VAR_AWS_S3_BUCKET"
+          set_if_not_empty "OPENAI_API_KEY"          "$VAR_OPENAI_API_KEY"
+          set_if_not_empty "SPOONACULAR_API_KEY"     "$VAR_SPOONACULAR_API_KEY"
+          set_if_not_empty "ALLOWED_ORIGINS"         "$VAR_ALLOWED_ORIGINS"
+          set_if_not_empty "WALMART_CONSUMER_ID"     "$VAR_WALMART_CONSUMER_ID"
+          set_if_not_empty "WALMART_KEY_VERSION"     "$VAR_WALMART_KEY_VERSION"
+          set_if_not_empty "WALMART_PRIVATE_KEY_BASE64" "$VAR_WALMART_PRIVATE_KEY_BASE64"
+
+  deploy-ai-service:
+    name: Deploy AI Service
+    runs-on: ubuntu-latest
+
+    env:
+      RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+      VAR_OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Railway CLI
+        run: |
+          curl -fsSL https://railway.app/install.sh | sh
+          echo "$HOME/.railway/bin" >> $GITHUB_PATH
+
+      - name: Set env vars on Railway (AI Service)
+        run: |
+          if [ -n "$VAR_OPENAI_API_KEY" ]; then
+            railway variables --set "OPENAI_API_KEY=$VAR_OPENAI_API_KEY" --service "$RAILWAY_AI_SERVICE_NAME"
+          else
+            echo "Skipping OPENAI_API_KEY (not set)"
+          fi
